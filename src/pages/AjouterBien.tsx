@@ -42,7 +42,7 @@ const AjouterBien = () => {
     <div className="p-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-foreground mb-2 flex items-center gap-2">
-          <Building2 className="h-8 w-8 text-slate-600" />
+          <Building2 className="h-8 w-8 text-primary" />
           {t('property.add')}
         </h1>
         <p className="text-muted-foreground">
@@ -53,79 +53,79 @@ const AjouterBien = () => {
       <Card>
         <CardContent className="p-6">
           <Tabs defaultValue="category" className="w-full">
-            <TabsList className="grid w-full grid-cols-6">
-              <TabsTrigger value="category">{t('property.category')}</TabsTrigger>
-              <TabsTrigger value="location">{t('property.location')}</TabsTrigger>
-              <TabsTrigger value="surface">{t('property.surface')}</TabsTrigger>
-              <TabsTrigger value="composition">{t('property.composition')}</TabsTrigger>
-              <TabsTrigger value="gallery">{t('property.gallery')}</TabsTrigger>
-              <TabsTrigger value="features">{t('property.features')}</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-6 bg-muted">
+              <TabsTrigger value="category" className="text-xs md:text-sm">{t('property.category')}</TabsTrigger>
+              <TabsTrigger value="location" className="text-xs md:text-sm">{t('property.location')}</TabsTrigger>
+              <TabsTrigger value="surface" className="text-xs md:text-sm">{t('property.surface')}</TabsTrigger>
+              <TabsTrigger value="composition" className="text-xs md:text-sm">{t('property.composition')}</TabsTrigger>
+              <TabsTrigger value="gallery" className="text-xs md:text-sm">{t('property.gallery')}</TabsTrigger>
+              <TabsTrigger value="features" className="text-xs md:text-sm">{t('property.features')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="category" className="space-y-6 mt-6">
               <div className="space-y-4">
                 <div>
-                  <Label className="text-base font-medium">{t('property.category')}</Label>
+                  <Label className="text-base font-medium text-foreground">{t('property.category')}</Label>
                   <RadioGroup value={category} onValueChange={setCategory} className="mt-2">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="sale" id="sale" />
-                      <Label htmlFor="sale">{t('property.sale')}</Label>
+                      <Label htmlFor="sale" className="text-foreground">{t('property.sale')}</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="rent" id="rent" />
-                      <Label htmlFor="rent">{t('property.rent')}</Label>
+                      <Label htmlFor="rent" className="text-foreground">{t('property.rent')}</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="vacation" id="vacation" />
-                      <Label htmlFor="vacation">{t('property.vacation')}</Label>
+                      <Label htmlFor="vacation" className="text-foreground">{t('property.vacation')}</Label>
                     </div>
                   </RadioGroup>
                 </div>
 
                 <div>
-                  <Label className="text-base font-medium">{t('property.type')}</Label>
+                  <Label className="text-base font-medium text-foreground">{t('property.type')}</Label>
                   <RadioGroup value={propertyType} onValueChange={setPropertyType} className="mt-2 grid grid-cols-2 gap-4">
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="apartment" id="apartment" />
-                      <Label htmlFor="apartment">{t('property.apartment')}</Label>
+                      <Label htmlFor="apartment" className="text-foreground">{t('property.apartment')}</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="villa" id="villa" />
-                      <Label htmlFor="villa">{t('property.villa')}</Label>
+                      <Label htmlFor="villa" className="text-foreground">{t('property.villa')}</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="commercial" id="commercial" />
-                      <Label htmlFor="commercial">{t('property.commercial')}</Label>
+                      <Label htmlFor="commercial" className="text-foreground">{t('property.commercial')}</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="land" id="land" />
-                      <Label htmlFor="land">{t('property.land')}</Label>
+                      <Label htmlFor="land" className="text-foreground">{t('property.land')}</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="house" id="house" />
-                      <Label htmlFor="house">{t('property.house')}</Label>
+                      <Label htmlFor="house" className="text-foreground">{t('property.house')}</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="riad" id="riad" />
-                      <Label htmlFor="riad">{t('property.riad')}</Label>
+                      <Label htmlFor="riad" className="text-foreground">{t('property.riad')}</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="office" id="office" />
-                      <Label htmlFor="office">{t('property.office')}</Label>
+                      <Label htmlFor="office" className="text-foreground">{t('property.office')}</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="farm" id="farm" />
-                      <Label htmlFor="farm">{t('property.farm')}</Label>
+                      <Label htmlFor="farm" className="text-foreground">{t('property.farm')}</Label>
                     </div>
                   </RadioGroup>
                 </div>
 
-                <div className="border rounded-lg p-4">
-                  <Label className="text-base font-medium flex items-center gap-2">
+                <div className="border border-border rounded-lg p-4 bg-card">
+                  <Label className="text-base font-medium flex items-center gap-2 text-foreground">
                     <MapPin className="h-4 w-4" />
                     Carte de localisation
                   </Label>
-                  <div className="mt-2 h-64 bg-muted rounded-lg flex items-center justify-center text-muted-foreground">
+                  <div className="mt-2 h-64 bg-muted rounded-lg flex items-center justify-center text-muted-foreground border border-border">
                     Google Map sera intégré ici
                   </div>
                 </div>
@@ -135,24 +135,24 @@ const AjouterBien = () => {
             <TabsContent value="location" className="space-y-4 mt-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="address">{t('property.address')}</Label>
-                  <Input id="address" placeholder={t('property.address')} />
+                  <Label htmlFor="address" className="text-foreground">{t('property.address')}</Label>
+                  <Input id="address" placeholder={t('property.address')} className="bg-background border-border" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="region">{t('property.region')}</Label>
-                  <Input id="region" placeholder={t('property.region')} />
+                  <Label htmlFor="region" className="text-foreground">{t('property.region')}</Label>
+                  <Input id="region" placeholder={t('property.region')} className="bg-background border-border" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="city">{t('property.city')}</Label>
-                  <Input id="city" placeholder={t('property.city')} />
+                  <Label htmlFor="city" className="text-foreground">{t('property.city')}</Label>
+                  <Input id="city" placeholder={t('property.city')} className="bg-background border-border" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="district">{t('property.district')}</Label>
-                  <Input id="district" placeholder={t('property.district')} />
+                  <Label htmlFor="district" className="text-foreground">{t('property.district')}</Label>
+                  <Input id="district" placeholder={t('property.district')} className="bg-background border-border" />
                 </div>
                 <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="neighborhood">{t('property.neighborhood')}</Label>
-                  <Input id="neighborhood" placeholder={t('property.neighborhood')} />
+                  <Label htmlFor="neighborhood" className="text-foreground">{t('property.neighborhood')}</Label>
+                  <Input id="neighborhood" placeholder={t('property.neighborhood')} className="bg-background border-border" />
                 </div>
               </div>
             </TabsContent>
@@ -160,33 +160,33 @@ const AjouterBien = () => {
             <TabsContent value="surface" className="space-y-4 mt-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="builtArea">{t('property.builtArea')} (m²)</Label>
-                  <Input id="builtArea" type="number" placeholder="120" />
+                  <Label htmlFor="builtArea" className="text-foreground">{t('property.builtArea')} (m²)</Label>
+                  <Input id="builtArea" type="number" placeholder="120" className="bg-background border-border" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="livingArea">{t('property.livingArea')} (m²)</Label>
-                  <Input id="livingArea" type="number" placeholder="100" />
+                  <Label htmlFor="livingArea" className="text-foreground">{t('property.livingArea')} (m²)</Label>
+                  <Input id="livingArea" type="number" placeholder="100" className="bg-background border-border" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="outdoorArea">{t('property.outdoorArea')} (m²)</Label>
-                  <Input id="outdoorArea" type="number" placeholder="20" />
+                  <Label htmlFor="outdoorArea" className="text-foreground">{t('property.outdoorArea')} (m²)</Label>
+                  <Input id="outdoorArea" type="number" placeholder="20" className="bg-background border-border" />
                 </div>
               </div>
               
               <div className="mt-6">
-                <Label className="text-base font-medium">{t('property.condition')}</Label>
+                <Label className="text-base font-medium text-foreground">{t('property.condition')}</Label>
                 <RadioGroup value={condition} onValueChange={setCondition} className="mt-2">
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="new" id="new" />
-                    <Label htmlFor="new">{t('property.new')}</Label>
+                    <Label htmlFor="new" className="text-foreground">{t('property.new')}</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="good" id="good" />
-                    <Label htmlFor="good">{t('property.good')}</Label>
+                    <Label htmlFor="good" className="text-foreground">{t('property.good')}</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="renovate" id="renovate" />
-                    <Label htmlFor="renovate">{t('property.renovate')}</Label>
+                    <Label htmlFor="renovate" className="text-foreground">{t('property.renovate')}</Label>
                   </div>
                 </RadioGroup>
               </div>
@@ -195,7 +195,7 @@ const AjouterBien = () => {
             <TabsContent value="composition" className="space-y-4 mt-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-3">
-                  <Label className="text-base font-medium">{t('property.bedrooms')}</Label>
+                  <Label className="text-base font-medium text-foreground">{t('property.bedrooms')}</Label>
                   <NumberInput 
                     value={bedrooms} 
                     onChange={setBedrooms} 
@@ -204,7 +204,7 @@ const AjouterBien = () => {
                   />
                 </div>
                 <div className="space-y-3">
-                  <Label className="text-base font-medium">{t('property.rooms')}</Label>
+                  <Label className="text-base font-medium text-foreground">{t('property.rooms')}</Label>
                   <NumberInput 
                     value={rooms} 
                     onChange={setRooms} 
@@ -213,7 +213,7 @@ const AjouterBien = () => {
                   />
                 </div>
                 <div className="space-y-3">
-                  <Label className="text-base font-medium">{t('property.bathrooms')}</Label>
+                  <Label className="text-base font-medium text-foreground">{t('property.bathrooms')}</Label>
                   <NumberInput 
                     value={bathrooms} 
                     onChange={setBathrooms} 
@@ -226,13 +226,13 @@ const AjouterBien = () => {
 
             <TabsContent value="gallery" className="space-y-4 mt-6">
               <div className="space-y-4">
-                <Label className="text-base font-medium">{t('property.gallery')}</Label>
-                <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
+                <Label className="text-base font-medium text-foreground">{t('property.gallery')}</Label>
+                <div className="border-2 border-dashed border-border rounded-lg p-8 text-center bg-muted/50">
                   <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <p className="text-muted-foreground mb-4">
                     Glissez-déposez vos photos et vidéos ici ou cliquez pour sélectionner
                   </p>
-                  <Button variant="outline">
+                  <Button variant="outline" className="border-border">
                     <Upload className="h-4 w-4 mr-2" />
                     Sélectionner des fichiers
                   </Button>
@@ -242,7 +242,7 @@ const AjouterBien = () => {
 
             <TabsContent value="features" className="space-y-4 mt-6">
               <div className="space-y-4">
-                <Label className="text-base font-medium">{t('property.features')}</Label>
+                <Label className="text-base font-medium text-foreground">{t('property.features')}</Label>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {features.map((feature) => (
                     <div key={feature} className="flex items-center space-x-2">
@@ -253,7 +253,7 @@ const AjouterBien = () => {
                           handleFeatureChange(feature, checked as boolean)
                         }
                       />
-                      <Label htmlFor={feature}>{t(`property.${feature}`)}</Label>
+                      <Label htmlFor={feature} className="text-foreground">{t(`property.${feature}`)}</Label>
                     </div>
                   ))}
                 </div>
@@ -261,12 +261,12 @@ const AjouterBien = () => {
             </TabsContent>
           </Tabs>
 
-          <div className="flex gap-4 pt-6 mt-6 border-t">
-            <Button className="bg-slate-600 hover:bg-slate-700">
+          <div className="flex gap-4 pt-6 mt-6 border-t border-border">
+            <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
               <Save className="h-4 w-4 mr-2" />
               {t('common.save')}
             </Button>
-            <Button variant="outline">
+            <Button variant="outline" className="border-border">
               {t('common.cancel')}
             </Button>
           </div>
