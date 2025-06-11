@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { Property, PropertyMetadata } from '@/types/property';
 
 const Biens = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -34,7 +35,7 @@ const Biens = () => {
         throw error;
       }
 
-      return data || [];
+      return data as Property[] || [];
     },
     enabled: !!user?.id,
   });
@@ -52,7 +53,7 @@ const Biens = () => {
     }
   };
 
-  const getPropertyImage = (property: any) => {
+  const getPropertyImage = (property: Property) => {
     const firstMedia = property.property_media?.[0];
     if (firstMedia) {
       const { data } = supabase.storage.from('property-media').getPublicUrl(firstMedia.file_path);
@@ -62,8 +63,9 @@ const Biens = () => {
   };
 
   const filteredProperties = properties.filter(property => {
-    const title = property.metadata?.title || '';
-    const location = property.metadata?.location || '';
+    const metadata = property.metadata as PropertyMetadata;
+    const title = metadata?.title || '';
+    const location = metadata?.location || '';
     return title.toLowerCase().includes(searchTerm.toLowerCase()) ||
            location.toLowerCase().includes(searchTerm.toLowerCase());
   });
@@ -162,7 +164,7 @@ const Biens = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredProperties.map((property) => {
-          const metadata = property.metadata || {};
+          const metadata = property.metadata as PropertyMetadata;
           const imageUrl = getPropertyImage(property);
           
           return (
@@ -171,7 +173,7 @@ const Biens = () => {
                 {imageUrl ? (
                   <img 
                     src={imageUrl} 
-                    alt={metadata.title || 'Photo du bien'}
+                    alt={metadata?.title || 'Photo du bien'}
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
@@ -185,32 +187,32 @@ const Biens = () => {
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <CardTitle className="text-lg font-semibold text-foreground line-clamp-2">
-                    {metadata.title || 'Sans titre'}
+                    {metadata?.title || 'Sans titre'}
                   </CardTitle>
-                  {getStatusBadge(metadata.status || 'available')}
+                  {getStatusBadge(metadata?.status || 'available')}
                 </div>
                 <div className="flex items-center text-muted-foreground text-sm">
                   <MapPin className="h-4 w-4 mr-1" />
-                  {metadata.location || 'Localisation non définie'}
+                  {metadata?.location || 'Localisation non définie'}
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
                 <div className="space-y-3">
                   <div className="text-2xl font-bold text-primary">
-                    {metadata.price ? `${metadata.price} €` : 'Prix non défini'}
+                    {metadata?.price ? `${metadata.price} €` : 'Prix non défini'}
                   </div>
                   <div className="flex items-center justify-between text-sm text-muted-foreground">
                     <div className="flex items-center">
                       <Square className="h-4 w-4 mr-1" />
-                      {metadata.surface ? `${metadata.surface} m²` : '-'}
+                      {metadata?.surface ? `${metadata.surface} m²` : '-'}
                     </div>
                     <div className="flex items-center">
                       <Bed className="h-4 w-4 mr-1" />
-                      {metadata.bedrooms || '-'}
+                      {metadata?.bedrooms || '-'}
                     </div>
                     <div className="flex items-center">
                       <Bath className="h-4 w-4 mr-1" />
-                      {metadata.bathrooms || '-'}
+                      {metadata?.bathrooms || '-'}
                     </div>
                   </div>
                 </div>
