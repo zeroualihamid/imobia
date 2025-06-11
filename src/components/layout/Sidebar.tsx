@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -60,7 +59,7 @@ const Sidebar = () => {
     {
       title: 'Demandes',
       icon: FileText,
-      color: 'text-orange-600',
+      color: 'text-indigo-600',
       isCollapsible: true,
       isOpen: demandesOpen,
       setIsOpen: setDemandesOpen,
@@ -73,13 +72,13 @@ const Sidebar = () => {
       title: 'Mandats',
       icon: FileText,
       href: '/mandats/ajouter',
-      color: 'text-red-600'
+      color: 'text-rose-600'
     },
     {
       title: 'Planning',
       icon: Calendar,
       href: '/planning',
-      color: 'text-indigo-600'
+      color: 'text-cyan-600'
     },
     {
       title: 'Messagerie',
@@ -101,49 +100,50 @@ const Sidebar = () => {
   ];
 
   return (
-    <div className="w-64 bg-white border-r border-border h-full flex flex-col shadow-sm">
-      <div className="p-6 border-b border-border">
-        <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
-          <Building2 className="h-8 w-8 text-emerald-600" />
-          <span className="bg-gradient-to-r from-emerald-600 to-blue-600 bg-clip-text text-transparent">
-            IMOBIA
-          </span>
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">Gestion Immobilière</p>
+    <div className="w-64 bg-white border-r border-slate-200 h-full flex flex-col shadow-sm">
+      <div className="p-6 border-b border-slate-200">
+        <div className="flex flex-col items-center space-y-3">
+          <img 
+            src="/logo_imobia.PNG" 
+            alt="IMOBIA Logo" 
+            className="w-24 h-24 object-contain"
+          />
+          
+        </div>
       </div>
       
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="flex-1 p-4 space-y-1">
         {menuItems.map((item, index) => (
           <div key={index}>
             {item.isCollapsible ? (
               <Collapsible open={item.isOpen} onOpenChange={item.setIsOpen}>
                 <CollapsibleTrigger className="w-full">
                   <div className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-accent w-full",
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-slate-100 w-full group",
                     item.color
                   )}>
-                    <item.icon className="h-5 w-5" />
+                    <item.icon className="h-5 w-5 flex-shrink-0" />
                     <span className="flex-1 text-left">{item.title}</span>
                     {item.isOpen ? (
-                      <ChevronDown className="h-4 w-4" />
+                      <ChevronDown className="h-4 w-4 transition-transform duration-200" />
                     ) : (
-                      <ChevronRight className="h-4 w-4" />
+                      <ChevronRight className="h-4 w-4 transition-transform duration-200" />
                     )}
                   </div>
                 </CollapsibleTrigger>
-                <CollapsibleContent className="ml-6 mt-1 space-y-1">
+                <CollapsibleContent className="ml-8 mt-1 space-y-1">
                   {item.subItems?.map((subItem, subIndex) => (
                     <Link
                       key={subIndex}
                       to={subItem.href}
                       className={cn(
-                        "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors hover:bg-accent",
+                        "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 hover:bg-slate-100",
                         location.pathname === subItem.href
-                          ? "bg-accent text-accent-foreground"
-                          : "text-muted-foreground hover:text-foreground"
+                          ? "bg-slate-100 text-slate-900 font-medium"
+                          : "text-slate-600 hover:text-slate-900"
                       )}
                     >
-                      <subItem.icon className="h-4 w-4" />
+                      <subItem.icon className="h-4 w-4 flex-shrink-0" />
                       {subItem.title}
                     </Link>
                   ))}
@@ -153,13 +153,13 @@ const Sidebar = () => {
               <Link
                 to={item.href}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-accent",
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-slate-100",
                   location.pathname === item.href
-                    ? "bg-accent text-accent-foreground"
+                    ? "bg-slate-100 text-slate-900"
                     : item.color
                 )}
               >
-                <item.icon className="h-5 w-5" />
+                <item.icon className="h-5 w-5 flex-shrink-0" />
                 {item.title}
               </Link>
             )}

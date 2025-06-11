@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,9 +45,9 @@ const NumberInput: React.FC<NumberInputProps> = ({
         size="icon"
         onClick={decrement}
         disabled={value <= min}
-        className="h-8 w-8"
+        className="h-10 w-10 bg-white border-slate-300 text-slate-700 hover:bg-slate-100 disabled:opacity-50"
       >
-        <Minus className="h-3 w-3" />
+        <Minus className="h-4 w-4" />
       </Button>
       <Input
         type="number"
@@ -56,7 +55,7 @@ const NumberInput: React.FC<NumberInputProps> = ({
         onChange={handleInputChange}
         min={min}
         max={max}
-        className="w-16 text-center"
+        className="w-20 text-center bg-white border-slate-300 text-slate-900"
       />
       <Button
         type="button"
@@ -64,9 +63,9 @@ const NumberInput: React.FC<NumberInputProps> = ({
         size="icon"
         onClick={increment}
         disabled={value >= max}
-        className="h-8 w-8"
+        className="h-10 w-10 bg-white border-slate-300 text-slate-700 hover:bg-slate-100 disabled:opacity-50"
       >
-        <Plus className="h-3 w-3" />
+        <Plus className="h-4 w-4" />
       </Button>
     </div>
   );
