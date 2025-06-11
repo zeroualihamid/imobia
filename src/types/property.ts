@@ -1,4 +1,3 @@
-
 export interface PropertyMetadata {
   title?: string;
   location?: string | {
@@ -10,12 +9,19 @@ export interface PropertyMetadata {
   };
   status?: 'available' | 'pending' | 'sold';
   price?: number;
-  surface?: number;
+  surface?: number | {
+    builtArea?: number;
+    livingArea?: number;
+    outdoorArea?: number;
+  };
   bedrooms?: number;
   bathrooms?: number;
+  rooms?: number;
   description?: string;
   propertyType?: string;
-  [key: string]: any; // Pour permettre d'autres propriétés
+  category?: string;
+  condition?: string;
+  features?: string[];
 }
 
 export interface Property {

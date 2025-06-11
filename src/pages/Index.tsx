@@ -2,10 +2,10 @@
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50">
       <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+        <h1 className="text-4xl font-bold mb-4 text-slate-900">Bienvenue sur IMOBIA</h1>
+        <p className="text-xl text-slate-600">Votre plateforme de gestion immobilière intelligente</p>
       </div>
     </div>
   );

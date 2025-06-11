@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Building2, Search, Plus, MapPin, Bed, Bath, Square } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,6 +13,7 @@ import { Property, PropertyMetadata } from '@/types/property';
 const Biens = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   // Fetch properties from Supabase
   const { data: properties = [], isLoading, error } = useQuery({
@@ -148,7 +149,7 @@ const Biens = () => {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 bg-slate-50 min-h-screen">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white rounded-lg p-6 shadow-sm border border-slate-200">
         <div>
           <h1 className="text-3xl font-bold text-slate-900 mb-2 flex items-center gap-2">
@@ -186,8 +187,12 @@ const Biens = () => {
           const locationStr = formatLocation(metadata?.location);
           
           return (
-            <Card key={property.id} className="bg-white hover:shadow-lg transition-all duration-200 border border-slate-200 overflow-hidden">
-              <div className="aspect-video bg-muted flex items-center justify-center overflow-hidden">
+            <Card 
+              key={property.id} 
+              className="bg-white hover:shadow-lg transition-all duration-200 border border-slate-200 overflow-hidden cursor-pointer"
+              onClick={() => navigate(`/biens/${property.id}`)}
+            >
+              <div className="aspect-video bg-slate-100 flex items-center justify-center overflow-hidden">
                 {imageUrl ? (
                   <img 
                     src={imageUrl} 
@@ -195,11 +200,11 @@ const Biens = () => {
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
-                      e.currentTarget.parentElement!.innerHTML = '<div class="flex items-center justify-center w-full h-full"><Building2 class="h-12 w-12 text-muted-foreground" /></div>';
+                      e.currentTarget.parentElement!.innerHTML = '<div class="flex items-center justify-center w-full h-full bg-slate-100"><Building2 class="h-12 w-12 text-slate-400" /></div>';
                     }}
                   />
                 ) : (
-                  <Building2 className="h-12 w-12 text-muted-foreground" />
+                  <Building2 className="h-12 w-12 text-slate-400" />
                 )}
               </div>
               <CardHeader className="pb-3">
@@ -209,7 +214,7 @@ const Biens = () => {
                   </CardTitle>
                   {getStatusBadge(metadata?.status || 'available')}
                 </div>
-                <div className="flex items-center text-muted-foreground text-sm">
+                <div className="flex items-center text-slate-600 text-sm">
                   <MapPin className="h-4 w-4 mr-1" />
                   {locationStr}
                 </div>
@@ -219,10 +224,13 @@ const Biens = () => {
                   <div className="text-2xl font-bold text-primary">
                     {metadata?.price ? `${metadata.price} €` : 'Prix non défini'}
                   </div>
-                  <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <div className="flex items-center justify-between text-sm text-slate-600">
                     <div className="flex items-center">
                       <Square className="h-4 w-4 mr-1" />
-                      {metadata?.surface ? `${metadata.surface} m²` : '-'}
+                      {metadata?.surface ? 
+                        (typeof metadata.surface === 'number' ? `${metadata.surface} m²` : 
+                         metadata.surface.builtArea ? `${metadata.surface.builtArea} m²` : '-') 
+                        : '-'}
                     </div>
                     <div className="flex items-center">
                       <Bed className="h-4 w-4 mr-1" />
@@ -242,9 +250,9 @@ const Biens = () => {
 
       {filteredProperties.length === 0 && !isLoading && (
         <div className="text-center py-12">
-          <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-foreground mb-2">Aucun bien trouvé</h3>
-          <p className="text-muted-foreground mb-4">
+          <Building2 className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-slate-900 mb-2">Aucun bien trouvé</h3>
+          <p className="text-slate-600 mb-4">
             {properties.length === 0 
               ? "Vous n'avez pas encore ajouté de bien." 
               : "Aucun bien ne correspond à votre recherche."

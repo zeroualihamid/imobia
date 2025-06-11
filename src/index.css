@@ -21,10 +21,10 @@
     --secondary: 241 245 249; /* slate-100 */
     --secondary-foreground: 51 65 85; /* slate-700 */
 
-    --muted: 241 245 249; /* slate-100 */
+    --muted: 248 250 252; /* slate-50 */
     --muted-foreground: 100 116 139; /* slate-500 */
 
-    --accent: 241 245 249; /* slate-100 */
+    --accent: 248 250 252; /* slate-50 */
     --accent-foreground: 15 23 42; /* slate-900 */
 
     --destructive: 220 38 38; /* red-600 */
@@ -157,5 +157,33 @@
 
   .focus-ring {
     @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white;
+  }
+}
+
+/* Ensure no yellow colors anywhere */
+@layer base {
+  /* Override any potential yellow/amber defaults */
+  * {
+    --tw-bg-opacity: 1;
+  }
+  
+  /* Force white backgrounds for dialogs and modals */
+  [role="dialog"],
+  [role="alertdialog"],
+  .dialog-content,
+  .alert-dialog-content {
+    @apply bg-white border-slate-200 text-slate-900;
+  }
+  
+  /* Ensure buttons have proper colors */
+  button:not([class*="bg-"]):not([class*="text-"]) {
+    @apply bg-white text-slate-900 border-slate-300;
+  }
+  
+  /* Remove any yellow from form elements */
+  input:not([class*="bg-"]),
+  textarea:not([class*="bg-"]),
+  select:not([class*="bg-"]) {
+    @apply bg-white border-slate-300 text-slate-900;
   }
 }

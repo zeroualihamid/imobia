@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -11,6 +10,7 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Biens from "./pages/Biens";
 import AjouterBien from "./pages/AjouterBien";
+import PropertyDetail from "./pages/PropertyDetail";
 import Auth from "./pages/Auth";
 
 const queryClient = new QueryClient();
@@ -49,6 +49,13 @@ const App = () => (
                 <ProtectedRoute>
                   <Layout>
                     <AjouterBien />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              <Route path="/biens/:id" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <PropertyDetail />
                   </Layout>
                 </ProtectedRoute>
               } />
