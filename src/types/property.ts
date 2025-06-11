@@ -1,7 +1,13 @@
 
 export interface PropertyMetadata {
   title?: string;
-  location?: string;
+  location?: string | {
+    city?: string;
+    region?: string;
+    address?: string;
+    district?: string;
+    neighborhood?: string;
+  };
   status?: 'available' | 'pending' | 'sold';
   price?: number;
   surface?: number;

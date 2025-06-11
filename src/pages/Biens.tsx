@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -62,12 +61,30 @@ const Biens = () => {
     return null;
   };
 
+  const formatLocation = (location: PropertyMetadata['location']): string => {
+    if (!location) return 'Localisation non définie';
+    
+    if (typeof location === 'string') {
+      return location;
+    }
+    
+    // Si c'est un objet, construire l'adresse à partir des composants
+    const parts = [];
+    if (location.address) parts.push(location.address);
+    if (location.neighborhood) parts.push(location.neighborhood);
+    if (location.district) parts.push(location.district);
+    if (location.city) parts.push(location.city);
+    if (location.region) parts.push(location.region);
+    
+    return parts.length > 0 ? parts.join(', ') : 'Localisation non définie';
+  };
+
   const filteredProperties = properties.filter(property => {
     const metadata = property.metadata as PropertyMetadata;
     const title = metadata?.title || '';
-    const location = metadata?.location || '';
+    const locationStr = formatLocation(metadata?.location);
     return title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           location.toLowerCase().includes(searchTerm.toLowerCase());
+           locationStr.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
   if (isLoading) {
@@ -166,6 +183,7 @@ const Biens = () => {
         {filteredProperties.map((property) => {
           const metadata = property.metadata as PropertyMetadata;
           const imageUrl = getPropertyImage(property);
+          const locationStr = formatLocation(metadata?.location);
           
           return (
             <Card key={property.id} className="bg-white hover:shadow-lg transition-all duration-200 border border-slate-200 overflow-hidden">
@@ -193,7 +211,7 @@ const Biens = () => {
                 </div>
                 <div className="flex items-center text-muted-foreground text-sm">
                   <MapPin className="h-4 w-4 mr-1" />
-                  {metadata?.location || 'Localisation non définie'}
+                  {locationStr}
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
