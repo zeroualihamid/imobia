@@ -107,46 +107,45 @@ const AjouterBien = () => {
         }
       };
 
-      // Insert property record
+      console.log('Saving property with metadata:', metadata);
+
+      // Use raw SQL query since the types aren't generated yet
       const { data: property, error: propertyError } = await supabase
-        .from('properties')
-        .insert({
-          user_id: user.id,
-          metadata
-        })
-        .select()
-        .single();
+        .rpc('create_property', {
+          p_user_id: user.id,
+          p_metadata: metadata
+        });
 
       if (propertyError) {
+        console.error('Property creation error:', propertyError);
         throw propertyError;
       }
 
-      // Upload files and create media records
+      console.log('Property created:', property);
+
+      // Upload files if any
       if (uploadedFiles.length > 0) {
-        const mediaPromises = uploadedFiles.map(async (uploadedFile) => {
-          const filePath = await uploadFileToStorage(uploadedFile.file, property.id);
+        console.log('Uploading files:', uploadedFiles.length);
+        
+        for (const uploadedFile of uploadedFiles) {
+          const filePath = await uploadFileToStorage(uploadedFile.file, property);
           
           if (filePath) {
-            return supabase
-              .from('property_media')
-              .insert({
-                property_id: property.id,
-                file_name: uploadedFile.file.name,
-                file_path: filePath,
-                file_type: uploadedFile.type,
-                file_size: uploadedFile.file.size,
-                mime_type: uploadedFile.file.type
+            // Use raw SQL for media insertion too
+            const { error: mediaError } = await supabase
+              .rpc('create_property_media', {
+                p_property_id: property,
+                p_file_name: uploadedFile.file.name,
+                p_file_path: filePath,
+                p_file_type: uploadedFile.type,
+                p_file_size: uploadedFile.file.size,
+                p_mime_type: uploadedFile.file.type
               });
-          }
-          return null;
-        });
 
-        const results = await Promise.all(mediaPromises);
-        const failedUploads = results.filter(result => result?.error);
-        
-        if (failedUploads.length > 0) {
-          console.error('Some file uploads failed:', failedUploads);
-          toast.error('Certains fichiers n\'ont pas pu être uploadés');
+            if (mediaError) {
+              console.error('Media creation error:', mediaError);
+            }
+          }
         }
       }
 
