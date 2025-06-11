@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -109,12 +108,15 @@ const AjouterBien = () => {
 
       console.log('Saving property with metadata:', metadata);
 
-      // Use raw SQL query since the types aren't generated yet
+      // Insert property record using the standard table method
       const { data: property, error: propertyError } = await supabase
-        .rpc('create_property', {
-          p_user_id: user.id,
-          p_metadata: metadata
-        });
+        .from('properties')
+        .insert({
+          user_id: user.id,
+          metadata
+        })
+        .select()
+        .single();
 
       if (propertyError) {
         console.error('Property creation error:', propertyError);
@@ -128,18 +130,19 @@ const AjouterBien = () => {
         console.log('Uploading files:', uploadedFiles.length);
         
         for (const uploadedFile of uploadedFiles) {
-          const filePath = await uploadFileToStorage(uploadedFile.file, property);
+          const filePath = await uploadFileToStorage(uploadedFile.file, property.id);
           
           if (filePath) {
-            // Use raw SQL for media insertion too
+            // Insert media record using the standard table method
             const { error: mediaError } = await supabase
-              .rpc('create_property_media', {
-                p_property_id: property,
-                p_file_name: uploadedFile.file.name,
-                p_file_path: filePath,
-                p_file_type: uploadedFile.type,
-                p_file_size: uploadedFile.file.size,
-                p_mime_type: uploadedFile.file.type
+              .from('property_media')
+              .insert({
+                property_id: property.id,
+                file_name: uploadedFile.file.name,
+                file_path: filePath,
+                file_type: uploadedFile.type,
+                file_size: uploadedFile.file.size,
+                mime_type: uploadedFile.file.type
               });
 
             if (mediaError) {
