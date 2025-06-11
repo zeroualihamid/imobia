@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,12 +8,19 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Building2, Save, Upload, MapPin } from 'lucide-react';
+import { Building2, Save, MapPin } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import NumberInput from '@/components/ui/NumberInput';
+import FileUpload, { UploadedFile } from '@/components/ui/FileUpload';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 const AjouterBien = () => {
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   
   // Form state
   const [category, setCategory] = useState('sale');
@@ -22,6 +30,20 @@ const AjouterBien = () => {
   const [rooms, setRooms] = useState(3);
   const [bathrooms, setBathrooms] = useState(1);
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Location state
+  const [address, setAddress] = useState('');
+  const [region, setRegion] = useState('');
+  const [city, setCity] = useState('');
+  const [district, setDistrict] = useState('');
+  const [neighborhood, setNeighborhood] = useState('');
+
+  // Surface state
+  const [builtArea, setBuiltArea] = useState('');
+  const [livingArea, setLivingArea] = useState('');
+  const [outdoorArea, setOutdoorArea] = useState('');
 
   const features = [
     'terrace', 'elevator', 'seaView', 'parking', 
@@ -34,6 +56,108 @@ const AjouterBien = () => {
       setSelectedFeatures([...selectedFeatures, feature]);
     } else {
       setSelectedFeatures(selectedFeatures.filter(f => f !== feature));
+    }
+  };
+
+  const uploadFileToStorage = async (file: File, propertyId: string): Promise<string | null> => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${propertyId}/${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+    
+    const { error } = await supabase.storage
+      .from('property-media')
+      .upload(fileName, file);
+
+    if (error) {
+      console.error('Error uploading file:', error);
+      return null;
+    }
+
+    return fileName;
+  };
+
+  const saveProperty = async () => {
+    if (!user) {
+      toast.error('Vous devez être connecté pour ajouter un bien');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Prepare metadata object
+      const metadata = {
+        category,
+        propertyType,
+        condition,
+        bedrooms,
+        rooms,
+        bathrooms,
+        features: selectedFeatures,
+        location: {
+          address,
+          region,
+          city,
+          district,
+          neighborhood
+        },
+        surface: {
+          builtArea: builtArea ? parseInt(builtArea) : null,
+          livingArea: livingArea ? parseInt(livingArea) : null,
+          outdoorArea: outdoorArea ? parseInt(outdoorArea) : null
+        }
+      };
+
+      // Insert property record
+      const { data: property, error: propertyError } = await supabase
+        .from('properties')
+        .insert({
+          user_id: user.id,
+          metadata
+        })
+        .select()
+        .single();
+
+      if (propertyError) {
+        throw propertyError;
+      }
+
+      // Upload files and create media records
+      if (uploadedFiles.length > 0) {
+        const mediaPromises = uploadedFiles.map(async (uploadedFile) => {
+          const filePath = await uploadFileToStorage(uploadedFile.file, property.id);
+          
+          if (filePath) {
+            return supabase
+              .from('property_media')
+              .insert({
+                property_id: property.id,
+                file_name: uploadedFile.file.name,
+                file_path: filePath,
+                file_type: uploadedFile.type,
+                file_size: uploadedFile.file.size,
+                mime_type: uploadedFile.file.type
+              });
+          }
+          return null;
+        });
+
+        const results = await Promise.all(mediaPromises);
+        const failedUploads = results.filter(result => result?.error);
+        
+        if (failedUploads.length > 0) {
+          console.error('Some file uploads failed:', failedUploads);
+          toast.error('Certains fichiers n\'ont pas pu être uploadés');
+        }
+      }
+
+      toast.success('Bien ajouté avec succès !');
+      navigate('/biens');
+      
+    } catch (error) {
+      console.error('Error saving property:', error);
+      toast.error('Erreur lors de la sauvegarde du bien');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -165,23 +289,53 @@ const AjouterBien = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="address" className="text-slate-900">{t('property.address')}</Label>
-                  <Input id="address" placeholder={t('property.address')} className="bg-white border-slate-300" />
+                  <Input 
+                    id="address" 
+                    placeholder={t('property.address')} 
+                    className="bg-white border-slate-300"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="region" className="text-slate-900">{t('property.region')}</Label>
-                  <Input id="region" placeholder={t('property.region')} className="bg-white border-slate-300" />
+                  <Input 
+                    id="region" 
+                    placeholder={t('property.region')} 
+                    className="bg-white border-slate-300"
+                    value={region}
+                    onChange={(e) => setRegion(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="city" className="text-slate-900">{t('property.city')}</Label>
-                  <Input id="city" placeholder={t('property.city')} className="bg-white border-slate-300" />
+                  <Input 
+                    id="city" 
+                    placeholder={t('property.city')} 
+                    className="bg-white border-slate-300"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="district" className="text-slate-900">{t('property.district')}</Label>
-                  <Input id="district" placeholder={t('property.district')} className="bg-white border-slate-300" />
+                  <Input 
+                    id="district" 
+                    placeholder={t('property.district')} 
+                    className="bg-white border-slate-300"
+                    value={district}
+                    onChange={(e) => setDistrict(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="neighborhood" className="text-slate-900">{t('property.neighborhood')}</Label>
-                  <Input id="neighborhood" placeholder={t('property.neighborhood')} className="bg-white border-slate-300" />
+                  <Input 
+                    id="neighborhood" 
+                    placeholder={t('property.neighborhood')} 
+                    className="bg-white border-slate-300"
+                    value={neighborhood}
+                    onChange={(e) => setNeighborhood(e.target.value)}
+                  />
                 </div>
               </div>
             </TabsContent>
@@ -190,15 +344,36 @@ const AjouterBien = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="builtArea" className="text-slate-900">{t('property.builtArea')} (m²)</Label>
-                  <Input id="builtArea" type="number" placeholder="120" className="bg-white border-slate-300" />
+                  <Input 
+                    id="builtArea" 
+                    type="number" 
+                    placeholder="120" 
+                    className="bg-white border-slate-300"
+                    value={builtArea}
+                    onChange={(e) => setBuiltArea(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="livingArea" className="text-slate-900">{t('property.livingArea')} (m²)</Label>
-                  <Input id="livingArea" type="number" placeholder="100" className="bg-white border-slate-300" />
+                  <Input 
+                    id="livingArea" 
+                    type="number" 
+                    placeholder="100" 
+                    className="bg-white border-slate-300"
+                    value={livingArea}
+                    onChange={(e) => setLivingArea(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="outdoorArea" className="text-slate-900">{t('property.outdoorArea')} (m²)</Label>
-                  <Input id="outdoorArea" type="number" placeholder="20" className="bg-white border-slate-300" />
+                  <Input 
+                    id="outdoorArea" 
+                    type="number" 
+                    placeholder="20" 
+                    className="bg-white border-slate-300"
+                    value={outdoorArea}
+                    onChange={(e) => setOutdoorArea(e.target.value)}
+                  />
                 </div>
               </div>
               
@@ -262,16 +437,11 @@ const AjouterBien = () => {
             <TabsContent value="gallery" className="space-y-4 mt-6">
               <div className="space-y-4">
                 <Label className="text-base font-medium text-slate-900">{t('property.gallery')}</Label>
-                <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center bg-slate-50">
-                  <Upload className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-                  <p className="text-slate-600 mb-4">
-                    Glissez-déposez vos photos et vidéos ici ou cliquez pour sélectionner
-                  </p>
-                  <Button variant="outline" className="border-slate-300 text-slate-700 hover:bg-slate-100">
-                    <Upload className="h-4 w-4 mr-2" />
-                    Sélectionner des fichiers
-                  </Button>
-                </div>
+                <FileUpload
+                  onFilesChange={setUploadedFiles}
+                  maxFiles={20}
+                  acceptedTypes={['image/*', 'video/*']}
+                />
               </div>
             </TabsContent>
 
@@ -297,11 +467,19 @@ const AjouterBien = () => {
           </Tabs>
 
           <div className="flex gap-4 pt-6 mt-6 border-t border-slate-200">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
+            <Button 
+              onClick={saveProperty}
+              className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+              disabled={isLoading}
+            >
               <Save className="h-4 w-4 mr-2" />
-              {t('common.save')}
+              {isLoading ? 'Sauvegarde...' : t('common.save')}
             </Button>
-            <Button variant="outline" className="bg-white border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm">
+            <Button 
+              variant="outline" 
+              className="bg-white border-slate-300 text-slate-700 hover:bg-slate-50 shadow-sm"
+              onClick={() => navigate('/biens')}
+            >
               {t('common.cancel')}
             </Button>
           </div>
