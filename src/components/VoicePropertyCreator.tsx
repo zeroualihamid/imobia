@@ -163,6 +163,33 @@ const VoicePropertyCreator: React.FC<VoicePropertyCreatorProps> = ({ onPropertyC
     }
   };
 
+  const formatLocation = (location: string | { city?: string; region?: string; address?: string; district?: string; neighborhood?: string; } | undefined): string => {
+    if (!location) return '';
+    if (typeof location === 'string') return location;
+    
+    const parts = [
+      location.address,
+      location.neighborhood,
+      location.district,
+      location.city,
+      location.region
+    ].filter(Boolean);
+    
+    return parts.join(', ');
+  };
+
+  const formatSurface = (surface: number | { builtArea?: number; livingArea?: number; outdoorArea?: number; } | undefined): string => {
+    if (!surface) return '';
+    if (typeof surface === 'number') return `${surface} m²`;
+    
+    const parts = [];
+    if (surface.builtArea) parts.push(`${surface.builtArea} m² construits`);
+    if (surface.livingArea) parts.push(`${surface.livingArea} m² habitables`);
+    if (surface.outdoorArea) parts.push(`${surface.outdoorArea} m² extérieurs`);
+    
+    return parts.join(', ');
+  };
+
   const handleSaveProperty = () => {
     if (propertyData.title && propertyData.location) {
       const property: PropertyMetadata = {
@@ -272,7 +299,7 @@ const VoicePropertyCreator: React.FC<VoicePropertyCreatorProps> = ({ onPropertyC
           {propertyData.location && (
             <div className="flex items-center gap-2">
               <Badge variant="outline">Localisation:</Badge>
-              <span className="text-sm">{propertyData.location}</span>
+              <span className="text-sm">{formatLocation(propertyData.location)}</span>
             </div>
           )}
           {propertyData.price && (
@@ -284,7 +311,7 @@ const VoicePropertyCreator: React.FC<VoicePropertyCreatorProps> = ({ onPropertyC
           {propertyData.surface && (
             <div className="flex items-center gap-2">
               <Badge variant="outline">Surface:</Badge>
-              <span className="text-sm">{propertyData.surface} m²</span>
+              <span className="text-sm">{formatSurface(propertyData.surface)}</span>
             </div>
           )}
           {propertyData.bedrooms && (
