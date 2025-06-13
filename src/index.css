@@ -202,4 +202,27 @@
   .save-button {
     @apply bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600;
   }
+  
+  /* Force override all yellow/amber variants globally */
+  * {
+    --tw-bg-yellow-50: rgb(248 250 252) !important;
+    --tw-bg-yellow-100: rgb(241 245 249) !important;
+    --tw-bg-yellow-200: rgb(226 232 240) !important;
+    --tw-bg-yellow-300: rgb(203 213 225) !important;
+    --tw-bg-yellow-400: rgb(148 163 184) !important;
+    --tw-bg-yellow-500: rgb(100 116 139) !important;
+    --tw-bg-amber-50: rgb(248 250 252) !important;
+    --tw-bg-amber-100: rgb(241 245 249) !important;
+    --tw-bg-amber-200: rgb(226 232 240) !important;
+    --tw-bg-amber-300: rgb(203 213 225) !important;
+    --tw-bg-amber-400: rgb(148 163 184) !important;
+    --tw-bg-amber-500: rgb(100 116 139) !important;
+  }
+  
+  /* Override any potential system warnings or alerts */
+  .alert,
+  .warning,
+  [data-state="warning"] {
+    @apply bg-slate-100 text-slate-700 border-slate-300 !important;
+  }
 }

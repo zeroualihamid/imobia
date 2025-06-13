@@ -229,7 +229,7 @@ const VoicePropertyCreator: React.FC<VoicePropertyCreatorProps> = ({ onPropertyC
             <Button
               onClick={isListening ? stopListening : startListening}
               variant={isListening ? "destructive" : "default"}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
             >
               {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
               {isListening ? 'Arrêter' : 'Commencer l\'écoute'}
@@ -239,23 +239,23 @@ const VoicePropertyCreator: React.FC<VoicePropertyCreatorProps> = ({ onPropertyC
               onClick={() => speakText('Bonjour, je suis votre assistant vocal IMOBIA. Décrivez le bien immobilier que vous souhaitez enregistrer.')}
               variant="outline"
               disabled={isSpeaking}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 border-slate-300 hover:bg-slate-100"
             >
               {isSpeaking ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
               Assistant vocal
             </Button>
           </div>
 
-          <Alert>
+          <Alert className="bg-slate-50 border-slate-200">
             <AlertDescription>
-              <Badge variant={isListening ? "default" : "secondary"}>
+              <Badge variant={isListening ? "default" : "secondary"} className="bg-slate-100 text-slate-700 border-slate-300">
                 {status}
               </Badge>
             </AlertDescription>
           </Alert>
 
           {transcript && (
-            <div className="p-4 bg-slate-50 rounded-lg">
+            <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
               <h4 className="font-medium text-slate-900 mb-2">Transcription:</h4>
               <p className="text-sm text-slate-600">{transcript}</p>
             </div>
@@ -286,44 +286,44 @@ const VoicePropertyCreator: React.FC<VoicePropertyCreatorProps> = ({ onPropertyC
         <CardContent className="space-y-3">
           {propertyData.title && (
             <div className="flex items-center gap-2">
-              <Badge variant="outline">Titre:</Badge>
+              <Badge variant="outline" className="border-slate-300 text-slate-700">Titre:</Badge>
               <span className="text-sm">{propertyData.title}</span>
             </div>
           )}
           {propertyData.propertyType && (
             <div className="flex items-center gap-2">
-              <Badge variant="outline">Type:</Badge>
+              <Badge variant="outline" className="border-slate-300 text-slate-700">Type:</Badge>
               <span className="text-sm">{propertyData.propertyType}</span>
             </div>
           )}
           {propertyData.location && (
             <div className="flex items-center gap-2">
-              <Badge variant="outline">Localisation:</Badge>
+              <Badge variant="outline" className="border-slate-300 text-slate-700">Localisation:</Badge>
               <span className="text-sm">{formatLocation(propertyData.location)}</span>
             </div>
           )}
           {propertyData.price && (
             <div className="flex items-center gap-2">
-              <Badge variant="outline">Prix:</Badge>
+              <Badge variant="outline" className="border-slate-300 text-slate-700">Prix:</Badge>
               <span className="text-sm">{propertyData.price.toLocaleString()} DH</span>
             </div>
           )}
           {propertyData.surface && (
             <div className="flex items-center gap-2">
-              <Badge variant="outline">Surface:</Badge>
+              <Badge variant="outline" className="border-slate-300 text-slate-700">Surface:</Badge>
               <span className="text-sm">{formatSurface(propertyData.surface)}</span>
             </div>
           )}
           {propertyData.bedrooms && (
             <div className="flex items-center gap-2">
-              <Badge variant="outline">Chambres:</Badge>
+              <Badge variant="outline" className="border-slate-300 text-slate-700">Chambres:</Badge>
               <span className="text-sm">{propertyData.bedrooms}</span>
             </div>
           )}
 
           <Button
             onClick={handleSaveProperty}
-            className="w-full mt-4 bg-emerald-600 hover:bg-emerald-700"
+            className="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 text-white border-0"
             disabled={!propertyData.title || !propertyData.location}
           >
             <Save className="h-4 w-4 mr-2" />
