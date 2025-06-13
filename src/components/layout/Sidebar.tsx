@@ -14,7 +14,8 @@ import {
   UserPlus,
   List,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Mic
 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
@@ -40,6 +41,7 @@ const Sidebar = () => {
       isOpen: biensOpen,
       setIsOpen: setBiensOpen,
       subItems: [
+        { title: 'Création vocale', href: '/biens/creation-vocale', icon: Mic },
         { title: 'Ajouter bien', href: '/biens/ajouter', icon: Plus },
         { title: 'Tous les biens', href: '/biens', icon: List }
       ]
