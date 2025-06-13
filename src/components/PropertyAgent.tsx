@@ -158,7 +158,7 @@ const PropertyAgent: React.FC<PropertyAgentProps> = ({ onDataUpdate, currentData
     setResponses(newResponses);
 
     // Update the property data based on the field
-    const updatedData = { ...currentData };
+    const updatedData: Partial<PropertyMetadata> = { ...currentData };
     
     if (currentQuestion.field === 'address' || currentQuestion.field === 'region' || 
         currentQuestion.field === 'city' || currentQuestion.field === 'district' || 
@@ -178,7 +178,29 @@ const PropertyAgent: React.FC<PropertyAgentProps> = ({ onDataUpdate, currentData
         [currentQuestion.field]: processedValue
       };
     } else {
-      updatedData[currentQuestion.field as keyof PropertyMetadata] = processedValue;
+      // Safe type assignment using explicit field mapping
+      switch (currentQuestion.field) {
+        case 'category':
+          updatedData.category = processedValue;
+          break;
+        case 'propertyType':
+          updatedData.propertyType = processedValue;
+          break;
+        case 'bedrooms':
+          updatedData.bedrooms = processedValue;
+          break;
+        case 'rooms':
+          updatedData.rooms = processedValue;
+          break;
+        case 'bathrooms':
+          updatedData.bathrooms = processedValue;
+          break;
+        case 'price':
+          updatedData.price = processedValue;
+          break;
+        default:
+          break;
+      }
     }
 
     onDataUpdate(updatedData);
