@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +7,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useConversation } from '@11labs/react';
 import FileUpload, { UploadedFile } from '@/components/ui/FileUpload';
 import { PropertyMetadata } from '@/types/property';
+import PropertyAgent from './PropertyAgent';
 
 interface VoicePropertyCreatorProps {
   onPropertyCreated?: (property: PropertyMetadata) => void;
@@ -190,6 +190,10 @@ const VoicePropertyCreator: React.FC<VoicePropertyCreatorProps> = ({ onPropertyC
     return parts.join(', ');
   };
 
+  const handlePropertyDataUpdate = (newData: Partial<PropertyMetadata>) => {
+    setPropertyData(newData);
+  };
+
   const handleSaveProperty = () => {
     if (propertyData.title && propertyData.location) {
       const property: PropertyMetadata = {
@@ -198,7 +202,10 @@ const VoicePropertyCreator: React.FC<VoicePropertyCreatorProps> = ({ onPropertyC
         price: propertyData.price,
         surface: propertyData.surface,
         bedrooms: propertyData.bedrooms,
+        bathrooms: propertyData.bathrooms,
+        rooms: propertyData.rooms,
         propertyType: propertyData.propertyType,
+        category: propertyData.category,
         status: 'available',
         description: transcript || 'Créé via interface vocale'
       };
@@ -217,11 +224,16 @@ const VoicePropertyCreator: React.FC<VoicePropertyCreatorProps> = ({ onPropertyC
 
   return (
     <div className="space-y-6">
+      <PropertyAgent 
+        onDataUpdate={handlePropertyDataUpdate}
+        currentData={propertyData}
+      />
+
       <Card className="bg-white border border-slate-200">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Mic className="h-5 w-5 text-emerald-600" />
-            Interface Vocale - Création de Bien
+            Interface Vocale Manuelle - Création de Bien
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -284,6 +296,12 @@ const VoicePropertyCreator: React.FC<VoicePropertyCreatorProps> = ({ onPropertyC
           <CardTitle>Données Extraites</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
+          {propertyData.category && (
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="border-slate-300 text-slate-700">Catégorie:</Badge>
+              <span className="text-sm">{propertyData.category}</span>
+            </div>
+          )}
           {propertyData.title && (
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="border-slate-300 text-slate-700">Titre:</Badge>
@@ -318,6 +336,18 @@ const VoicePropertyCreator: React.FC<VoicePropertyCreatorProps> = ({ onPropertyC
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="border-slate-300 text-slate-700">Chambres:</Badge>
               <span className="text-sm">{propertyData.bedrooms}</span>
+            </div>
+          )}
+          {propertyData.rooms && (
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="border-slate-300 text-slate-700">Pièces:</Badge>
+              <span className="text-sm">{propertyData.rooms}</span>
+            </div>
+          )}
+          {propertyData.bathrooms && (
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="border-slate-300 text-slate-700">Salles de bain:</Badge>
+              <span className="text-sm">{propertyData.bathrooms}</span>
             </div>
           )}
 
