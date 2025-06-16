@@ -17,25 +17,25 @@ interface ProspectionFormProps {
 const ProspectionForm: React.FC<ProspectionFormProps> = ({ open, onOpenChange }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Prospection de biens selon les besoins clients</DialogTitle>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-white">
+        <DialogHeader className="bg-white border-b border-slate-200 pb-4">
+          <DialogTitle className="text-slate-800">Prospection de biens selon les besoins clients</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Analyse de la demande</CardTitle>
+          <Card className="bg-white border border-slate-200 shadow-sm">
+            <CardHeader className="bg-slate-50 border-b border-slate-200">
+              <CardTitle className="text-lg text-slate-700">Analyse de la demande</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 bg-white">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="typologie">Typologie recherchée</Label>
+                  <Label htmlFor="typologie" className="text-slate-700">Typologie recherchée</Label>
                   <Select>
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-white border-slate-200">
                       <SelectValue placeholder="Sélectionner" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-white border-slate-200">
                       <SelectItem value="appartement">Appartement</SelectItem>
                       <SelectItem value="maison">Maison</SelectItem>
                       <SelectItem value="bureau">Bureau</SelectItem>
@@ -44,20 +44,20 @@ const ProspectionForm: React.FC<ProspectionFormProps> = ({ open, onOpenChange })
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="budget">Budget (MAD)</Label>
-                  <Input id="budget" type="number" placeholder="Ex: 1500000" />
+                  <Label htmlFor="budget" className="text-slate-700">Budget (MAD)</Label>
+                  <Input id="budget" type="number" placeholder="Ex: 1500000" className="bg-white border-slate-200" />
                 </div>
                 <div>
-                  <Label htmlFor="localisation">Localisation</Label>
-                  <Input id="localisation" placeholder="Ex: Casablanca, Ain Diab" />
+                  <Label htmlFor="localisation" className="text-slate-700">Localisation</Label>
+                  <Input id="localisation" placeholder="Ex: Casablanca, Ain Diab" className="bg-white border-slate-200" />
                 </div>
                 <div>
-                  <Label htmlFor="delai">Délai souhaité</Label>
+                  <Label htmlFor="delai" className="text-slate-700">Délai souhaité</Label>
                   <Select>
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-white border-slate-200">
                       <SelectValue placeholder="Sélectionner" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-white border-slate-200">
                       <SelectItem value="urgent">Urgent (&lt; 1 mois)</SelectItem>
                       <SelectItem value="court">Court terme (1-3 mois)</SelectItem>
                       <SelectItem value="moyen">Moyen terme (3-6 mois)</SelectItem>
@@ -67,83 +67,83 @@ const ProspectionForm: React.FC<ProspectionFormProps> = ({ open, onOpenChange })
                 </div>
               </div>
               <div>
-                <Label htmlFor="segmentation">Segmentation</Label>
+                <Label htmlFor="segmentation" className="text-slate-700">Segmentation</Label>
                 <div className="flex gap-4 mt-2">
                   <div className="flex items-center space-x-2">
                     <Checkbox id="residentiel" />
-                    <Label htmlFor="residentiel">Résidentiel</Label>
+                    <Label htmlFor="residentiel" className="text-slate-600">Résidentiel</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Checkbox id="bureaux" />
-                    <Label htmlFor="bureaux">Bureaux</Label>
+                    <Label htmlFor="bureaux" className="text-slate-600">Bureaux</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Checkbox id="commerces" />
-                    <Label htmlFor="commerces">Commerces</Label>
+                    <Label htmlFor="commerces" className="text-slate-600">Commerces</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Checkbox id="investissement" />
-                    <Label htmlFor="investissement">Investissement</Label>
+                    <Label htmlFor="investissement" className="text-slate-600">Investissement</Label>
                   </div>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Veille et sourcing</CardTitle>
+          <Card className="bg-white border border-slate-200 shadow-sm">
+            <CardHeader className="bg-slate-50 border-b border-slate-200">
+              <CardTitle className="text-lg text-slate-700">Veille et sourcing</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 bg-white">
               <div>
-                <Label htmlFor="portails">Portails consultés</Label>
+                <Label htmlFor="portails" className="text-slate-700">Portails consultés</Label>
                 <div className="flex gap-4 mt-2">
                   <div className="flex items-center space-x-2">
                     <Checkbox id="avito" />
-                    <Label htmlFor="avito">Avito</Label>
+                    <Label htmlFor="avito" className="text-slate-600">Avito</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Checkbox id="sarouty" />
-                    <Label htmlFor="sarouty">Sarouty</Label>
+                    <Label htmlFor="sarouty" className="text-slate-600">Sarouty</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Checkbox id="mubawab" />
-                    <Label htmlFor="mubawab">Mubawab</Label>
+                    <Label htmlFor="mubawab" className="text-slate-600">Mubawab</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Checkbox id="autres" />
-                    <Label htmlFor="autres">Autres</Label>
+                    <Label htmlFor="autres" className="text-slate-600">Autres</Label>
                   </div>
                 </div>
               </div>
               <div>
-                <Label htmlFor="contacts_reseau">Contacts réseau activés</Label>
-                <Textarea id="contacts_reseau" placeholder="Gardiens, syndics, promoteurs contactés..." />
+                <Label htmlFor="contacts_reseau" className="text-slate-700">Contacts réseau activés</Label>
+                <Textarea id="contacts_reseau" placeholder="Gardiens, syndics, promoteurs contactés..." className="bg-white border-slate-200" />
               </div>
               <div>
-                <Label htmlFor="campagnes">Campagnes de chasse de mandat</Label>
-                <Input id="campagnes" placeholder="Zone ciblée, type de campagne..." />
+                <Label htmlFor="campagnes" className="text-slate-700">Campagnes de chasse de mandat</Label>
+                <Input id="campagnes" placeholder="Zone ciblée, type de campagne..." className="bg-white border-slate-200" />
               </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Prise de mandat</CardTitle>
+          <Card className="bg-white border border-slate-200 shadow-sm">
+            <CardHeader className="bg-slate-50 border-b border-slate-200">
+              <CardTitle className="text-lg text-slate-700">Prise de mandat</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 bg-white">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="estimation">Pré-estimation (MAD)</Label>
-                  <Input id="estimation" type="number" placeholder="Prix estimé" />
+                  <Label htmlFor="estimation" className="text-slate-700">Pré-estimation (MAD)</Label>
+                  <Input id="estimation" type="number" placeholder="Prix estimé" className="bg-white border-slate-200" />
                 </div>
                 <div>
-                  <Label htmlFor="type_mandat">Type de mandat</Label>
+                  <Label htmlFor="type_mandat" className="text-slate-700">Type de mandat</Label>
                   <Select>
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-white border-slate-200">
                       <SelectValue placeholder="Sélectionner" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-white border-slate-200">
                       <SelectItem value="exclusif">Exclusif</SelectItem>
                       <SelectItem value="simple">Simple</SelectItem>
                     </SelectContent>
@@ -151,42 +151,42 @@ const ProspectionForm: React.FC<ProspectionFormProps> = ({ open, onOpenChange })
                 </div>
               </div>
               <div>
-                <Label htmlFor="verifications">Vérifications réglementaires</Label>
+                <Label htmlFor="verifications" className="text-slate-700">Vérifications réglementaires</Label>
                 <div className="flex gap-4 mt-2">
                   <div className="flex items-center space-x-2">
                     <Checkbox id="titre_propriete" />
-                    <Label htmlFor="titre_propriete">Titre de propriété</Label>
+                    <Label htmlFor="titre_propriete" className="text-slate-600">Titre de propriété</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Checkbox id="plans" />
-                    <Label htmlFor="plans">Plans</Label>
+                    <Label htmlFor="plans" className="text-slate-600">Plans</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Checkbox id="conformite" />
-                    <Label htmlFor="conformite">Conformité</Label>
+                    <Label htmlFor="conformite" className="text-slate-600">Conformité</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Checkbox id="cnss" />
-                    <Label htmlFor="cnss">Certificat CNSS</Label>
+                    <Label htmlFor="cnss" className="text-slate-600">Certificat CNSS</Label>
                   </div>
                 </div>
               </div>
               <div>
-                <Label htmlFor="points_forts">Points forts du bien</Label>
-                <Textarea id="points_forts" placeholder="Avantages à mettre en avant..." />
+                <Label htmlFor="points_forts" className="text-slate-700">Points forts du bien</Label>
+                <Textarea id="points_forts" placeholder="Avantages à mettre en avant..." className="bg-white border-slate-200" />
               </div>
               <div>
-                <Label htmlFor="points_faibles">Points faibles / améliorations</Label>
-                <Textarea id="points_faibles" placeholder="Points d&apos;attention, travaux nécessaires..." />
+                <Label htmlFor="points_faibles" className="text-slate-700">Points faibles / améliorations</Label>
+                <Textarea id="points_faibles" placeholder="Points d'attention, travaux nécessaires..." className="bg-white border-slate-200" />
               </div>
             </CardContent>
           </Card>
 
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <div className="flex justify-end gap-2 pt-4 border-t border-slate-200">
+            <Button variant="outline" onClick={() => onOpenChange(false)} className="bg-white border-slate-200 text-slate-700 hover:bg-slate-50">
               Annuler
             </Button>
-            <Button>
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
               Enregistrer
             </Button>
           </div>
