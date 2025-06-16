@@ -161,68 +161,144 @@
   }
 }
 
-/* Completely remove any possibility of yellow colors */
+/* Completely remove any possibility of yellow colors and force proper styling */
 @layer base {
-  /* Override any potential yellow/amber defaults */
+  /* Override any potential yellow/amber defaults and force white backgrounds */
   * {
     --tw-bg-opacity: 1;
   }
   
-  /* Explicitly forbid yellow colors */
+  /* Explicitly override all yellow/amber color classes with neutral alternatives */
   .bg-yellow-50, .bg-yellow-100, .bg-yellow-200, .bg-yellow-300, .bg-yellow-400, .bg-yellow-500, .bg-yellow-600, .bg-yellow-700, .bg-yellow-800, .bg-yellow-900,
-  .bg-amber-50, .bg-amber-100, .bg-amber-200, .bg-amber-300, .bg-amber-400, .bg-amber-500, .bg-amber-600, .bg-amber-700, .bg-amber-800, .bg-amber-900,
-  .text-yellow-50, .text-yellow-100, .text-yellow-200, .text-yellow-300, .text-yellow-400, .text-yellow-500, .text-yellow-600, .text-yellow-700, .text-yellow-800, .text-yellow-900,
-  .text-amber-50, .text-amber-100, .text-amber-200, .text-amber-300, .text-amber-400, .text-amber-500, .text-amber-600, .text-amber-700, .text-amber-800, .text-amber-900,
-  .border-yellow-50, .border-yellow-100, .border-yellow-200, .border-yellow-300, .border-yellow-400, .border-yellow-500, .border-yellow-600, .border-yellow-700, .border-yellow-800, .border-yellow-900,
-  .border-amber-50, .border-amber-100, .border-amber-200, .border-amber-300, .border-amber-400, .border-amber-500, .border-amber-600, .border-amber-700, .border-amber-800, .border-amber-900 {
-    @apply bg-slate-100 text-slate-700 border-slate-300 !important;
+  .bg-amber-50, .bg-amber-100, .bg-amber-200, .bg-amber-300, .bg-amber-400, .bg-amber-500, .bg-amber-600, .bg-amber-700, .bg-amber-800, .bg-amber-900 {
+    background-color: rgb(255 255 255) !important; /* Force white background */
+    color: rgb(51 65 85) !important; /* Force slate-700 text */
+    border-color: rgb(226 232 240) !important; /* Force slate-200 border */
   }
   
-  /* Force white backgrounds for dialogs and modals */
+  .text-yellow-50, .text-yellow-100, .text-yellow-200, .text-yellow-300, .text-yellow-400, .text-yellow-500, .text-yellow-600, .text-yellow-700, .text-yellow-800, .text-yellow-900,
+  .text-amber-50, .text-amber-100, .text-amber-200, .text-amber-300, .text-amber-400, .text-amber-500, .text-amber-600, .text-amber-700, .text-amber-800, .text-amber-900 {
+    color: rgb(51 65 85) !important; /* Force slate-700 text */
+  }
+  
+  .border-yellow-50, .border-yellow-100, .border-yellow-200, .border-yellow-300, .border-yellow-400, .border-yellow-500, .border-yellow-600, .border-yellow-700, .border-yellow-800, .border-yellow-900,
+  .border-amber-50, .border-amber-100, .border-amber-200, .border-amber-300, .border-amber-400, .border-amber-500, .border-amber-600, .border-amber-700, .border-amber-800, .border-amber-900 {
+    border-color: rgb(226 232 240) !important; /* Force slate-200 border */
+  }
+  
+  /* Force white backgrounds for all major UI components */
   [role="dialog"],
   [role="alertdialog"],
   .dialog-content,
-  .alert-dialog-content {
-    @apply bg-white border-slate-200 text-slate-900;
+  .alert-dialog-content,
+  .card,
+  .popover,
+  .dropdown-menu {
+    background-color: rgb(255 255 255) !important;
+    border-color: rgb(226 232 240) !important;
+    color: rgb(15 23 42) !important;
   }
   
-  /* Ensure buttons have proper colors */
-  button:not([class*="bg-"]):not([class*="text-"]) {
-    @apply bg-white text-slate-900 border-slate-300;
+  /* Ensure all buttons have clean styling */
+  button:not([class*="bg-"]):not([class*="variant-"]) {
+    background-color: rgb(255 255 255) !important;
+    color: rgb(51 65 85) !important;
+    border-color: rgb(226 232 240) !important;
+  }
+  
+  /* Force proper button variant colors */
+  .btn-primary,
+  [data-variant="default"],
+  button[class*="variant-default"] {
+    background-color: rgb(37 99 235) !important; /* blue-600 */
+    color: rgb(255 255 255) !important;
+  }
+  
+  .btn-secondary,
+  [data-variant="secondary"],
+  button[class*="variant-secondary"] {
+    background-color: rgb(241 245 249) !important; /* slate-100 */
+    color: rgb(51 65 85) !important; /* slate-700 */
+  }
+  
+  .btn-outline,
+  [data-variant="outline"],
+  button[class*="variant-outline"] {
+    background-color: rgb(255 255 255) !important;
+    color: rgb(51 65 85) !important;
+    border-color: rgb(226 232 240) !important;
   }
   
   /* Remove any yellow from form elements */
   input:not([class*="bg-"]),
   textarea:not([class*="bg-"]),
   select:not([class*="bg-"]) {
-    @apply bg-white border-slate-300 text-slate-900;
+    background-color: rgb(255 255 255) !important;
+    border-color: rgb(226 232 240) !important;
+    color: rgb(15 23 42) !important;
   }
   
-  /* Ensure save button has proper styling */
-  .save-button {
-    @apply bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600;
+  /* Ensure dropdowns have proper backgrounds */
+  .select-content,
+  .dropdown-content,
+  [role="listbox"],
+  [role="menu"] {
+    background-color: rgb(255 255 255) !important;
+    border-color: rgb(226 232 240) !important;
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
+    z-index: 50 !important;
   }
   
-  /* Force override all yellow/amber variants globally */
-  * {
-    --tw-bg-yellow-50: rgb(248 250 252) !important;
-    --tw-bg-yellow-100: rgb(241 245 249) !important;
-    --tw-bg-yellow-200: rgb(226 232 240) !important;
-    --tw-bg-yellow-300: rgb(203 213 225) !important;
-    --tw-bg-yellow-400: rgb(148 163 184) !important;
-    --tw-bg-yellow-500: rgb(100 116 139) !important;
-    --tw-bg-amber-50: rgb(248 250 252) !important;
-    --tw-bg-amber-100: rgb(241 245 249) !important;
-    --tw-bg-amber-200: rgb(226 232 240) !important;
-    --tw-bg-amber-300: rgb(203 213 225) !important;
-    --tw-bg-amber-400: rgb(148 163 184) !important;
-    --tw-bg-amber-500: rgb(100 116 139) !important;
-  }
-  
-  /* Override any potential system warnings or alerts */
+  /* Override any system warnings or alerts to use neutral colors */
   .alert,
   .warning,
-  [data-state="warning"] {
-    @apply bg-slate-100 text-slate-700 border-slate-300 !important;
+  [data-state="warning"],
+  .toast,
+  .notification {
+    background-color: rgb(248 250 252) !important; /* slate-50 */
+    color: rgb(51 65 85) !important; /* slate-700 */
+    border-color: rgb(226 232 240) !important; /* slate-200 */
+  }
+  
+  /* Force override Tailwind CSS variables to prevent any yellow */
+  * {
+    --tw-bg-yellow-50: rgb(255 255 255) !important;
+    --tw-bg-yellow-100: rgb(248 250 252) !important;
+    --tw-bg-yellow-200: rgb(241 245 249) !important;
+    --tw-bg-yellow-300: rgb(226 232 240) !important;
+    --tw-bg-yellow-400: rgb(203 213 225) !important;
+    --tw-bg-yellow-500: rgb(148 163 184) !important;
+    --tw-bg-amber-50: rgb(255 255 255) !important;
+    --tw-bg-amber-100: rgb(248 250 252) !important;
+    --tw-bg-amber-200: rgb(241 245 249) !important;
+    --tw-bg-amber-300: rgb(226 232 240) !important;
+    --tw-bg-amber-400: rgb(203 213 225) !important;
+    --tw-bg-amber-500: rgb(148 163 184) !important;
+  }
+  
+  /* Ensure badges use proper colors */
+  .badge {
+    background-color: rgb(241 245 249) !important; /* slate-100 */
+    color: rgb(51 65 85) !important; /* slate-700 */
+    border-color: rgb(226 232 240) !important; /* slate-200 */
+  }
+  
+  /* Force proper table styling */
+  table, thead, tbody, tr, th, td {
+    background-color: rgb(255 255 255) !important;
+    color: rgb(15 23 42) !important;
+    border-color: rgb(226 232 240) !important;
+  }
+  
+  /* Force proper card styling */
+  .card-header {
+    background-color: rgb(248 250 252) !important; /* slate-50 */
+    color: rgb(15 23 42) !important;
+  }
+  
+  .card-content,
+  .card-body {
+    background-color: rgb(255 255 255) !important;
+    color: rgb(15 23 42) !important;
   }
 }
