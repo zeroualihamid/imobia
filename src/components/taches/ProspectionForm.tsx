@@ -23,7 +23,6 @@ const ProspectionForm: React.FC<ProspectionFormProps> = ({ open, onOpenChange })
         </DialogHeader>
         
         <div className="space-y-6">
-          {/* Analyse de la demande */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Analyse de la demande</CardTitle>
@@ -59,10 +58,10 @@ const ProspectionForm: React.FC<ProspectionFormProps> = ({ open, onOpenChange })
                       <SelectValue placeholder="Sélectionner" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="urgent">Urgent (< 1 mois)</SelectItem>
+                      <SelectItem value="urgent">Urgent (&lt; 1 mois)</SelectItem>
                       <SelectItem value="court">Court terme (1-3 mois)</SelectItem>
                       <SelectItem value="moyen">Moyen terme (3-6 mois)</SelectItem>
-                      <SelectItem value="long">Long terme (> 6 mois)</SelectItem>
+                      <SelectItem value="long">Long terme (&gt; 6 mois)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -91,7 +90,6 @@ const ProspectionForm: React.FC<ProspectionFormProps> = ({ open, onOpenChange })
             </CardContent>
           </Card>
 
-          {/* Veille et sourcing */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Veille et sourcing</CardTitle>
@@ -129,7 +127,6 @@ const ProspectionForm: React.FC<ProspectionFormProps> = ({ open, onOpenChange })
             </CardContent>
           </Card>
 
-          {/* Prise de mandat */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Prise de mandat</CardTitle>
@@ -180,7 +177,7 @@ const ProspectionForm: React.FC<ProspectionFormProps> = ({ open, onOpenChange })
               </div>
               <div>
                 <Label htmlFor="points_faibles">Points faibles / améliorations</Label>
-                <Textarea id="points_faibles" placeholder="Points d'attention, travaux nécessaires..." />
+                <Textarea id="points_faibles" placeholder="Points d&apos;attention, travaux nécessaires..." />
               </div>
             </CardContent>
           </Card>

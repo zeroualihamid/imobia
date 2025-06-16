@@ -23,7 +23,6 @@ const LeadsForm: React.FC<LeadsFormProps> = ({ open, onOpenChange }) => {
         </DialogHeader>
         
         <div className="space-y-6">
-          {/* Informations du lead */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Informations du lead</CardTitle>
@@ -66,7 +65,6 @@ const LeadsForm: React.FC<LeadsFormProps> = ({ open, onOpenChange }) => {
             </CardContent>
           </Card>
 
-          {/* Qualification BANT */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Qualification BANT + Situation</CardTitle>
@@ -103,7 +101,7 @@ const LeadsForm: React.FC<LeadsFormProps> = ({ open, onOpenChange }) => {
                     <SelectValue placeholder="Sélectionner" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="immediat">Immédiat (< 1 mois)</SelectItem>
+                    <SelectItem value="immediat">Immédiat (&lt; 1 mois)</SelectItem>
                     <SelectItem value="court">1-3 mois</SelectItem>
                     <SelectItem value="moyen">3-6 mois</SelectItem>
                     <SelectItem value="long">6-12 mois</SelectItem>
@@ -141,7 +139,6 @@ const LeadsForm: React.FC<LeadsFormProps> = ({ open, onOpenChange }) => {
             </CardContent>
           </Card>
 
-          {/* Scoring et suivi */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Scoring et suivi</CardTitle>
@@ -156,7 +153,7 @@ const LeadsForm: React.FC<LeadsFormProps> = ({ open, onOpenChange }) => {
                   <SelectContent>
                     <SelectItem value="chaud">Chaud (prêt à acheter)</SelectItem>
                     <SelectItem value="tiede">Tiède (intéressé mais pas urgent)</SelectItem>
-                    <SelectItem value="froid">Froid (simple recherche d'info)</SelectItem>
+                    <SelectItem value="froid">Froid (simple recherche d&apos;info)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
