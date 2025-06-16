@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -243,8 +244,8 @@ const TachesConseillers = () => {
         {taches.map((tache) => {
           const IconComponent = tache.icon;
           return (
-            <Card key={tache.id} className="overflow-hidden">
-              <CardHeader className="pb-4">
+            <Card key={tache.id} className="overflow-hidden border border-slate-200 bg-white">
+              <CardHeader className="pb-4 bg-slate-50">
                 <div className="flex items-start gap-4">
                   <div className={`${tache.color} p-3 rounded-lg`}>
                     <IconComponent className="h-6 w-6 text-white" />
@@ -255,7 +256,7 @@ const TachesConseillers = () => {
                         <CardTitle className="text-xl text-slate-800 mb-2">
                           {tache.titre}
                         </CardTitle>
-                        <Badge variant="outline" className="text-sm">
+                        <Badge variant="secondary" className="text-sm bg-slate-100 text-slate-700">
                           Objectif : {tache.objectif}
                         </Badge>
                       </div>
@@ -267,7 +268,7 @@ const TachesConseillers = () => {
                 </div>
               </CardHeader>
               
-              <CardContent className="pt-0">
+              <CardContent className="pt-4">
                 <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
                   {tache.sections.map((section, sectionIndex) => (
                     <div key={sectionIndex} className="space-y-3">
