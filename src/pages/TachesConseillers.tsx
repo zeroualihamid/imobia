@@ -1,7 +1,7 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { 
   Search, 
   UserCheck, 
@@ -10,8 +10,30 @@ import {
   FileText, 
   CreditCard 
 } from 'lucide-react';
+import { useTachesModals } from '@/hooks/useTachesModals';
+import ProspectionForm from '@/components/taches/ProspectionForm';
+import LeadsForm from '@/components/taches/LeadsForm';
+import VisitesForm from '@/components/taches/VisitesForm';
+import NegociationForm from '@/components/taches/NegociationForm';
+import ActesForm from '@/components/taches/ActesForm';
+import EncaissementForm from '@/components/taches/EncaissementForm';
 
 const TachesConseillers = () => {
+  const {
+    prospectionOpen,
+    setProspectionOpen,
+    leadsOpen,
+    setLeadsOpen,
+    visitesOpen,
+    setVisitesOpen,
+    negociationOpen,
+    setNegociationOpen,
+    actesOpen,
+    setActesOpen,
+    encaissementOpen,
+    setEncaissementOpen,
+  } = useTachesModals();
+
   const taches = [
     {
       id: 1,
@@ -19,6 +41,7 @@ const TachesConseillers = () => {
       objectif: "Alimenter le portefeuille de biens parfaitement adaptés aux recherches actives",
       icon: Search,
       color: "bg-blue-500",
+      onButtonClick: () => setProspectionOpen(true),
       sections: [
         {
           titre: "Analyse de la demande",
@@ -51,6 +74,7 @@ const TachesConseillers = () => {
       objectif: "Qualifier, prioriser, transformer un maximum de contacts en rendez-vous",
       icon: UserCheck,
       color: "bg-green-500",
+      onButtonClick: () => setLeadsOpen(true),
       sections: [
         {
           titre: "Réception et réactivité (SLA < 30 min)",
@@ -86,6 +110,7 @@ const TachesConseillers = () => {
       objectif: "Provoquer le \"coup de cœur\" et recueillir un feedback exploitable",
       icon: Eye,
       color: "bg-purple-500",
+      onButtonClick: () => setVisitesOpen(true),
       sections: [
         {
           titre: "Pré-visite",
@@ -116,6 +141,7 @@ const TachesConseillers = () => {
       objectif: "Aboutir à un accord gagnant-gagnant dans les meilleurs délais",
       icon: Handshake,
       color: "bg-orange-500",
+      onButtonClick: () => setNegociationOpen(true),
       sections: [
         {
           titre: "Stratégie de prix",
@@ -146,6 +172,7 @@ const TachesConseillers = () => {
       objectif: "Sécuriser juridiquement la transaction",
       icon: FileText,
       color: "bg-indigo-500",
+      onButtonClick: () => setActesOpen(true),
       sections: [
         {
           titre: "Préparation du dossier",
@@ -175,6 +202,7 @@ const TachesConseillers = () => {
       objectif: "Sécuriser les honoraires et fidéliser le client",
       icon: CreditCard,
       color: "bg-rose-500",
+      onButtonClick: () => setEncaissementOpen(true),
       sections: [
         {
           titre: "Facturation et encaissement",
@@ -222,12 +250,19 @@ const TachesConseillers = () => {
                     <IconComponent className="h-6 w-6 text-white" />
                   </div>
                   <div className="flex-1">
-                    <CardTitle className="text-xl text-slate-800 mb-2">
-                      {tache.titre}
-                    </CardTitle>
-                    <Badge variant="outline" className="text-sm">
-                      Objectif : {tache.objectif}
-                    </Badge>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle className="text-xl text-slate-800 mb-2">
+                          {tache.titre}
+                        </CardTitle>
+                        <Badge variant="outline" className="text-sm">
+                          Objectif : {tache.objectif}
+                        </Badge>
+                      </div>
+                      <Button onClick={tache.onButtonClick} className="ml-4">
+                        Renseigner
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </CardHeader>
@@ -255,6 +290,14 @@ const TachesConseillers = () => {
           );
         })}
       </div>
+
+      {/* Modals */}
+      <ProspectionForm open={prospectionOpen} onOpenChange={setProspectionOpen} />
+      <LeadsForm open={leadsOpen} onOpenChange={setLeadsOpen} />
+      <VisitesForm open={visitesOpen} onOpenChange={setVisitesOpen} />
+      <NegociationForm open={negociationOpen} onOpenChange={setNegociationOpen} />
+      <ActesForm open={actesOpen} onOpenChange={setActesOpen} />
+      <EncaissementForm open={encaissementOpen} onOpenChange={setEncaissementOpen} />
     </div>
   );
 };
