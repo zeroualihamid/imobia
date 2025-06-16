@@ -13,6 +13,7 @@ import Biens from "./pages/Biens";
 import AjouterBien from "./pages/AjouterBien";
 import PropertyDetail from "./pages/PropertyDetail";
 import CreationVocale from "./pages/CreationVocale";
+import TachesConseillers from "./pages/TachesConseillers";
 import Auth from "./pages/Auth";
 
 const queryClient = new QueryClient();
@@ -65,6 +66,13 @@ const App = () => (
                 <ProtectedRoute>
                   <Layout>
                     <PropertyDetail />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              <Route path="/conseillers/taches" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <TachesConseillers />
                   </Layout>
                 </ProtectedRoute>
               } />

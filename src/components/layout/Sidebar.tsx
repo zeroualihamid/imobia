@@ -15,7 +15,8 @@ import {
   List,
   ChevronDown,
   ChevronRight,
-  Mic
+  Mic,
+  ClipboardList
 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
@@ -55,7 +56,8 @@ const Sidebar = () => {
       setIsOpen: setConseillesOpen,
       subItems: [
         { title: 'Liste des conseillers', href: '/conseillers', icon: List },
-        { title: 'Ajouter un conseiller', href: '/conseillers/ajouter', icon: UserPlus }
+        { title: 'Ajouter un conseiller', href: '/conseillers/ajouter', icon: UserPlus },
+        { title: 'Tâches détaillées', href: '/conseillers/taches', icon: ClipboardList }
       ]
     },
     {
