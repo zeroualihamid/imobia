@@ -908,12 +908,12 @@ Soit 9000 DHS TTC`;
             /* Edit Mode - Complete tabs interface */
             <Tabs defaultValue="category" className="w-full">
               <TabsList className="grid w-full grid-cols-6 bg-slate-100">
-                <TabsTrigger value="category" className="text-sm">Catégorie</TabsTrigger>
-                <TabsTrigger value="location" className="text-sm">Emplacement</TabsTrigger>
-                <TabsTrigger value="surface" className="text-sm">Surface</TabsTrigger>
-                <TabsTrigger value="composition" className="text-sm">Composition</TabsTrigger>
-                <TabsTrigger value="gallery" className="text-sm">Galerie</TabsTrigger>
-                <TabsTrigger value="features" className="text-sm">Fonctionnalités</TabsTrigger>
+                <TabsTrigger value="category" className="text-sm bg-white data-[state=active]:bg-blue-600 data-[state=active]:text-white hover:bg-slate-50 text-slate-700 border-slate-200">Catégorie</TabsTrigger>
+                <TabsTrigger value="location" className="text-sm bg-white data-[state=active]:bg-blue-600 data-[state=active]:text-white hover:bg-slate-50 text-slate-700 border-slate-200">Emplacement</TabsTrigger>
+                <TabsTrigger value="surface" className="text-sm bg-white data-[state=active]:bg-blue-600 data-[state=active]:text-white hover:bg-slate-50 text-slate-700 border-slate-200">Surface</TabsTrigger>
+                <TabsTrigger value="composition" className="text-sm bg-white data-[state=active]:bg-blue-600 data-[state=active]:text-white hover:bg-slate-50 text-slate-700 border-slate-200">Composition</TabsTrigger>
+                <TabsTrigger value="gallery" className="text-sm bg-white data-[state=active]:bg-blue-600 data-[state=active]:text-white hover:bg-slate-50 text-slate-700 border-slate-200">Galerie</TabsTrigger>
+                <TabsTrigger value="features" className="text-sm bg-white data-[state=active]:bg-blue-600 data-[state=active]:text-white hover:bg-slate-50 text-slate-700 border-slate-200">Fonctionnalités</TabsTrigger>
               </TabsList>
 
               {/* Catégorie de bien */}
