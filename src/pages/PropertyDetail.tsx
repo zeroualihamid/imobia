@@ -22,7 +22,9 @@ import {
   X,
   AlertTriangle,
   FileText,
-  Upload
+  Upload,
+  CheckCircle,
+  AlertCircle
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -160,6 +162,11 @@ Soit 9000 DHS TTC`;
     },
     enabled: !!id && !!user?.id,
   });
+
+  // Check if mandate files exist
+  const hasMandateFiles = property?.property_media?.some(media => 
+    media.file_name.startsWith('MANDAT_')
+  ) || false;
 
   // Initialize form with property data
   useEffect(() => {
@@ -568,9 +575,17 @@ Soit 9000 DHS TTC`;
                   <DialogTrigger asChild>
                     <Button 
                       variant="outline"
-                      className="bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
+                      className={`border-2 font-medium ${
+                        hasMandateFiles 
+                          ? 'bg-green-50 border-green-300 text-green-700 hover:bg-green-100' 
+                          : 'bg-red-50 border-red-300 text-red-700 hover:bg-red-100'
+                      }`}
                     >
-                      <FileText className="h-4 w-4 mr-2" />
+                      {hasMandateFiles ? (
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                      ) : (
+                        <AlertCircle className="h-4 w-4 mr-2" />
+                      )}
                       Mandat
                     </Button>
                   </DialogTrigger>
