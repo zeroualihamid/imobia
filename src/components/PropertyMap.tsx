@@ -1,11 +1,17 @@
 
 import React, { useEffect, useRef, useState } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { Button } from '@/components/ui/button';
 import { MapPin, Search } from 'lucide-react';
+
+// Fix pour les icônes par défaut de Leaflet
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+});
 
 interface PropertyMapProps {
   address: string;
@@ -21,30 +27,29 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
   onLocationUpdate 
 }) => {
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const marker = useRef<mapboxgl.Marker | null>(null);
+  const map = useRef<L.Map | null>(null);
+  const marker = useRef<L.Marker | null>(null);
   const [coordinates, setCoordinates] = useState<[number, number]>([-7.5898, 33.5731]); // Casablanca par défaut
   const [isGeocoding, setIsGeocoding] = useState(false);
 
-  const mapboxToken = 'pk.eyJ1IjoiYXhtLWFpIiwiYSI6ImNtYzJjMzZ1azA2ODMyanNpMXFtNG1lcjEifQ.XDg92ItHbxEXd79BbdEIQg';
-
-  // Fonction pour géocoder une adresse
+  // Fonction pour géocoder une adresse avec Nominatim
   const geocodeAddress = async (fullAddress: string) => {
-    if (!mapboxToken || !fullAddress.trim()) return;
+    if (!fullAddress.trim()) return;
     
     setIsGeocoding(true);
-    console.log('Géocodage de l\'adresse:', fullAddress);
+    console.log('Géocodage de l\'adresse avec Nominatim:', fullAddress);
     
     try {
       const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(fullAddress)}.json?access_token=${mapboxToken}&country=MA&limit=1`
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}&limit=1&countrycodes=ma&addressdetails=1`
       );
       const data = await response.json();
       
-      console.log('Réponse du géocodage:', data);
+      console.log('Réponse du géocodage Nominatim:', data);
       
-      if (data.features && data.features.length > 0) {
-        const [lng, lat] = data.features[0].center;
+      if (data && data.length > 0) {
+        const lat = parseFloat(data[0].lat);
+        const lng = parseFloat(data[0].lon);
         const newCoordinates: [number, number] = [lng, lat];
         
         console.log('Nouvelles coordonnées:', newCoordinates);
@@ -53,14 +58,10 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
         
         if (map.current && marker.current) {
           // Animer la carte vers la nouvelle position
-          map.current.flyTo({
-            center: newCoordinates,
-            zoom: 16,
-            duration: 2000
-          });
+          map.current.setView([lat, lng], 16);
           
           // Mettre à jour la position du marqueur
-          marker.current.setLngLat(newCoordinates);
+          marker.current.setLatLng([lat, lng]);
         }
         
         onLocationUpdate?.(newCoordinates);
@@ -68,7 +69,7 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
         console.log('Aucun résultat trouvé pour l\'adresse:', fullAddress);
       }
     } catch (error) {
-      console.error('Erreur de géocodage:', error);
+      console.error('Erreur de géocodage Nominatim:', error);
     } finally {
       setIsGeocoding(false);
     }
@@ -76,54 +77,59 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
 
   // Initialiser la carte
   useEffect(() => {
-    if (!mapContainer.current || !mapboxToken) return;
+    if (!mapContainer.current) return;
 
-    console.log('Initialisation de la carte avec les coordonnées:', coordinates);
+    console.log('Initialisation de la carte Leaflet avec les coordonnées:', coordinates);
 
-    mapboxgl.accessToken = mapboxToken;
-    
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
-      center: coordinates,
-      zoom: 12
+    // Créer la carte
+    map.current = L.map(mapContainer.current).setView([coordinates[1], coordinates[0]], 12);
+
+    // Ajouter les tuiles OpenStreetMap
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map.current);
+
+    // Créer une icône personnalisée bleue
+    const blueIcon = new L.Icon({
+      iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowSize: [41, 41]
     });
 
-    // Ajouter les contrôles de navigation
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-
-    // Ajouter un marqueur
-    marker.current = new mapboxgl.Marker({
-      color: '#3B82F6',
+    // Ajouter le marqueur
+    marker.current = L.marker([coordinates[1], coordinates[0]], {
+      icon: blueIcon,
       draggable: true
-    })
-      .setLngLat(coordinates)
-      .addTo(map.current);
+    }).addTo(map.current);
 
     // Écouter les déplacements du marqueur
-    marker.current.on('dragend', () => {
-      if (marker.current) {
-        const lngLat = marker.current.getLngLat();
-        const newCoordinates: [number, number] = [lngLat.lng, lngLat.lat];
-        console.log('Marqueur déplacé vers:', newCoordinates);
-        setCoordinates(newCoordinates);
-        onLocationUpdate?.(newCoordinates);
-      }
+    marker.current.on('dragend', (e) => {
+      const latlng = e.target.getLatLng();
+      const newCoordinates: [number, number] = [latlng.lng, latlng.lat];
+      console.log('Marqueur déplacé vers:', newCoordinates);
+      setCoordinates(newCoordinates);
+      onLocationUpdate?.(newCoordinates);
     });
 
     return () => {
-      map.current?.remove();
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
     };
-  }, [mapboxToken]);
+  }, []);
 
   // Géocoder l'adresse quand elle change
   useEffect(() => {
-    if (address && city && mapboxToken) {
+    if (address && city) {
       const fullAddress = `${address}, ${city}, ${region || 'Maroc'}`;
       console.log('Adresse changée, géocodage automatique:', fullAddress);
       geocodeAddress(fullAddress);
     }
-  }, [address, city, region, mapboxToken]);
+  }, [address, city, region]);
 
   const handleSearchLocation = () => {
     if (address && city) {
