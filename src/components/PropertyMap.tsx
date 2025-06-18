@@ -23,8 +23,9 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const marker = useRef<mapboxgl.Marker | null>(null);
-  const [mapboxToken, setMapboxToken] = useState('');
   const [coordinates, setCoordinates] = useState<[number, number]>([-7.5898, 33.5731]); // Casablanca par défaut
+
+  const mapboxToken = 'pk.eyJ1IjoiYXhtLWFpIiwiYSI6ImNtYzJjMzZ1azA2ODMyanNpMXFtNG1lcjEifQ.XDg92ItHbxEXd79BbdEIQg';
 
   // Fonction pour géocoder une adresse
   const geocodeAddress = async (fullAddress: string) => {
@@ -114,40 +115,6 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
       geocodeAddress(fullAddress);
     }
   };
-
-  if (!mapboxToken) {
-    return (
-      <div className="space-y-4">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h3 className="text-lg font-semibold text-blue-800 mb-2">Configuration Mapbox requise</h3>
-          <p className="text-blue-600 mb-4">
-            Veuillez entrer votre token Mapbox public pour afficher la carte.
-            Vous pouvez l'obtenir sur <a href="https://mapbox.com/" target="_blank" rel="noopener noreferrer" className="underline">mapbox.com</a>
-          </p>
-          <div className="space-y-2">
-            <Label htmlFor="mapbox-token">Token Mapbox Public</Label>
-            <div className="flex gap-2">
-              <Input
-                id="mapbox-token"
-                type="text"
-                placeholder="pk.eyJ1IjoiLi4uLi4iLCJhIjoiLi4uLi4ifQ...."
-                value={mapboxToken}
-                onChange={(e) => setMapboxToken(e.target.value)}
-                className="bg-white border-blue-300"
-              />
-              <Button 
-                onClick={() => {}} 
-                disabled={!mapboxToken}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                Valider
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-4">
