@@ -85,6 +85,43 @@ const PropertyDetail = () => {
     'fireplace', 'security'
   ];
 
+  // Default descriptive text for properties
+  const defaultDescription = `CASABLANCA CIL LOUE LUXUEUX
+3 chambres
+ensoleillé de 117 m²
+SANS VIS-A-VIS
+
+Confortable appartement épuré et semi-meuble de 117 m² habitable à louer.
+
+Ce logement très confortable se trouve au 4e étage d'une résidence calme et bien gérée.
+
+Il est très ensoleillé et se distribue de la façon suivante :
+
+• Double salon avec cheminé
+• Chambre avec placard
+• SDB complete
+• Suite Parentale + SDB avec son dressing et balcon
+• Salle d'eau
+• Cuisine équipée avec entrée de service
+• Buanderie de 10 m²
+
+Ce Logement avec marbre au sol et boiserie haut de gamme dispose d'une place de parking privée et gardée 24/24 7/7 par ouverture exclusive de vigile.
+
+Cet appartement offre d'excellentes prestations collective (ménage, concierge) ainsi qu'un box fermé en terrasse.
+
+La résidence à proximité du nouveau projet Casa Finance City et de son magnifique Parc, permet cet immense espace vert de créer une véritable barrière contre la pollution.
+
+Le quartier bien réputé contribue à la qualité de vie des riverains en leur permettant de pratiquer des activités physiques en plein air.
+
+Ce quartier résidentiel avec un emplacement idéal à mi-chemin entre le centre-ville et le sud de Casablanca, la localisation de cette résidence est idéale avec ses nombreux commerces de proximité, notamment ACIMA, BIM, la pâtisserie AMOUD mais également le marché du CIL avec tous ses commerces et restaurants.
+
+De nombreuses écoles sont également proches (écoles LOUIS BERTRAND, Georges BIZET, LA PRAIRIE, BENNIS, l'école INTERNATIONALE)
+
+Location avec la fibre internet (500 dhs), parking (500 dhs) Charges syndicales (500 dhs) et taxes comprises
+
+7500 DHS brut
+Soit 9000 DHS TTC`;
+
   // Fetch property data
   const { data: property, isLoading: isLoadingProperty, error } = useQuery({
     queryKey: ['property', id],
@@ -117,7 +154,8 @@ const PropertyDetail = () => {
       const metadata = property.metadata as PropertyMetadata;
       
       setTitle(metadata?.title || '');
-      setDescription(metadata?.description || '');
+      // Use the default description if no description exists
+      setDescription(metadata?.description || defaultDescription);
       setPrice(metadata?.price?.toString() || '');
       setCategory(metadata?.category || 'sale');
       setPropertyType(metadata?.propertyType || 'apartment');
@@ -434,6 +472,7 @@ const PropertyDetail = () => {
   const metadata = property.metadata as PropertyMetadata;
   const images = getPropertyImages(property);
   const locationStr = formatLocation(metadata?.location);
+  const displayDescription = metadata?.description || defaultDescription;
 
   return (
     <div className="space-y-8 bg-slate-50 min-h-screen">
@@ -583,12 +622,12 @@ const PropertyDetail = () => {
               </div>
 
               {/* Description */}
-              {metadata?.description && (
-                <div className="space-y-2">
-                  <Label className="text-base font-medium text-slate-900">Description</Label>
-                  <p className="text-slate-700 leading-relaxed">{metadata.description}</p>
+              <div className="space-y-2">
+                <Label className="text-base font-medium text-slate-900">Description</Label>
+                <div className="bg-slate-50 rounded-lg p-6 border border-slate-200">
+                  <pre className="text-slate-700 leading-relaxed whitespace-pre-wrap font-sans">{displayDescription}</pre>
                 </div>
-              )}
+              </div>
 
               {/* Images */}
               {images.length > 0 && (
@@ -671,7 +710,7 @@ const PropertyDetail = () => {
                 <Textarea 
                   id="description" 
                   placeholder="Description détaillée du bien..." 
-                  className="bg-white border-slate-300 min-h-[100px]"
+                  className="bg-white border-slate-300 min-h-[300px]"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                 />
@@ -822,4 +861,4 @@ const PropertyDetail = () => {
   );
 };
 
-export default PropertyDetail; 
+export default PropertyDetail;
