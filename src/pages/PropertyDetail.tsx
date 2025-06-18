@@ -20,7 +20,9 @@ import {
   Bath, 
   Square,
   X,
-  AlertTriangle
+  AlertTriangle,
+  FileText,
+  Upload
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -41,6 +43,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const PropertyDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -52,6 +62,8 @@ const PropertyDetail = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isUploadingMandate, setIsUploadingMandate] = useState(false);
+  const [mandateDialogOpen, setMandateDialogOpen] = useState(false);
   
   // Form state
   const [title, setTitle] = useState('');
@@ -66,6 +78,7 @@ const PropertyDetail = () => {
   const [bathrooms, setBathrooms] = useState(1);
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [mandateFiles, setMandateFiles] = useState<UploadedFile[]>([]);
   
   // Location state
   const [address, setAddress] = useState('');
@@ -257,6 +270,51 @@ Soit 9000 DHS TTC`;
 
     if (error) {
       console.error('Error deleting file:', error);
+    }
+  };
+
+  const handleMandateUpload = async () => {
+    if (!property || !user || mandateFiles.length === 0) {
+      toast.error('Veuillez sélectionner un fichier de mandat');
+      return;
+    }
+
+    setIsUploadingMandate(true);
+
+    try {
+      for (const mandateFile of mandateFiles) {
+        const filePath = await uploadFileToStorage(mandateFile.file, property.id);
+        
+        if (filePath) {
+          const { error: mediaError } = await supabase
+            .from('property_media')
+            .insert({
+              property_id: property.id,
+              file_name: `MANDAT_${mandateFile.file.name}`,
+              file_path: filePath,
+              file_type: mandateFile.type,
+              file_size: mandateFile.file.size,
+              mime_type: mandateFile.file.type
+            });
+
+          if (mediaError) {
+            console.error('Media creation error:', mediaError);
+          }
+        }
+      }
+
+      // Refresh the query
+      queryClient.invalidateQueries({ queryKey: ['property', id] });
+      
+      toast.success('Mandat uploadé avec succès !');
+      setMandateDialogOpen(false);
+      setMandateFiles([]);
+      
+    } catch (error) {
+      console.error('Error uploading mandate:', error);
+      toast.error('Erreur lors de l\'upload du mandat');
+    } finally {
+      setIsUploadingMandate(false);
     }
   };
 
@@ -506,6 +564,52 @@ Soit 9000 DHS TTC`;
           <div className="flex items-center gap-2">
             {!isEditing ? (
               <>
+                <Dialog open={mandateDialogOpen} onOpenChange={setMandateDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      variant="outline"
+                      className="bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      Mandat
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="bg-white border border-slate-200 sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle className="text-slate-900">Télécharger un mandat</DialogTitle>
+                      <DialogDescription className="text-slate-600">
+                        Sélectionnez un fichier de mandat (image ou PDF) à associer à ce bien.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <FileUpload
+                        onFilesChange={setMandateFiles}
+                        maxFiles={1}
+                        acceptedTypes={['image/*', 'application/pdf']}
+                      />
+                      <div className="flex justify-end gap-2">
+                        <Button 
+                          variant="outline" 
+                          onClick={() => {
+                            setMandateDialogOpen(false);
+                            setMandateFiles([]);
+                          }}
+                          className="bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
+                        >
+                          Annuler
+                        </Button>
+                        <Button 
+                          onClick={handleMandateUpload}
+                          disabled={isUploadingMandate || mandateFiles.length === 0}
+                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          <Upload className="h-4 w-4 mr-2" />
+                          {isUploadingMandate ? 'Upload...' : 'Télécharger'}
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
                 <Button 
                   onClick={() => setIsEditing(true)}
                   className="bg-blue-600 hover:bg-blue-700 text-white"
