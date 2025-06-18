@@ -24,7 +24,8 @@ import {
   FileText,
   Upload,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Image
 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -167,6 +168,11 @@ Soit 9000 DHS TTC`;
   const hasMandateFiles = property?.property_media?.some(media => 
     media.file_name.startsWith('MANDAT_')
   ) || false;
+
+  // Get existing mandate file
+  const existingMandateFile = property?.property_media?.find(media => 
+    media.file_name.startsWith('MANDAT_')
+  );
 
   // Initialize form with property data
   useEffect(() => {
@@ -322,6 +328,35 @@ Soit 9000 DHS TTC`;
       toast.error('Erreur lors de l\'upload du mandat');
     } finally {
       setIsUploadingMandate(false);
+    }
+  };
+
+  const handleRemoveMandateFile = async () => {
+    if (!existingMandateFile) return;
+
+    try {
+      // Delete from storage
+      await deleteFileFromStorage(existingMandateFile.file_path);
+      
+      // Delete from database
+      const { error } = await supabase
+        .from('property_media')
+        .delete()
+        .eq('id', existingMandateFile.id);
+
+      if (error) {
+        console.error('Error deleting mandate file:', error);
+        throw error;
+      }
+
+      // Refresh the query
+      queryClient.invalidateQueries({ queryKey: ['property', id] });
+      
+      toast.success('Mandat supprimé avec succès !');
+      
+    } catch (error) {
+      console.error('Error removing mandate file:', error);
+      toast.error('Erreur lors de la suppression du mandat');
     }
   };
 
@@ -591,37 +626,108 @@ Soit 9000 DHS TTC`;
                   </DialogTrigger>
                   <DialogContent className="bg-white border border-slate-200 sm:max-w-md">
                     <DialogHeader>
-                      <DialogTitle className="text-slate-900">Télécharger un mandat</DialogTitle>
+                      <DialogTitle className="text-slate-900">
+                        {hasMandateFiles ? 'Mandat existant' : 'Télécharger un mandat'}
+                      </DialogTitle>
                       <DialogDescription className="text-slate-600">
-                        Sélectionnez un fichier de mandat (image ou PDF) à associer à ce bien.
+                        {hasMandateFiles 
+                          ? 'Un mandat est déjà associé à ce bien. Vous pouvez le supprimer pour en ajouter un nouveau.'
+                          : 'Sélectionnez un fichier de mandat (image ou PDF) à associer à ce bien.'
+                        }
                       </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
-                      <FileUpload
-                        onFilesChange={setMandateFiles}
-                        maxFiles={1}
-                        acceptedTypes={['image/*', 'application/pdf']}
-                      />
-                      <div className="flex justify-end gap-2">
-                        <Button 
-                          variant="outline" 
-                          onClick={() => {
-                            setMandateDialogOpen(false);
-                            setMandateFiles([]);
-                          }}
-                          className="bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
-                        >
-                          Annuler
-                        </Button>
-                        <Button 
-                          onClick={handleMandateUpload}
-                          disabled={isUploadingMandate || mandateFiles.length === 0}
-                          className="bg-blue-600 hover:bg-blue-700 text-white"
-                        >
-                          <Upload className="h-4 w-4 mr-2" />
-                          {isUploadingMandate ? 'Upload...' : 'Télécharger'}
-                        </Button>
-                      </div>
+                      {hasMandateFiles && existingMandateFile ? (
+                        <div className="space-y-4">
+                          {/* Display existing mandate file */}
+                          <div className="border border-slate-200 rounded-lg p-4 bg-slate-50">
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                {existingMandateFile.mime_type?.startsWith('image/') ? (
+                                  <Image className="h-5 w-5 text-blue-600" />
+                                ) : (
+                                  <FileText className="h-5 w-5 text-red-600" />
+                                )}
+                                <span className="text-sm font-medium text-slate-700">
+                                  {existingMandateFile.file_name.replace('MANDAT_', '')}
+                                </span>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={handleRemoveMandateFile}
+                                className="bg-red-600 hover:bg-red-700 text-white"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            
+                            {/* Display file preview */}
+                            {existingMandateFile.mime_type?.startsWith('image/') ? (
+                              <div className="aspect-video bg-white rounded border overflow-hidden">
+                                <img
+                                  src={supabase.storage.from('property-media').getPublicUrl(existingMandateFile.file_path).data.publicUrl}
+                                  alt="Mandat"
+                                  className="w-full h-full object-contain"
+                                />
+                              </div>
+                            ) : (
+                              <div className="aspect-video bg-white rounded border flex items-center justify-center">
+                                <div className="text-center">
+                                  <FileText className="h-16 w-16 text-red-600 mx-auto mb-2" />
+                                  <p className="text-sm text-slate-600">Fichier PDF</p>
+                                  <a
+                                    href={supabase.storage.from('property-media').getPublicUrl(existingMandateFile.file_path).data.publicUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 hover:text-blue-800 text-sm underline"
+                                  >
+                                    Ouvrir le PDF
+                                  </a>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div className="flex justify-end">
+                            <Button 
+                              variant="outline" 
+                              onClick={() => setMandateDialogOpen(false)}
+                              className="bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
+                            >
+                              Fermer
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <FileUpload
+                            onFilesChange={setMandateFiles}
+                            maxFiles={1}
+                            acceptedTypes={['image/*', 'application/pdf']}
+                          />
+                          <div className="flex justify-end gap-2">
+                            <Button 
+                              variant="outline" 
+                              onClick={() => {
+                                setMandateDialogOpen(false);
+                                setMandateFiles([]);
+                              }}
+                              className="bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
+                            >
+                              Annuler
+                            </Button>
+                            <Button 
+                              onClick={handleMandateUpload}
+                              disabled={isUploadingMandate || mandateFiles.length === 0}
+                              className="bg-blue-600 hover:bg-blue-700 text-white"
+                            >
+                              <Upload className="h-4 w-4 mr-2" />
+                              {isUploadingMandate ? 'Upload...' : 'Télécharger'}
+                            </Button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </DialogContent>
                 </Dialog>
