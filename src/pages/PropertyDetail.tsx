@@ -54,6 +54,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import PropertyMap from '@/components/PropertyMap';
 
 const PropertyDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -904,181 +905,346 @@ Soit 9000 DHS TTC`;
               )}
             </div>
           ) : (
-            /* Edit Mode - Simplified version with key fields */
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            /* Edit Mode - Complete tabs interface */
+            <Tabs defaultValue="category" className="w-full">
+              <TabsList className="grid w-full grid-cols-6 bg-slate-100">
+                <TabsTrigger value="category" className="text-sm">Catégorie</TabsTrigger>
+                <TabsTrigger value="location" className="text-sm">Emplacement</TabsTrigger>
+                <TabsTrigger value="surface" className="text-sm">Surface</TabsTrigger>
+                <TabsTrigger value="composition" className="text-sm">Composition</TabsTrigger>
+                <TabsTrigger value="gallery" className="text-sm">Galerie</TabsTrigger>
+                <TabsTrigger value="features" className="text-sm">Fonctionnalités</TabsTrigger>
+              </TabsList>
+
+              {/* Catégorie de bien */}
+              <TabsContent value="category" className="space-y-6 mt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="title" className="text-slate-900">Titre</Label>
+                    <Input 
+                      id="title" 
+                      placeholder="Titre du bien" 
+                      className="bg-white border-slate-300"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="price" className="text-slate-900">Prix (€)</Label>
+                    <Input 
+                      id="price" 
+                      type="number" 
+                      placeholder="250000" 
+                      className="bg-white border-slate-300"
+                      value={price}
+                      onChange={(e) => setPrice(e.target.value)}
+                    />
+                  </div>
+                </div>
+
                 <div className="space-y-2">
-                  <Label htmlFor="title" className="text-slate-900">Titre</Label>
-                  <Input 
-                    id="title" 
-                    placeholder="Titre du bien" 
-                    className="bg-white border-slate-300"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
+                  <Label htmlFor="description" className="text-slate-900">Description</Label>
+                  <Textarea 
+                    id="description" 
+                    placeholder="Description détaillée du bien..." 
+                    className="bg-white border-slate-300 min-h-[300px]"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="price" className="text-slate-900">Prix (€)</Label>
-                  <Input 
-                    id="price" 
-                    type="number" 
-                    placeholder="250000" 
-                    className="bg-white border-slate-300"
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div>
+                    <Label className="text-base font-medium text-slate-900">Statut</Label>
+                    <RadioGroup value={status} onValueChange={setStatus} className="mt-2">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="available" id="available" />
+                        <Label htmlFor="available" className="text-slate-700">Disponible</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="pending" id="pending" />
+                        <Label htmlFor="pending" className="text-slate-700">En cours</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="sold" id="sold" />
+                        <Label htmlFor="sold" className="text-slate-700">Vendu</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  <div>
+                    <Label className="text-base font-medium text-slate-900">{t('property.category')}</Label>
+                    <RadioGroup value={category} onValueChange={setCategory} className="mt-2">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="sale" id="sale" />
+                        <Label htmlFor="sale" className="text-slate-700">{t('property.sale')}</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="rent" id="rent" />
+                        <Label htmlFor="rent" className="text-slate-700">{t('property.rent')}</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="vacation" id="vacation" />
+                        <Label htmlFor="vacation" className="text-slate-700">{t('property.vacation')}</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
+                  <div>
+                    <Label className="text-base font-medium text-slate-900">Type de bien</Label>
+                    <RadioGroup value={propertyType} onValueChange={setPropertyType} className="mt-2">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="apartment" id="apartment" />
+                        <Label htmlFor="apartment" className="text-slate-700">Appartement</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="house" id="house" />
+                        <Label htmlFor="house" className="text-slate-700">Maison</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="villa" id="villa" />
+                        <Label htmlFor="villa" className="text-slate-700">Villa</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                </div>
+              </TabsContent>
+
+              {/* Emplacement */}
+              <TabsContent value="location" className="space-y-6 mt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="address" className="text-slate-900">Adresse</Label>
+                    <Input 
+                      id="address" 
+                      placeholder="123 Rue de la Paix" 
+                      className="bg-white border-slate-300"
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="city" className="text-slate-900">Ville</Label>
+                    <Input 
+                      id="city" 
+                      placeholder="Casablanca" 
+                      className="bg-white border-slate-300"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="region" className="text-slate-900">Région</Label>
+                    <Input 
+                      id="region" 
+                      placeholder="Casablanca-Settat" 
+                      className="bg-white border-slate-300"
+                      value={region}
+                      onChange={(e) => setRegion(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="district" className="text-slate-900">Arrondissement</Label>
+                    <Input 
+                      id="district" 
+                      placeholder="Hay Hassani" 
+                      className="bg-white border-slate-300"
+                      value={district}
+                      onChange={(e) => setDistrict(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="neighborhood" className="text-slate-900">Quartier</Label>
+                    <Input 
+                      id="neighborhood" 
+                      placeholder="CIL" 
+                      className="bg-white border-slate-300"
+                      value={neighborhood}
+                      onChange={(e) => setNeighborhood(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <Label className="text-base font-medium text-slate-900">Localisation sur la carte</Label>
+                  <PropertyMap
+                    address={address}
+                    city={city}
+                    region={region}
+                    onLocationUpdate={(coordinates) => {
+                      console.log('Nouvelles coordonnées:', coordinates);
+                    }}
                   />
                 </div>
-              </div>
+              </TabsContent>
 
-              <div className="space-y-2">
-                <Label htmlFor="description" className="text-slate-900">Description</Label>
-                <Textarea 
-                  id="description" 
-                  placeholder="Description détaillée du bien..." 
-                  className="bg-white border-slate-300 min-h-[300px]"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                />
-              </div>
+              {/* Surface */}
+              <TabsContent value="surface" className="space-y-6 mt-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="builtArea" className="text-slate-900">Surface construite (m²)</Label>
+                    <Input 
+                      id="builtArea" 
+                      type="number" 
+                      placeholder="120" 
+                      className="bg-white border-slate-300"
+                      value={builtArea}
+                      onChange={(e) => setBuiltArea(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="livingArea" className="text-slate-900">Surface habitable (m²)</Label>
+                    <Input 
+                      id="livingArea" 
+                      type="number" 
+                      placeholder="100" 
+                      className="bg-white border-slate-300"
+                      value={livingArea}
+                      onChange={(e) => setLivingArea(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="outdoorArea" className="text-slate-900">Surface extérieure (m²)</Label>
+                    <Input 
+                      id="outdoorArea" 
+                      type="number" 
+                      placeholder="20" 
+                      className="bg-white border-slate-300"
+                      value={outdoorArea}
+                      onChange={(e) => setOutdoorArea(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </TabsContent>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Composition */}
+              <TabsContent value="composition" className="space-y-6 mt-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  <div className="space-y-3">
+                    <Label className="text-base font-medium text-slate-900 block">{t('property.bedrooms')}</Label>
+                    <div className="flex justify-center">
+                      <NumberInput 
+                        value={bedrooms} 
+                        onChange={setBedrooms} 
+                        min={0} 
+                        max={20} 
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <Label className="text-base font-medium text-slate-900 block">{t('property.rooms')}</Label>
+                    <div className="flex justify-center">
+                      <NumberInput 
+                        value={rooms} 
+                        onChange={setRooms} 
+                        min={1} 
+                        max={50} 
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <Label className="text-base font-medium text-slate-900 block">{t('property.bathrooms')}</Label>
+                    <div className="flex justify-center">
+                      <NumberInput 
+                        value={bathrooms} 
+                        onChange={setBathrooms} 
+                        min={0} 
+                        max={10} 
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 <div>
-                  <Label className="text-base font-medium text-slate-900">Statut</Label>
-                  <RadioGroup value={status} onValueChange={setStatus} className="mt-2">
+                  <Label className="text-base font-medium text-slate-900">État du bien</Label>
+                  <RadioGroup value={condition} onValueChange={setCondition} className="mt-2">
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="available" id="available" />
-                      <Label htmlFor="available" className="text-slate-700">Disponible</Label>
+                      <RadioGroupItem value="new" id="new" />
+                      <Label htmlFor="new" className="text-slate-700">Neuf</Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="pending" id="pending" />
-                      <Label htmlFor="pending" className="text-slate-700">En cours</Label>
+                      <RadioGroupItem value="good" id="good" />
+                      <Label htmlFor="good" className="text-slate-700">Bon état</Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="sold" id="sold" />
-                      <Label htmlFor="sold" className="text-slate-700">Vendu</Label>
+                      <RadioGroupItem value="renovation" id="renovation" />
+                      <Label htmlFor="renovation" className="text-slate-700">À rénover</Label>
                     </div>
                   </RadioGroup>
                 </div>
+              </TabsContent>
 
-                <div>
-                  <Label className="text-base font-medium text-slate-900">{t('property.category')}</Label>
-                  <RadioGroup value={category} onValueChange={setCategory} className="mt-2">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="sale" id="sale" />
-                      <Label htmlFor="sale" className="text-slate-700">{t('property.sale')}</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="rent" id="rent" />
-                      <Label htmlFor="rent" className="text-slate-700">{t('property.rent')}</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="vacation" id="vacation" />
-                      <Label htmlFor="vacation" className="text-slate-700">{t('property.vacation')}</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className="space-y-3">
-                  <Label className="text-base font-medium text-slate-900 block">{t('property.bedrooms')}</Label>
-                  <div className="flex justify-center">
-                    <NumberInput 
-                      value={bedrooms} 
-                      onChange={setBedrooms} 
-                      min={0} 
-                      max={20} 
-                    />
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <Label className="text-base font-medium text-slate-900 block">{t('property.rooms')}</Label>
-                  <div className="flex justify-center">
-                    <NumberInput 
-                      value={rooms} 
-                      onChange={setRooms} 
-                      min={1} 
-                      max={50} 
-                    />
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <Label className="text-base font-medium text-slate-900 block">{t('property.bathrooms')}</Label>
-                  <div className="flex justify-center">
-                    <NumberInput 
-                      value={bathrooms} 
-                      onChange={setBathrooms} 
-                      min={0} 
-                      max={10} 
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Images Management */}
-              <div className="space-y-4">
-                <Label className="text-base font-medium text-slate-900">Images actuelles</Label>
-                {images.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {images.map((image, index) => (
-                      <div key={image.media.id} className="relative group bg-white rounded-lg overflow-hidden border border-slate-200 shadow-sm">
-                        <div className="aspect-video bg-slate-100 flex items-center justify-center">
-                          <img 
-                            src={image.url} 
-                            alt={`Image ${index + 1}`}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                              e.currentTarget.parentElement!.innerHTML = '<div class="flex items-center justify-center w-full h-full bg-slate-100"><Building2 class="h-12 w-12 text-slate-400" /></div>';
-                            }}
-                          />
+              {/* Galerie */}
+              <TabsContent value="gallery" className="space-y-6 mt-6">
+                <div className="space-y-4">
+                  <Label className="text-base font-medium text-slate-900">Images actuelles</Label>
+                  {images.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {images.map((image, index) => (
+                        <div key={image.media.id} className="relative group bg-white rounded-lg overflow-hidden border border-slate-200 shadow-sm">
+                          <div className="aspect-video bg-slate-100 flex items-center justify-center">
+                            <img 
+                              src={image.url} 
+                              alt={`Image ${index + 1}`}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                e.currentTarget.parentElement!.innerHTML = '<div class="flex items-center justify-center w-full h-full bg-slate-100"><Building2 class="h-12 w-12 text-slate-400" /></div>';
+                              }}
+                            />
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-red-600 hover:bg-red-700 text-white"
+                            onClick={() => handleRemoveImage(image.media)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
                         </div>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-red-600 hover:bg-red-700 text-white"
-                          onClick={() => handleRemoveImage(image.media)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-slate-500 bg-slate-50 p-4 rounded-lg border border-slate-200">Aucune image pour ce bien</p>
+                  )}
+                  
+                  <div className="mt-6">
+                    <Label className="text-base font-medium text-slate-900">Ajouter de nouvelles images</Label>
+                    <div className="mt-2">
+                      <FileUpload
+                        onFilesChange={setUploadedFiles}
+                        maxFiles={20}
+                        acceptedTypes={['image/*', 'video/*']}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </TabsContent>
+
+              {/* Fonctionnalités */}
+              <TabsContent value="features" className="space-y-6 mt-6">
+                <div className="space-y-4">
+                  <Label className="text-base font-medium text-slate-900">{t('property.features')}</Label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {features.map((feature) => (
+                      <div key={feature} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={feature}
+                          checked={selectedFeatures.includes(feature)}
+                          onCheckedChange={(checked) => 
+                            handleFeatureChange(feature, checked as boolean)
+                          }
+                        />
+                        <Label htmlFor={feature} className="text-slate-700">{t(`property.${feature}`)}</Label>
                       </div>
                     ))}
                   </div>
-                ) : (
-                  <p className="text-slate-500 bg-slate-50 p-4 rounded-lg border border-slate-200">Aucune image pour ce bien</p>
-                )}
-                
-                <div className="mt-6">
-                  <Label className="text-base font-medium text-slate-900">Ajouter de nouvelles images</Label>
-                  <div className="mt-2">
-                    <FileUpload
-                      onFilesChange={setUploadedFiles}
-                      maxFiles={20}
-                      acceptedTypes={['image/*', 'video/*']}
-                    />
-                  </div>
                 </div>
-              </div>
-
-              {/* Features */}
-              <div className="space-y-4">
-                <Label className="text-base font-medium text-slate-900">{t('property.features')}</Label>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {features.map((feature) => (
-                    <div key={feature} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={feature}
-                        checked={selectedFeatures.includes(feature)}
-                        onCheckedChange={(checked) => 
-                          handleFeatureChange(feature, checked as boolean)
-                        }
-                      />
-                      <Label htmlFor={feature} className="text-slate-700">{t(`property.${feature}`)}</Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+              </TabsContent>
+            </Tabs>
           )}
         </CardContent>
       </Card>
