@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Table,
@@ -79,21 +78,9 @@ const ListeConseillers = () => {
 
   const fetchConseillers = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast({
-          title: "Erreur d'authentification",
-          description: "Vous devez être connecté pour voir les conseillers.",
-          variant: "destructive",
-        });
-        return;
-      }
-
       const { data, error } = await supabase
         .from('conseillers')
         .select('*')
-        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) {
