@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,6 +20,11 @@ import {
   Award,
   FileText
 } from 'lucide-react';
+
+interface CompetenceSection {
+  [key: string]: boolean | string;
+  notes: string;
+}
 
 const AjouterConseiller = () => {
   const [formData, setFormData] = useState({
@@ -52,38 +56,38 @@ const AjouterConseiller = () => {
       veilleSourcing: false,
       priseMandat: false,
       notes: ''
-    },
+    } as CompetenceSection,
     leads: {
       reactivite: false,
       qualification: false,
       scoring: false,
       rdv: false,
       notes: ''
-    },
+    } as CompetenceSection,
     visites: {
       preVisite: false,
       parcoursScenarise: false,
       feedback: false,
       notes: ''
-    },
+    } as CompetenceSection,
     negociation: {
       strategiePrix: false,
       gestionOffres: false,
       techniques: false,
       notes: ''
-    },
+    } as CompetenceSection,
     actes: {
       preparationDossier: false,
       compromis: false,
       accompagnement: false,
       notes: ''
-    },
+    } as CompetenceSection,
     encaissement: {
       facturation: false,
       remiseCles: false,
       afterSale: false,
       notes: ''
-    }
+    } as CompetenceSection
   });
 
   const specialisationsOptions = [
@@ -124,24 +128,30 @@ const AjouterConseiller = () => {
     }));
   };
 
-  const handleCompetenceChange = (section: string, competence: string, checked: boolean) => {
-    setFormData(prev => ({
-      ...prev,
-      [section]: {
-        ...prev[section as keyof typeof prev],
-        [competence]: checked
-      }
-    }));
+  const handleCompetenceChange = (section: keyof typeof formData, competence: string, checked: boolean) => {
+    const sectionData = formData[section];
+    if (typeof sectionData === 'object' && sectionData !== null && !Array.isArray(sectionData)) {
+      setFormData(prev => ({
+        ...prev,
+        [section]: {
+          ...sectionData,
+          [competence]: checked
+        }
+      }));
+    }
   };
 
-  const handleNotesChange = (section: string, notes: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [section]: {
-        ...prev[section as keyof typeof prev],
-        notes
-      }
-    }));
+  const handleNotesChange = (section: keyof typeof formData, notes: string) => {
+    const sectionData = formData[section];
+    if (typeof sectionData === 'object' && sectionData !== null && !Array.isArray(sectionData)) {
+      setFormData(prev => ({
+        ...prev,
+        [section]: {
+          ...sectionData,
+          notes
+        }
+      }));
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -400,7 +410,7 @@ const AjouterConseiller = () => {
                   <div className="flex items-center space-x-2">
                     <Checkbox 
                       id="prospection-analyse"
-                      checked={formData.prospection.analyseDemande}
+                      checked={formData.prospection.analyseDemande as boolean}
                       onCheckedChange={(checked) => handleCompetenceChange('prospection', 'analyseDemande', !!checked)}
                     />
                     <Label htmlFor="prospection-analyse" className="text-sm text-slate-600">Analyse de la demande</Label>
@@ -408,7 +418,7 @@ const AjouterConseiller = () => {
                   <div className="flex items-center space-x-2">
                     <Checkbox 
                       id="prospection-veille"
-                      checked={formData.prospection.veilleSourcing}
+                      checked={formData.prospection.veilleSourcing as boolean}
                       onCheckedChange={(checked) => handleCompetenceChange('prospection', 'veilleSourcing', !!checked)}
                     />
                     <Label htmlFor="prospection-veille" className="text-sm text-slate-600">Veille et sourcing</Label>
@@ -416,7 +426,7 @@ const AjouterConseiller = () => {
                   <div className="flex items-center space-x-2">
                     <Checkbox 
                       id="prospection-mandat"
-                      checked={formData.prospection.priseMandat}
+                      checked={formData.prospection.priseMandat as boolean}
                       onCheckedChange={(checked) => handleCompetenceChange('prospection', 'priseMandat', !!checked)}
                     />
                     <Label htmlFor="prospection-mandat" className="text-sm text-slate-600">Prise de mandat</Label>
@@ -426,7 +436,7 @@ const AjouterConseiller = () => {
                   <Label htmlFor="prospection-notes" className="text-sm text-slate-700">Notes</Label>
                   <Textarea 
                     id="prospection-notes"
-                    value={formData.prospection.notes}
+                    value={formData.prospection.notes as string}
                     onChange={(e) => handleNotesChange('prospection', e.target.value)}
                     className="bg-white border-slate-200 text-sm" 
                     rows={3}
@@ -449,7 +459,7 @@ const AjouterConseiller = () => {
                   <div className="flex items-center space-x-2">
                     <Checkbox 
                       id="leads-reactivite"
-                      checked={formData.leads.reactivite}
+                      checked={formData.leads.reactivite as boolean}
                       onCheckedChange={(checked) => handleCompetenceChange('leads', 'reactivite', !!checked)}
                     />
                     <Label htmlFor="leads-reactivite" className="text-sm text-slate-600">Réactivité (SLA &lt; 30 min)</Label>
@@ -457,7 +467,7 @@ const AjouterConseiller = () => {
                   <div className="flex items-center space-x-2">
                     <Checkbox 
                       id="leads-qualification"
-                      checked={formData.leads.qualification}
+                      checked={formData.leads.qualification as boolean}
                       onCheckedChange={(checked) => handleCompetenceChange('leads', 'qualification', !!checked)}
                     />
                     <Label htmlFor="leads-qualification" className="text-sm text-slate-600">Qualification BANT</Label>
@@ -465,7 +475,7 @@ const AjouterConseiller = () => {
                   <div className="flex items-center space-x-2">
                     <Checkbox 
                       id="leads-scoring"
-                      checked={formData.leads.scoring}
+                      checked={formData.leads.scoring as boolean}
                       onCheckedChange={(checked) => handleCompetenceChange('leads', 'scoring', !!checked)}
                     />
                     <Label htmlFor="leads-scoring" className="text-sm text-slate-600">Scoring & CRM</Label>
@@ -473,7 +483,7 @@ const AjouterConseiller = () => {
                   <div className="flex items-center space-x-2">
                     <Checkbox 
                       id="leads-rdv"
-                      checked={formData.leads.rdv}
+                      checked={formData.leads.rdv as boolean}
                       onCheckedChange={(checked) => handleCompetenceChange('leads', 'rdv', !!checked)}
                     />
                     <Label htmlFor="leads-rdv" className="text-sm text-slate-600">Prise de rendez-vous</Label>
@@ -483,7 +493,7 @@ const AjouterConseiller = () => {
                   <Label htmlFor="leads-notes" className="text-sm text-slate-700">Notes</Label>
                   <Textarea 
                     id="leads-notes"
-                    value={formData.leads.notes}
+                    value={formData.leads.notes as string}
                     onChange={(e) => handleNotesChange('leads', e.target.value)}
                     className="bg-white border-slate-200 text-sm" 
                     rows={3}
@@ -506,7 +516,7 @@ const AjouterConseiller = () => {
                   <div className="flex items-center space-x-2">
                     <Checkbox 
                       id="visites-pre"
-                      checked={formData.visites.preVisite}
+                      checked={formData.visites.preVisite as boolean}
                       onCheckedChange={(checked) => handleCompetenceChange('visites', 'preVisite', !!checked)}
                     />
                     <Label htmlFor="visites-pre" className="text-sm text-slate-600">Pré-visite</Label>
@@ -514,7 +524,7 @@ const AjouterConseiller = () => {
                   <div className="flex items-center space-x-2">
                     <Checkbox 
                       id="visites-parcours"
-                      checked={formData.visites.parcoursScenarise}
+                      checked={formData.visites.parcoursScenarise as boolean}
                       onCheckedChange={(checked) => handleCompetenceChange('visites', 'parcoursScenarise', !!checked)}
                     />
                     <Label htmlFor="visites-parcours" className="text-sm text-slate-600">Parcours scénarisé</Label>
@@ -522,7 +532,7 @@ const AjouterConseiller = () => {
                   <div className="flex items-center space-x-2">
                     <Checkbox 
                       id="visites-feedback"
-                      checked={formData.visites.feedback}
+                      checked={formData.visites.feedback as boolean}
                       onCheckedChange={(checked) => handleCompetenceChange('visites', 'feedback', !!checked)}
                     />
                     <Label htmlFor="visites-feedback" className="text-sm text-slate-600">Recueil feedback</Label>
@@ -532,7 +542,7 @@ const AjouterConseiller = () => {
                   <Label htmlFor="visites-notes" className="text-sm text-slate-700">Notes</Label>
                   <Textarea 
                     id="visites-notes"
-                    value={formData.visites.notes}
+                    value={formData.visites.notes as string}
                     onChange={(e) => handleNotesChange('visites', e.target.value)}
                     className="bg-white border-slate-200 text-sm" 
                     rows={3}
@@ -555,7 +565,7 @@ const AjouterConseiller = () => {
                   <div className="flex items-center space-x-2">
                     <Checkbox 
                       id="negociation-strategie"
-                      checked={formData.negociation.strategiePrix}
+                      checked={formData.negociation.strategiePrix as boolean}
                       onCheckedChange={(checked) => handleCompetenceChange('negociation', 'strategiePrix', !!checked)}
                     />
                     <Label htmlFor="negociation-strategie" className="text-sm text-slate-600">Stratégie de prix</Label>
@@ -563,7 +573,7 @@ const AjouterConseiller = () => {
                   <div className="flex items-center space-x-2">
                     <Checkbox 
                       id="negociation-offres"
-                      checked={formData.negociation.gestionOffres}
+                      checked={formData.negociation.gestionOffres as boolean}
                       onCheckedChange={(checked) => handleCompetenceChange('negociation', 'gestionOffres', !!checked)}
                     />
                     <Label htmlFor="negociation-offres" className="text-sm text-slate-600">Gestion des offres</Label>
@@ -571,7 +581,7 @@ const AjouterConseiller = () => {
                   <div className="flex items-center space-x-2">
                     <Checkbox 
                       id="negociation-techniques"
-                      checked={formData.negociation.techniques}
+                      checked={formData.negociation.techniques as boolean}
                       onCheckedChange={(checked) => handleCompetenceChange('negociation', 'techniques', !!checked)}
                     />
                     <Label htmlFor="negociation-techniques" className="text-sm text-slate-600">Techniques de négociation</Label>
@@ -581,7 +591,7 @@ const AjouterConseiller = () => {
                   <Label htmlFor="negociation-notes" className="text-sm text-slate-700">Notes</Label>
                   <Textarea 
                     id="negociation-notes"
-                    value={formData.negociation.notes}
+                    value={formData.negociation.notes as string}
                     onChange={(e) => handleNotesChange('negociation', e.target.value)}
                     className="bg-white border-slate-200 text-sm" 
                     rows={3}
@@ -604,7 +614,7 @@ const AjouterConseiller = () => {
                   <div className="flex items-center space-x-2">
                     <Checkbox 
                       id="actes-preparation"
-                      checked={formData.actes.preparationDossier}
+                      checked={formData.actes.preparationDossier as boolean}
                       onCheckedChange={(checked) => handleCompetenceChange('actes', 'preparationDossier', !!checked)}
                     />
                     <Label htmlFor="actes-preparation" className="text-sm text-slate-600">Préparation du dossier</Label>
@@ -612,7 +622,7 @@ const AjouterConseiller = () => {
                   <div className="flex items-center space-x-2">
                     <Checkbox 
                       id="actes-compromis"
-                      checked={formData.actes.compromis}
+                      checked={formData.actes.compromis as boolean}
                       onCheckedChange={(checked) => handleCompetenceChange('actes', 'compromis', !!checked)}
                     />
                     <Label htmlFor="actes-compromis" className="text-sm text-slate-600">Compromis & contrats</Label>
@@ -620,7 +630,7 @@ const AjouterConseiller = () => {
                   <div className="flex items-center space-x-2">
                     <Checkbox 
                       id="actes-accompagnement"
-                      checked={formData.actes.accompagnement}
+                      checked={formData.actes.accompagnement as boolean}
                       onCheckedChange={(checked) => handleCompetenceChange('actes', 'accompagnement', !!checked)}
                     />
                     <Label htmlFor="actes-accompagnement" className="text-sm text-slate-600">Accompagnement jusqu'à l'acte</Label>
@@ -630,7 +640,7 @@ const AjouterConseiller = () => {
                   <Label htmlFor="actes-notes" className="text-sm text-slate-700">Notes</Label>
                   <Textarea 
                     id="actes-notes"
-                    value={formData.actes.notes}
+                    value={formData.actes.notes as string}
                     onChange={(e) => handleNotesChange('actes', e.target.value)}
                     className="bg-white border-slate-200 text-sm" 
                     rows={3}
@@ -653,7 +663,7 @@ const AjouterConseiller = () => {
                   <div className="flex items-center space-x-2">
                     <Checkbox 
                       id="encaissement-facturation"
-                      checked={formData.encaissement.facturation}
+                      checked={formData.encaissement.facturation as boolean}
                       onCheckedChange={(checked) => handleCompetenceChange('encaissement', 'facturation', !!checked)}
                     />
                     <Label htmlFor="encaissement-facturation" className="text-sm text-slate-600">Facturation et encaissement</Label>
@@ -661,7 +671,7 @@ const AjouterConseiller = () => {
                   <div className="flex items-center space-x-2">
                     <Checkbox 
                       id="encaissement-cles"
-                      checked={formData.encaissement.remiseCles}
+                      checked={formData.encaissement.remiseCles as boolean}
                       onCheckedChange={(checked) => handleCompetenceChange('encaissement', 'remiseCles', !!checked)}
                     />
                     <Label htmlFor="encaissement-cles" className="text-sm text-slate-600">Remise des clés</Label>
@@ -669,7 +679,7 @@ const AjouterConseiller = () => {
                   <div className="flex items-center space-x-2">
                     <Checkbox 
                       id="encaissement-after"
-                      checked={formData.encaissement.afterSale}
+                      checked={formData.encaissement.afterSale as boolean}
                       onCheckedChange={(checked) => handleCompetenceChange('encaissement', 'afterSale', !!checked)}
                     />
                     <Label htmlFor="encaissement-after" className="text-sm text-slate-600">After-sale service</Label>
@@ -679,7 +689,7 @@ const AjouterConseiller = () => {
                   <Label htmlFor="encaissement-notes" className="text-sm text-slate-700">Notes</Label>
                   <Textarea 
                     id="encaissement-notes"
-                    value={formData.encaissement.notes}
+                    value={formData.encaissement.notes as string}
                     onChange={(e) => handleNotesChange('encaissement', e.target.value)}
                     className="bg-white border-slate-200 text-sm" 
                     rows={3}
