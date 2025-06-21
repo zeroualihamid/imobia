@@ -1,4 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Table,
   TableBody,
@@ -9,7 +11,6 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -42,6 +43,7 @@ interface Conseiller {
 }
 
 const ListeConseillers = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [conseillers, setConseillers] = useState<Conseiller[]>([]);
   const [filteredConseillers, setFilteredConseillers] = useState<Conseiller[]>([]);
@@ -78,15 +80,20 @@ const ListeConseillers = () => {
 
   const fetchConseillers = async () => {
     try {
+      console.log('Fetching conseillers...');
       const { data, error } = await supabase
         .from('conseillers')
         .select('*')
         .order('created_at', { ascending: false });
 
+      console.log('Supabase query result:', { data, error });
+
       if (error) {
+        console.error('Supabase error:', error);
         throw error;
       }
 
+      console.log('Fetched conseillers:', data);
       setConseillers(data || []);
     } catch (error) {
       console.error('Erreur lors du chargement des conseillers:', error);
@@ -112,6 +119,10 @@ const ListeConseillers = () => {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     const mois = Math.floor(diffDays / 30);
     return mois > 0 ? `${mois} mois` : `${diffDays} jours`;
+  };
+
+  const handleRowClick = (conseillerId: string) => {
+    navigate(`/conseillers/${conseillerId}`);
   };
 
   if (isLoading) {
@@ -249,7 +260,11 @@ const ListeConseillers = () => {
                   const score = generateRandomScore();
                   
                   return (
-                    <TableRow key={conseiller.id}>
+                    <TableRow 
+                      key={conseiller.id}
+                      className="cursor-pointer hover:bg-slate-50 transition-colors"
+                      onClick={() => handleRowClick(conseiller.id)}
+                    >
                       <TableCell>
                         <div>
                           <p className="font-medium text-slate-900">
