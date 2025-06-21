@@ -15,6 +15,7 @@ import PropertyDetail from "./pages/PropertyDetail";
 import CreationVocale from "./pages/CreationVocale";
 import TachesConseillers from "./pages/TachesConseillers";
 import AjouterConseiller from "./pages/AjouterConseiller";
+import ListeConseillers from "./pages/ListeConseillers";
 import Auth from "./pages/Auth";
 
 const queryClient = new QueryClient();
@@ -67,6 +68,13 @@ const App = () => (
                 <ProtectedRoute>
                   <Layout>
                     <PropertyDetail />
+                  </Layout>
+                </ProtectedRoute>
+              } />
+              <Route path="/conseillers" element={
+                <ProtectedRoute>
+                  <Layout>
+                    <ListeConseillers />
                   </Layout>
                 </ProtectedRoute>
               } />
