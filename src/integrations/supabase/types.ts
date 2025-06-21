@@ -167,6 +167,90 @@ export type Database = {
           },
         ]
       }
+      tasks: {
+        Row: {
+          auto_goal: boolean | null
+          category: Database["public"]["Enums"]["task_category"]
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          owner_id: string | null
+          previous_owner_id: string | null
+          progress: number | null
+          score: number | null
+          sla_hours: number | null
+          status: Database["public"]["Enums"]["task_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          auto_goal?: boolean | null
+          category?: Database["public"]["Enums"]["task_category"]
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          owner_id?: string | null
+          previous_owner_id?: string | null
+          progress?: number | null
+          score?: number | null
+          sla_hours?: number | null
+          status?: Database["public"]["Enums"]["task_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          auto_goal?: boolean | null
+          category?: Database["public"]["Enums"]["task_category"]
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          owner_id?: string | null
+          previous_owner_id?: string | null
+          progress?: number | null
+          score?: number | null
+          sla_hours?: number | null
+          status?: Database["public"]["Enums"]["task_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      weekly_performance: {
+        Row: {
+          created_at: string
+          id: string
+          score_contrats: number | null
+          score_prospection: number | null
+          score_visites: number | null
+          updated_at: string
+          user_id: string
+          week_start: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          score_contrats?: number | null
+          score_prospection?: number | null
+          score_visites?: number | null
+          updated_at?: string
+          user_id: string
+          week_start: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          score_contrats?: number | null
+          score_prospection?: number | null
+          score_visites?: number | null
+          updated_at?: string
+          user_id?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -189,7 +273,14 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      task_category: "URGENT" | "IMPORTANT" | "NORMAL" | "AUTO_GOAL"
+      task_status:
+        | "EN_FILE"
+        | "ASSIGNEE"
+        | "EN_COURS"
+        | "TERMINEE"
+        | "EN_RETARD"
+        | "REAFFECTEE"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -304,6 +395,16 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      task_category: ["URGENT", "IMPORTANT", "NORMAL", "AUTO_GOAL"],
+      task_status: [
+        "EN_FILE",
+        "ASSIGNEE",
+        "EN_COURS",
+        "TERMINEE",
+        "EN_RETARD",
+        "REAFFECTEE",
+      ],
+    },
   },
 } as const
