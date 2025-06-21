@@ -19,7 +19,7 @@ import AjouterConseiller from "./pages/AjouterConseiller";
 import ListeConseillers from "./pages/ListeConseillers";
 import DetailConseiller from "./pages/DetailConseiller";
 import PilotageConseillers from "./pages/PilotageConseillers";
-
+import TaskDetail from "./pages/TaskDetail";
 import Auth from "./pages/Auth";
 
 const queryClient = new QueryClient();
@@ -111,7 +111,13 @@ function App() {
                     </Layout>
                   </ProtectedRoute>
                 } />
-                
+                <Route path="/tasks/:id/edit" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <TaskDetail />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
               </Routes>
             </BrowserRouter>
           </TooltipProvider>
