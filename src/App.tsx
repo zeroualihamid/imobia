@@ -19,6 +19,7 @@ import AjouterConseiller from "./pages/AjouterConseiller";
 import ListeConseillers from "./pages/ListeConseillers";
 import DetailConseiller from "./pages/DetailConseiller";
 import PilotageConseillers from "./pages/PilotageConseillers";
+
 import Auth from "./pages/Auth";
 
 const queryClient = new QueryClient();
@@ -110,6 +111,7 @@ function App() {
                     </Layout>
                   </ProtectedRoute>
                 } />
+                
               </Routes>
             </BrowserRouter>
           </TooltipProvider>
