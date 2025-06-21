@@ -9,6 +9,72 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      conseillers: {
+        Row: {
+          adresse: string | null
+          commission: number | null
+          created_at: string
+          date_embauche: string | null
+          date_naissance: string | null
+          email: string
+          formation: string | null
+          id: string
+          langues: string[] | null
+          nationalite: string | null
+          nom: string
+          numero_cin: string | null
+          prenom: string
+          salaire: number | null
+          specialisations: string[] | null
+          telephone: string
+          updated_at: string
+          user_id: string
+          ville: string | null
+        }
+        Insert: {
+          adresse?: string | null
+          commission?: number | null
+          created_at?: string
+          date_embauche?: string | null
+          date_naissance?: string | null
+          email: string
+          formation?: string | null
+          id?: string
+          langues?: string[] | null
+          nationalite?: string | null
+          nom: string
+          numero_cin?: string | null
+          prenom: string
+          salaire?: number | null
+          specialisations?: string[] | null
+          telephone: string
+          updated_at?: string
+          user_id: string
+          ville?: string | null
+        }
+        Update: {
+          adresse?: string | null
+          commission?: number | null
+          created_at?: string
+          date_embauche?: string | null
+          date_naissance?: string | null
+          email?: string
+          formation?: string | null
+          id?: string
+          langues?: string[] | null
+          nationalite?: string | null
+          nom?: string
+          numero_cin?: string | null
+          prenom?: string
+          salaire?: number | null
+          specialisations?: string[] | null
+          telephone?: string
+          updated_at?: string
+          user_id?: string
+          ville?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

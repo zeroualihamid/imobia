@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,27 +7,20 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import { 
   UserPlus, 
   User, 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Calendar,
   Building,
   GraduationCap,
-  Award,
-  FileText
+  Loader2
 } from 'lucide-react';
 
-interface CompetenceSection {
-  [key: string]: boolean | string;
-  notes: string;
-}
-
 const AjouterConseiller = () => {
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     // Informations personnelles
     prenom: '',
@@ -38,57 +32,47 @@ const AjouterConseiller = () => {
     nationalite: '',
     
     // Informations professionnelles
-    numeroLicence: '',
+    numeroCin: '',
     dateEmbauche: '',
     salaire: '',
     commission: '',
-    secteur: '',
+    ville: '',
     
-    // Formation et expérience
+    // Formation et spécialisations
     formation: '',
-    experience: '',
     specialisations: [] as string[],
     langues: [] as string[],
-    
-    // Compétences par tâche
-    prospection: {
-      analyseDemande: false,
-      veilleSourcing: false,
-      priseMandat: false,
-      notes: ''
-    } as CompetenceSection,
-    leads: {
-      reactivite: false,
-      qualification: false,
-      scoring: false,
-      rdv: false,
-      notes: ''
-    } as CompetenceSection,
-    visites: {
-      preVisite: false,
-      parcoursScenarise: false,
-      feedback: false,
-      notes: ''
-    } as CompetenceSection,
-    negociation: {
-      strategiePrix: false,
-      gestionOffres: false,
-      techniques: false,
-      notes: ''
-    } as CompetenceSection,
-    actes: {
-      preparationDossier: false,
-      compromis: false,
-      accompagnement: false,
-      notes: ''
-    } as CompetenceSection,
-    encaissement: {
-      facturation: false,
-      remiseCles: false,
-      afterSale: false,
-      notes: ''
-    } as CompetenceSection
   });
+
+  const villesMaroc = [
+    'Casablanca',
+    'Rabat',
+    'Fès',
+    'Marrakech',
+    'Agadir',
+    'Tanger',
+    'Meknès',
+    'Oujda',
+    'Kenitra',
+    'Tétouan',
+    'Safi',
+    'El Jadida',
+    'Beni Mellal',
+    'Errachidia',
+    'Taza',
+    'Essaouira',
+    'Khouribga',
+    'Ouarzazate',
+    'Settat',
+    'Larache'
+  ];
+
+  const formationsOptions = [
+    'Bac+2',
+    'Bac+3',
+    'Bac+4',
+    'Bac+5'
+  ];
 
   const specialisationsOptions = [
     'Résidentiel',
@@ -128,40 +112,90 @@ const AjouterConseiller = () => {
     }));
   };
 
-  const handleCompetenceChange = (section: keyof typeof formData, competence: string, checked: boolean) => {
-    const sectionData = formData[section];
-    if (typeof sectionData === 'object' && sectionData !== null && !Array.isArray(sectionData)) {
-      setFormData(prev => ({
-        ...prev,
-        [section]: {
-          ...sectionData,
-          [competence]: checked
-        }
-      }));
-    }
-  };
-
-  const handleNotesChange = (section: keyof typeof formData, notes: string) => {
-    const sectionData = formData[section];
-    if (typeof sectionData === 'object' && sectionData !== null && !Array.isArray(sectionData)) {
-      setFormData(prev => ({
-        ...prev,
-        [section]: {
-          ...sectionData,
-          notes
-        }
-      }));
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Données du conseiller:', formData);
-    // Ici, vous pouvez ajouter la logique pour sauvegarder les données
+    setIsLoading(true);
+
+    try {
+      // Vérifier que l'utilisateur est connecté
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Erreur d'authentification",
+          description: "Vous devez être connecté pour ajouter un conseiller.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Préparer les données pour l'insertion
+      const conseillerData = {
+        user_id: user.id,
+        prenom: formData.prenom,
+        nom: formData.nom,
+        email: formData.email,
+        telephone: formData.telephone,
+        adresse: formData.adresse || null,
+        date_naissance: formData.dateNaissance || null,
+        nationalite: formData.nationalite || null,
+        numero_cin: formData.numeroCin || null,
+        date_embauche: formData.dateEmbauche || null,
+        salaire: formData.salaire ? parseFloat(formData.salaire) : null,
+        commission: formData.commission ? parseFloat(formData.commission) : null,
+        ville: formData.ville || null,
+        formation: formData.formation || null,
+        specialisations: formData.specialisations.length > 0 ? formData.specialisations : null,
+        langues: formData.langues.length > 0 ? formData.langues : null,
+      };
+
+      // Insérer les données dans Supabase
+      const { error } = await supabase
+        .from('conseillers')
+        .insert([conseillerData]);
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Conseiller ajouté avec succès",
+        description: `${formData.prenom} ${formData.nom} a été ajouté à votre équipe.`,
+      });
+
+      // Réinitialiser le formulaire
+      setFormData({
+        prenom: '',
+        nom: '',
+        email: '',
+        telephone: '',
+        adresse: '',
+        dateNaissance: '',
+        nationalite: '',
+        numeroCin: '',
+        dateEmbauche: '',
+        salaire: '',
+        commission: '',
+        ville: '',
+        formation: '',
+        specialisations: [],
+        langues: [],
+      });
+
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout du conseiller:', error);
+      toast({
+        title: "Erreur",
+        description: "Une erreur s'est produite lors de l'ajout du conseiller. Veuillez réessayer.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6">
       <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
         <div className="flex items-center gap-3 mb-4">
           <div className="bg-purple-500 p-3 rounded-lg">
@@ -172,7 +206,7 @@ const AjouterConseiller = () => {
               Ajouter un conseiller
             </h1>
             <p className="text-slate-600">
-              Fiche de renseignement complète pour un nouveau conseiller immobilier
+              Fiche de renseignement pour un nouveau conseiller immobilier
             </p>
           </div>
         </div>
@@ -273,11 +307,11 @@ const AjouterConseiller = () => {
           <CardContent className="space-y-4 bg-white">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="numeroLicence" className="text-slate-700">Numéro de licence</Label>
+                <Label htmlFor="numeroCin" className="text-slate-700">Numéro de CIN</Label>
                 <Input 
-                  id="numeroLicence" 
-                  value={formData.numeroLicence}
-                  onChange={(e) => setFormData(prev => ({ ...prev, numeroLicence: e.target.value }))}
+                  id="numeroCin" 
+                  value={formData.numeroCin}
+                  onChange={(e) => setFormData(prev => ({ ...prev, numeroCin: e.target.value }))}
                   className="bg-white border-slate-200" 
                 />
               </div>
@@ -313,14 +347,17 @@ const AjouterConseiller = () => {
               </div>
             </div>
             <div>
-              <Label htmlFor="secteur" className="text-slate-700">Secteur géographique assigné</Label>
-              <Input 
-                id="secteur" 
-                value={formData.secteur}
-                onChange={(e) => setFormData(prev => ({ ...prev, secteur: e.target.value }))}
-                className="bg-white border-slate-200" 
-                placeholder="Ex: Casablanca Centre, Rabat Agdal..."
-              />
+              <Label htmlFor="ville" className="text-slate-700">Ville d'affectation</Label>
+              <Select value={formData.ville} onValueChange={(value) => setFormData(prev => ({ ...prev, ville: value }))}>
+                <SelectTrigger className="bg-white border-slate-200">
+                  <SelectValue placeholder="Sélectionner une ville" />
+                </SelectTrigger>
+                <SelectContent>
+                  {villesMaroc.map((ville) => (
+                    <SelectItem key={ville} value={ville}>{ville}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
         </Card>
@@ -335,24 +372,17 @@ const AjouterConseiller = () => {
           </CardHeader>
           <CardContent className="space-y-4 bg-white">
             <div>
-              <Label htmlFor="formation" className="text-slate-700">Formation et diplômes</Label>
-              <Textarea 
-                id="formation" 
-                value={formData.formation}
-                onChange={(e) => setFormData(prev => ({ ...prev, formation: e.target.value }))}
-                className="bg-white border-slate-200" 
-                placeholder="Diplômes, certifications, formations suivies..."
-              />
-            </div>
-            <div>
-              <Label htmlFor="experience" className="text-slate-700">Expérience professionnelle</Label>
-              <Textarea 
-                id="experience" 
-                value={formData.experience}
-                onChange={(e) => setFormData(prev => ({ ...prev, experience: e.target.value }))}
-                className="bg-white border-slate-200" 
-                placeholder="Postes précédents, années d'expérience..."
-              />
+              <Label htmlFor="formation" className="text-slate-700">Niveau de formation</Label>
+              <Select value={formData.formation} onValueChange={(value) => setFormData(prev => ({ ...prev, formation: value }))}>
+                <SelectTrigger className="bg-white border-slate-200">
+                  <SelectValue placeholder="Sélectionner le niveau" />
+                </SelectTrigger>
+                <SelectContent>
+                  {formationsOptions.map((formation) => (
+                    <SelectItem key={formation} value={formation}>{formation}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             
             <div>
@@ -389,324 +419,24 @@ const AjouterConseiller = () => {
           </CardContent>
         </Card>
 
-        {/* Compétences par tâche */}
-        <Card className="bg-white border border-slate-200 shadow-sm">
-          <CardHeader className="bg-slate-50 border-b border-slate-200">
-            <CardTitle className="flex items-center gap-2 text-slate-700">
-              <Award className="h-5 w-5" />
-              Évaluation des compétences par tâche
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6 bg-white">
-            {/* Prospection */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="bg-blue-100 text-blue-700">
-                  Prospection de biens
-                </Badge>
-              </div>
-              <div className="grid grid-cols-2 gap-4 ml-4">
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="prospection-analyse"
-                      checked={formData.prospection.analyseDemande as boolean}
-                      onCheckedChange={(checked) => handleCompetenceChange('prospection', 'analyseDemande', !!checked)}
-                    />
-                    <Label htmlFor="prospection-analyse" className="text-sm text-slate-600">Analyse de la demande</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="prospection-veille"
-                      checked={formData.prospection.veilleSourcing as boolean}
-                      onCheckedChange={(checked) => handleCompetenceChange('prospection', 'veilleSourcing', !!checked)}
-                    />
-                    <Label htmlFor="prospection-veille" className="text-sm text-slate-600">Veille et sourcing</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="prospection-mandat"
-                      checked={formData.prospection.priseMandat as boolean}
-                      onCheckedChange={(checked) => handleCompetenceChange('prospection', 'priseMandat', !!checked)}
-                    />
-                    <Label htmlFor="prospection-mandat" className="text-sm text-slate-600">Prise de mandat</Label>
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="prospection-notes" className="text-sm text-slate-700">Notes</Label>
-                  <Textarea 
-                    id="prospection-notes"
-                    value={formData.prospection.notes as string}
-                    onChange={(e) => handleNotesChange('prospection', e.target.value)}
-                    className="bg-white border-slate-200 text-sm" 
-                    rows={3}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Traitement des leads */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="bg-green-100 text-green-700">
-                  Traitement des leads
-                </Badge>
-              </div>
-              <div className="grid grid-cols-2 gap-4 ml-4">
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="leads-reactivite"
-                      checked={formData.leads.reactivite as boolean}
-                      onCheckedChange={(checked) => handleCompetenceChange('leads', 'reactivite', !!checked)}
-                    />
-                    <Label htmlFor="leads-reactivite" className="text-sm text-slate-600">Réactivité (SLA &lt; 30 min)</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="leads-qualification"
-                      checked={formData.leads.qualification as boolean}
-                      onCheckedChange={(checked) => handleCompetenceChange('leads', 'qualification', !!checked)}
-                    />
-                    <Label htmlFor="leads-qualification" className="text-sm text-slate-600">Qualification BANT</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="leads-scoring"
-                      checked={formData.leads.scoring as boolean}
-                      onCheckedChange={(checked) => handleCompetenceChange('leads', 'scoring', !!checked)}
-                    />
-                    <Label htmlFor="leads-scoring" className="text-sm text-slate-600">Scoring & CRM</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="leads-rdv"
-                      checked={formData.leads.rdv as boolean}
-                      onCheckedChange={(checked) => handleCompetenceChange('leads', 'rdv', !!checked)}
-                    />
-                    <Label htmlFor="leads-rdv" className="text-sm text-slate-600">Prise de rendez-vous</Label>
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="leads-notes" className="text-sm text-slate-700">Notes</Label>
-                  <Textarea 
-                    id="leads-notes"
-                    value={formData.leads.notes as string}
-                    onChange={(e) => handleNotesChange('leads', e.target.value)}
-                    className="bg-white border-slate-200 text-sm" 
-                    rows={3}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Organisation des visites */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="bg-purple-100 text-purple-700">
-                  Organisation des visites
-                </Badge>
-              </div>
-              <div className="grid grid-cols-2 gap-4 ml-4">
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="visites-pre"
-                      checked={formData.visites.preVisite as boolean}
-                      onCheckedChange={(checked) => handleCompetenceChange('visites', 'preVisite', !!checked)}
-                    />
-                    <Label htmlFor="visites-pre" className="text-sm text-slate-600">Pré-visite</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="visites-parcours"
-                      checked={formData.visites.parcoursScenarise as boolean}
-                      onCheckedChange={(checked) => handleCompetenceChange('visites', 'parcoursScenarise', !!checked)}
-                    />
-                    <Label htmlFor="visites-parcours" className="text-sm text-slate-600">Parcours scénarisé</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="visites-feedback"
-                      checked={formData.visites.feedback as boolean}
-                      onCheckedChange={(checked) => handleCompetenceChange('visites', 'feedback', !!checked)}
-                    />
-                    <Label htmlFor="visites-feedback" className="text-sm text-slate-600">Recueil feedback</Label>
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="visites-notes" className="text-sm text-slate-700">Notes</Label>
-                  <Textarea 
-                    id="visites-notes"
-                    value={formData.visites.notes as string}
-                    onChange={(e) => handleNotesChange('visites', e.target.value)}
-                    className="bg-white border-slate-200 text-sm" 
-                    rows={3}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Négociation */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="bg-orange-100 text-orange-700">
-                  Négociation & closing
-                </Badge>
-              </div>
-              <div className="grid grid-cols-2 gap-4 ml-4">
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="negociation-strategie"
-                      checked={formData.negociation.strategiePrix as boolean}
-                      onCheckedChange={(checked) => handleCompetenceChange('negociation', 'strategiePrix', !!checked)}
-                    />
-                    <Label htmlFor="negociation-strategie" className="text-sm text-slate-600">Stratégie de prix</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="negociation-offres"
-                      checked={formData.negociation.gestionOffres as boolean}
-                      onCheckedChange={(checked) => handleCompetenceChange('negociation', 'gestionOffres', !!checked)}
-                    />
-                    <Label htmlFor="negociation-offres" className="text-sm text-slate-600">Gestion des offres</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="negociation-techniques"
-                      checked={formData.negociation.techniques as boolean}
-                      onCheckedChange={(checked) => handleCompetenceChange('negociation', 'techniques', !!checked)}
-                    />
-                    <Label htmlFor="negociation-techniques" className="text-sm text-slate-600">Techniques de négociation</Label>
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="negociation-notes" className="text-sm text-slate-700">Notes</Label>
-                  <Textarea 
-                    id="negociation-notes"
-                    value={formData.negociation.notes as string}
-                    onChange={(e) => handleNotesChange('negociation', e.target.value)}
-                    className="bg-white border-slate-200 text-sm" 
-                    rows={3}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Signature des actes */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="bg-indigo-100 text-indigo-700">
-                  Signature des actes
-                </Badge>
-              </div>
-              <div className="grid grid-cols-2 gap-4 ml-4">
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="actes-preparation"
-                      checked={formData.actes.preparationDossier as boolean}
-                      onCheckedChange={(checked) => handleCompetenceChange('actes', 'preparationDossier', !!checked)}
-                    />
-                    <Label htmlFor="actes-preparation" className="text-sm text-slate-600">Préparation du dossier</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="actes-compromis"
-                      checked={formData.actes.compromis as boolean}
-                      onCheckedChange={(checked) => handleCompetenceChange('actes', 'compromis', !!checked)}
-                    />
-                    <Label htmlFor="actes-compromis" className="text-sm text-slate-600">Compromis & contrats</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="actes-accompagnement"
-                      checked={formData.actes.accompagnement as boolean}
-                      onCheckedChange={(checked) => handleCompetenceChange('actes', 'accompagnement', !!checked)}
-                    />
-                    <Label htmlFor="actes-accompagnement" className="text-sm text-slate-600">Accompagnement jusqu'à l'acte</Label>
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="actes-notes" className="text-sm text-slate-700">Notes</Label>
-                  <Textarea 
-                    id="actes-notes"
-                    value={formData.actes.notes as string}
-                    onChange={(e) => handleNotesChange('actes', e.target.value)}
-                    className="bg-white border-slate-200 text-sm" 
-                    rows={3}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Encaissement */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="bg-rose-100 text-rose-700">
-                  Encaissement & suivi post-transaction
-                </Badge>
-              </div>
-              <div className="grid grid-cols-2 gap-4 ml-4">
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="encaissement-facturation"
-                      checked={formData.encaissement.facturation as boolean}
-                      onCheckedChange={(checked) => handleCompetenceChange('encaissement', 'facturation', !!checked)}
-                    />
-                    <Label htmlFor="encaissement-facturation" className="text-sm text-slate-600">Facturation et encaissement</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="encaissement-cles"
-                      checked={formData.encaissement.remiseCles as boolean}
-                      onCheckedChange={(checked) => handleCompetenceChange('encaissement', 'remiseCles', !!checked)}
-                    />
-                    <Label htmlFor="encaissement-cles" className="text-sm text-slate-600">Remise des clés</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="encaissement-after"
-                      checked={formData.encaissement.afterSale as boolean}
-                      onCheckedChange={(checked) => handleCompetenceChange('encaissement', 'afterSale', !!checked)}
-                    />
-                    <Label htmlFor="encaissement-after" className="text-sm text-slate-600">After-sale service</Label>
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="encaissement-notes" className="text-sm text-slate-700">Notes</Label>
-                  <Textarea 
-                    id="encaissement-notes"
-                    value={formData.encaissement.notes as string}
-                    onChange={(e) => handleNotesChange('encaissement', e.target.value)}
-                    className="bg-white border-slate-200 text-sm" 
-                    rows={3}
-                  />
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Boutons d'action */}
         <div className="flex justify-end gap-4 pt-6 border-t border-slate-200">
           <Button variant="outline" type="button" className="bg-white border-slate-200 text-slate-700 hover:bg-slate-50">
             Annuler
           </Button>
-          <Button type="submit" className="bg-purple-600 hover:bg-purple-700 text-white">
-            Ajouter le conseiller
+          <Button 
+            type="submit" 
+            className="bg-purple-600 hover:bg-purple-700 text-white"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Ajout en cours...
+              </>
+            ) : (
+              'Ajouter le conseiller'
+            )}
           </Button>
         </div>
       </form>
