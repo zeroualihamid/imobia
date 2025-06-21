@@ -15,7 +15,8 @@ import {
   User, 
   Building,
   GraduationCap,
-  Loader2
+  Loader2,
+  X
 } from 'lucide-react';
 
 const AjouterConseiller = () => {
@@ -36,7 +37,7 @@ const AjouterConseiller = () => {
     dateEmbauche: '',
     salaire: '',
     commission: '',
-    ville: '',
+    villes: [] as string[],
     
     // Formation et spécialisations
     formation: '',
@@ -94,6 +95,22 @@ const AjouterConseiller = () => {
     'Italien'
   ];
 
+  const handleVilleChange = (ville: string, checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      villes: checked 
+        ? [...prev.villes, ville]
+        : prev.villes.filter(v => v !== ville)
+    }));
+  };
+
+  const removeVille = (villeToRemove: string) => {
+    setFormData(prev => ({
+      ...prev,
+      villes: prev.villes.filter(v => v !== villeToRemove)
+    }));
+  };
+
   const handleSpecialisationChange = (specialisation: string, checked: boolean) => {
     setFormData(prev => ({
       ...prev,
@@ -143,7 +160,7 @@ const AjouterConseiller = () => {
         date_embauche: formData.dateEmbauche || null,
         salaire: formData.salaire ? parseFloat(formData.salaire) : null,
         commission: formData.commission ? parseFloat(formData.commission) : null,
-        ville: formData.ville || null,
+        ville: formData.villes.join(', ') || null,
         formation: formData.formation || null,
         specialisations: formData.specialisations.length > 0 ? formData.specialisations : null,
         langues: formData.langues.length > 0 ? formData.langues : null,
@@ -176,7 +193,7 @@ const AjouterConseiller = () => {
         dateEmbauche: '',
         salaire: '',
         commission: '',
-        ville: '',
+        villes: [],
         formation: '',
         specialisations: [],
         langues: [],
@@ -346,18 +363,42 @@ const AjouterConseiller = () => {
                 />
               </div>
             </div>
+            
             <div>
-              <Label htmlFor="ville" className="text-slate-700">Ville d'affectation</Label>
-              <Select value={formData.ville} onValueChange={(value) => setFormData(prev => ({ ...prev, ville: value }))}>
-                <SelectTrigger className="bg-white border-slate-200">
-                  <SelectValue placeholder="Sélectionner une ville" />
-                </SelectTrigger>
-                <SelectContent>
+              <Label className="text-slate-700 mb-3 block">Villes d'affectation</Label>
+              <div className="space-y-3">
+                {/* Affichage des villes sélectionnées */}
+                {formData.villes.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {formData.villes.map((ville) => (
+                      <Badge key={ville} variant="secondary" className="bg-purple-100 text-purple-800">
+                        {ville}
+                        <button
+                          type="button"
+                          onClick={() => removeVille(ville)}
+                          className="ml-2 hover:bg-purple-200 rounded-full p-0.5"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+                
+                {/* Sélection des villes */}
+                <div className="grid grid-cols-3 gap-2">
                   {villesMaroc.map((ville) => (
-                    <SelectItem key={ville} value={ville}>{ville}</SelectItem>
+                    <div key={ville} className="flex items-center space-x-2">
+                      <Checkbox 
+                        id={`ville-${ville}`}
+                        checked={formData.villes.includes(ville)}
+                        onCheckedChange={(checked) => handleVilleChange(ville, !!checked)}
+                      />
+                      <Label htmlFor={`ville-${ville}`} className="text-sm text-slate-600">{ville}</Label>
+                    </div>
                   ))}
-                </SelectContent>
-              </Select>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -372,7 +413,7 @@ const AjouterConseiller = () => {
           </CardHeader>
           <CardContent className="space-y-4 bg-white">
             <div>
-              <Label htmlFor="formation" className="text-slate-700">Niveau de formation</Label>
+              <Label htmlFor="formation" className="text-slate-700">Formation et diplômes</Label>
               <Select value={formData.formation} onValueChange={(value) => setFormData(prev => ({ ...prev, formation: value }))}>
                 <SelectTrigger className="bg-white border-slate-200">
                   <SelectValue placeholder="Sélectionner le niveau" />
