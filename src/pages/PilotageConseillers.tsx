@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import CreateTaskDialog from '@/components/taches/CreateTaskDialog';
 import {
   Users,
   AlertTriangle,
@@ -200,6 +200,12 @@ const PilotageConseillers = () => {
 
   return (
     <div className="space-y-6">
+      {/* En-tête avec bouton d'ajout et statistiques */}
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-slate-800">Pilotage des conseillers</h1>
+        <CreateTaskDialog onTaskCreated={fetchData} />
+      </div>
+
       {/* En-tête avec statistiques */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
