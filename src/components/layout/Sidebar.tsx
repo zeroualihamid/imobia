@@ -16,7 +16,8 @@ import {
   ChevronDown,
   ChevronRight,
   Mic,
-  ClipboardList
+  ClipboardList,
+  Settings
 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
@@ -57,7 +58,8 @@ const Sidebar = () => {
       subItems: [
         { title: 'Liste des conseillers', href: '/conseillers', icon: List },
         { title: 'Ajouter un conseiller', href: '/conseillers/ajouter', icon: UserPlus },
-        { title: 'Tâches détaillées', href: '/conseillers/taches', icon: ClipboardList }
+        { title: 'Tâches détaillées', href: '/conseillers/taches', icon: ClipboardList },
+        { title: 'Pilotage des conseillers', href: '/conseillers/pilotage', icon: Settings }
       ]
     },
     {
