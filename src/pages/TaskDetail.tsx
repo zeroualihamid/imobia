@@ -84,7 +84,7 @@ const TaskDetail = () => {
       setTask(taskData);
       setConseillers(conseillersData || []);
       
-      // Set form data
+      // Set form data - use 'none' instead of empty string for no advisor
       setFormData({
         title: taskData.title,
         description: taskData.description || '',
@@ -93,7 +93,7 @@ const TaskDetail = () => {
         due_date: taskData.due_date ? new Date(taskData.due_date).toISOString().slice(0, 16) : '',
         sla_hours: taskData.sla_hours || 24,
         progress: taskData.progress || 0,
-        owner_id: taskData.owner_id || '',
+        owner_id: taskData.owner_id || 'none',
         score: taskData.score || 0
       });
     } catch (error) {
@@ -127,7 +127,7 @@ const TaskDetail = () => {
         due_date: formData.due_date ? new Date(formData.due_date).toISOString() : null,
         sla_hours: formData.sla_hours,
         progress: formData.progress,
-        owner_id: formData.owner_id || null,
+        owner_id: formData.owner_id === 'none' ? null : formData.owner_id,
         score: formData.score,
         updated_at: new Date().toISOString()
       };
@@ -355,7 +355,7 @@ const TaskDetail = () => {
                     <SelectValue placeholder="Sélectionner un conseiller" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Aucun conseiller</SelectItem>
+                    <SelectItem value="none">Aucun conseiller</SelectItem>
                     {conseillers.map((conseiller) => (
                       <SelectItem key={conseiller.id} value={conseiller.id}>
                         {conseiller.prenom} {conseiller.nom}
