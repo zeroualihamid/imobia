@@ -9,6 +9,7 @@ import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import CreateTaskDialog from '@/components/taches/CreateTaskDialog';
+import DragDropTaskBoard from '@/components/taches/DragDropTaskBoard';
 import {
   Users,
   AlertTriangle,
@@ -270,88 +271,12 @@ const PilotageConseillers = () => {
 
         {/* File d'attente */}
         <TabsContent value="file-attente" className="space-y-4 mt-6 p-6 bg-white">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Tâches urgentes */}
-            <Card className="bg-white border border-slate-200 shadow-sm">
-              <CardHeader className="bg-white border-b border-slate-200">
-                <CardTitle className="flex items-center gap-2 text-red-700">
-                  <AlertTriangle className="h-5 w-5" />
-                  Urgent ({urgentTasks.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="bg-white">
-                <div className="space-y-3">
-                  {urgentTasks.slice(0, 5).map((task) => (
-                    <div key={task.id} className="p-3 border border-red-200 bg-red-50 rounded-lg">
-                      <h4 className="font-medium text-sm text-red-900">{task.title}</h4>
-                      <div className="flex items-center justify-between mt-2">
-                        <Badge variant="destructive" className="text-xs">
-                          {task.status}
-                        </Badge>
-                        {task.owner_id && (
-                          <span className="text-xs text-slate-600">Assignée</span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Tâches importantes */}
-            <Card className="bg-white border border-slate-200 shadow-sm">
-              <CardHeader className="bg-white border-b border-slate-200">
-                <CardTitle className="flex items-center gap-2 text-orange-700">
-                  <Target className="h-5 w-5" />
-                  Important ({importantTasks.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="bg-white">
-                <div className="space-y-3">
-                  {importantTasks.slice(0, 5).map((task) => (
-                    <div key={task.id} className="p-3 border border-orange-200 bg-orange-50 rounded-lg">
-                      <h4 className="font-medium text-sm text-orange-900">{task.title}</h4>
-                      <div className="flex items-center justify-between mt-2">
-                        <Badge variant="default" className="text-xs">
-                          {task.status}
-                        </Badge>
-                        {task.owner_id && (
-                          <span className="text-xs text-slate-600">Assignée</span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Tâches normales */}
-            <Card className="bg-white border border-slate-200 shadow-sm">
-              <CardHeader className="bg-white border-b border-slate-200">
-                <CardTitle className="flex items-center gap-2 text-blue-700">
-                  <Users className="h-5 w-5" />
-                  Normal ({normalTasks.length})
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="bg-white">
-                <div className="space-y-3">
-                  {normalTasks.slice(0, 5).map((task) => (
-                    <div key={task.id} className="p-3 border border-blue-200 bg-blue-50 rounded-lg">
-                      <h4 className="font-medium text-sm text-blue-900">{task.title}</h4>
-                      <div className="flex items-center justify-between mt-2">
-                        <Badge variant="secondary" className="text-xs">
-                          {task.status}
-                        </Badge>
-                        {task.owner_id && (
-                          <span className="text-xs text-slate-600">Assignée</span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          {/* Drag and Drop Task Board */}
+          <DragDropTaskBoard 
+            tasks={tasks} 
+            onTaskUpdate={fetchData} 
+            onTaskClick={handleTaskClick} 
+          />
 
           {/* Table détaillée des tâches en file */}
           <Card className="bg-white border border-slate-200 shadow-sm">
