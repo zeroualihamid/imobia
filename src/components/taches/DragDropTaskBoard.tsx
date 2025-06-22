@@ -43,9 +43,6 @@ const DragDropTaskBoard = ({ tasks, onTaskUpdate, onTaskClick }: DragDropTaskBoa
     setDraggedTask(taskId);
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', taskId);
-    
-    // Prevent immediate click event
-    e.stopPropagation();
   };
 
   const handleDragEnd = (e: React.DragEvent) => {
@@ -65,7 +62,6 @@ const DragDropTaskBoard = ({ tasks, onTaskUpdate, onTaskClick }: DragDropTaskBoa
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
-    // Only clear drag over if we're leaving the drop zone entirely
     if (!e.currentTarget.contains(e.relatedTarget as Node)) {
       setDragOverCategory(null);
     }
@@ -75,7 +71,7 @@ const DragDropTaskBoard = ({ tasks, onTaskUpdate, onTaskClick }: DragDropTaskBoa
     e.preventDefault();
     e.stopPropagation();
     
-    const taskId = e.dataTransfer.getData('text/plain') || draggedTask;
+    const taskId = e.dataTransfer.getData('text/plain');
     
     console.log('Drop:', taskId, 'to', targetCategory);
     
@@ -129,18 +125,19 @@ const DragDropTaskBoard = ({ tasks, onTaskUpdate, onTaskClick }: DragDropTaskBoa
       onDragStart={(e) => handleDragStart(e, task.id)}
       onDragEnd={handleDragEnd}
       onClick={(e) => {
-        // Only trigger click if not dragging
+        // Only trigger click if we're not in the middle of a drag operation
         if (!draggedTask) {
           onTaskClick(task);
         }
       }}
-      className={`p-3 border rounded-lg cursor-move hover:shadow-md transition-all duration-200 bg-white select-none ${
-        draggedTask === task.id ? 'opacity-50 scale-95' : 'opacity-100 scale-100'
+      className={`p-3 border rounded-lg transition-all duration-200 bg-white select-none ${
+        draggedTask === task.id 
+          ? 'opacity-60 scale-95 rotate-3 cursor-grabbing shadow-lg' 
+          : 'opacity-100 scale-100 cursor-grab hover:shadow-md'
       }`}
       style={{
         borderColor: task.category === 'URGENT' ? '#ef4444' : 
-                    task.category === 'IMPORTANT' ? '#f97316' : '#3b82f6',
-        transform: draggedTask === task.id ? 'rotate(5deg)' : 'rotate(0deg)'
+                    task.category === 'IMPORTANT' ? '#f97316' : '#3b82f6'
       }}
     >
       <h4 className="font-medium text-sm mb-2 pointer-events-none">{task.title}</h4>
@@ -164,7 +161,7 @@ const DragDropTaskBoard = ({ tasks, onTaskUpdate, onTaskClick }: DragDropTaskBoa
       {/* Tâches urgentes */}
       <Card 
         className={`bg-white border border-slate-200 shadow-sm transition-all duration-200 ${
-          dragOverCategory === 'URGENT' ? 'ring-2 ring-red-400 bg-red-50' : ''
+          dragOverCategory === 'URGENT' ? 'ring-2 ring-red-400 bg-red-50 scale-102' : ''
         }`}
         onDragOver={handleDragOver}
         onDragEnter={(e) => handleDragEnter(e, 'URGENT')}
@@ -184,7 +181,7 @@ const DragDropTaskBoard = ({ tasks, onTaskUpdate, onTaskClick }: DragDropTaskBoa
             ))}
             {urgentTasks.length === 0 && (
               <div className="flex items-center justify-center h-full text-slate-400 text-sm border-2 border-dashed border-slate-200 rounded-lg p-8">
-                Déposez ici les tâches urgentes
+                Glissez ici les tâches urgentes
               </div>
             )}
           </div>
@@ -194,7 +191,7 @@ const DragDropTaskBoard = ({ tasks, onTaskUpdate, onTaskClick }: DragDropTaskBoa
       {/* Tâches importantes */}
       <Card 
         className={`bg-white border border-slate-200 shadow-sm transition-all duration-200 ${
-          dragOverCategory === 'IMPORTANT' ? 'ring-2 ring-orange-400 bg-orange-50' : ''
+          dragOverCategory === 'IMPORTANT' ? 'ring-2 ring-orange-400 bg-orange-50 scale-102' : ''
         }`}
         onDragOver={handleDragOver}
         onDragEnter={(e) => handleDragEnter(e, 'IMPORTANT')}
@@ -214,7 +211,7 @@ const DragDropTaskBoard = ({ tasks, onTaskUpdate, onTaskClick }: DragDropTaskBoa
             ))}
             {importantTasks.length === 0 && (
               <div className="flex items-center justify-center h-full text-slate-400 text-sm border-2 border-dashed border-slate-200 rounded-lg p-8">
-                Déposez ici les tâches importantes
+                Glissez ici les tâches importantes
               </div>
             )}
           </div>
@@ -224,7 +221,7 @@ const DragDropTaskBoard = ({ tasks, onTaskUpdate, onTaskClick }: DragDropTaskBoa
       {/* Tâches normales */}
       <Card 
         className={`bg-white border border-slate-200 shadow-sm transition-all duration-200 ${
-          dragOverCategory === 'NORMAL' ? 'ring-2 ring-blue-400 bg-blue-50' : ''
+          dragOverCategory === 'NORMAL' ? 'ring-2 ring-blue-400 bg-blue-50 scale-102' : ''
         }`}
         onDragOver={handleDragOver}
         onDragEnter={(e) => handleDragEnter(e, 'NORMAL')}
@@ -244,7 +241,7 @@ const DragDropTaskBoard = ({ tasks, onTaskUpdate, onTaskClick }: DragDropTaskBoa
             ))}
             {normalTasks.length === 0 && (
               <div className="flex items-center justify-center h-full text-slate-400 text-sm border-2 border-dashed border-slate-200 rounded-lg p-8">
-                Déposez ici les tâches normales
+                Glissez ici les tâches normales
               </div>
             )}
           </div>
