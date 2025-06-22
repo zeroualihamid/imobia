@@ -28,6 +28,7 @@ interface DragDropTaskBoardProps {
 const DragDropTaskBoard = ({ tasks, onTaskUpdate, onTaskClick }: DragDropTaskBoardProps) => {
   const { toast } = useToast();
   const [draggedTask, setDraggedTask] = useState<string | null>(null);
+  const [dragOverCategory, setDragOverCategory] = useState<string | null>(null);
 
   const getTasksByCategory = (category: string) => {
     return tasks.filter(task => task.category === category && task.status === 'EN_FILE');
@@ -38,8 +39,19 @@ const DragDropTaskBoard = ({ tasks, onTaskUpdate, onTaskClick }: DragDropTaskBoa
   const normalTasks = getTasksByCategory('NORMAL');
 
   const handleDragStart = (e: React.DragEvent, taskId: string) => {
+    console.log('Drag start:', taskId);
     setDraggedTask(taskId);
     e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', taskId);
+    
+    // Prevent immediate click event
+    e.stopPropagation();
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    console.log('Drag end');
+    setDraggedTask(null);
+    setDragOverCategory(null);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -47,10 +59,39 @@ const DragDropTaskBoard = ({ tasks, onTaskUpdate, onTaskClick }: DragDropTaskBoa
     e.dataTransfer.dropEffect = 'move';
   };
 
+  const handleDragEnter = (e: React.DragEvent, category: string) => {
+    e.preventDefault();
+    setDragOverCategory(category);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    // Only clear drag over if we're leaving the drop zone entirely
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setDragOverCategory(null);
+    }
+  };
+
   const handleDrop = async (e: React.DragEvent, targetCategory: 'URGENT' | 'IMPORTANT' | 'NORMAL') => {
     e.preventDefault();
+    e.stopPropagation();
     
-    if (!draggedTask) return;
+    const taskId = e.dataTransfer.getData('text/plain') || draggedTask;
+    
+    console.log('Drop:', taskId, 'to', targetCategory);
+    
+    if (!taskId) {
+      console.log('No task ID found');
+      return;
+    }
+
+    // Find the task to check if it's already in the target category
+    const task = tasks.find(t => t.id === taskId);
+    if (task && task.category === targetCategory) {
+      console.log('Task already in target category');
+      setDraggedTask(null);
+      setDragOverCategory(null);
+      return;
+    }
 
     try {
       const { error } = await supabase
@@ -59,13 +100,13 @@ const DragDropTaskBoard = ({ tasks, onTaskUpdate, onTaskClick }: DragDropTaskBoa
           category: targetCategory,
           updated_at: new Date().toISOString()
         })
-        .eq('id', draggedTask);
+        .eq('id', taskId);
 
       if (error) throw error;
 
       toast({
         title: "Succès",
-        description: "Tâche déplacée avec succès.",
+        description: `Tâche déplacée vers ${targetCategory.toLowerCase()}.`,
       });
       
       onTaskUpdate();
@@ -78,6 +119,7 @@ const DragDropTaskBoard = ({ tasks, onTaskUpdate, onTaskClick }: DragDropTaskBoa
       });
     } finally {
       setDraggedTask(null);
+      setDragOverCategory(null);
     }
   };
 
@@ -85,16 +127,24 @@ const DragDropTaskBoard = ({ tasks, onTaskUpdate, onTaskClick }: DragDropTaskBoa
     <div
       draggable
       onDragStart={(e) => handleDragStart(e, task.id)}
-      onClick={() => onTaskClick(task)}
-      className="p-3 border rounded-lg cursor-move hover:shadow-md transition-shadow bg-white"
+      onDragEnd={handleDragEnd}
+      onClick={(e) => {
+        // Only trigger click if not dragging
+        if (!draggedTask) {
+          onTaskClick(task);
+        }
+      }}
+      className={`p-3 border rounded-lg cursor-move hover:shadow-md transition-all duration-200 bg-white select-none ${
+        draggedTask === task.id ? 'opacity-50 scale-95' : 'opacity-100 scale-100'
+      }`}
       style={{
-        opacity: draggedTask === task.id ? 0.5 : 1,
         borderColor: task.category === 'URGENT' ? '#ef4444' : 
-                    task.category === 'IMPORTANT' ? '#f97316' : '#3b82f6'
+                    task.category === 'IMPORTANT' ? '#f97316' : '#3b82f6',
+        transform: draggedTask === task.id ? 'rotate(5deg)' : 'rotate(0deg)'
       }}
     >
-      <h4 className="font-medium text-sm mb-2">{task.title}</h4>
-      <div className="flex items-center justify-between">
+      <h4 className="font-medium text-sm mb-2 pointer-events-none">{task.title}</h4>
+      <div className="flex items-center justify-between pointer-events-none">
         <Badge 
           variant={task.category === 'URGENT' ? 'destructive' : 
                   task.category === 'IMPORTANT' ? 'default' : 'secondary'}
@@ -113,8 +163,12 @@ const DragDropTaskBoard = ({ tasks, onTaskUpdate, onTaskClick }: DragDropTaskBoa
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Tâches urgentes */}
       <Card 
-        className="bg-white border border-slate-200 shadow-sm"
+        className={`bg-white border border-slate-200 shadow-sm transition-all duration-200 ${
+          dragOverCategory === 'URGENT' ? 'ring-2 ring-red-400 bg-red-50' : ''
+        }`}
         onDragOver={handleDragOver}
+        onDragEnter={(e) => handleDragEnter(e, 'URGENT')}
+        onDragLeave={handleDragLeave}
         onDrop={(e) => handleDrop(e, 'URGENT')}
       >
         <CardHeader className="bg-red-50 border-b border-red-200">
@@ -129,7 +183,7 @@ const DragDropTaskBoard = ({ tasks, onTaskUpdate, onTaskClick }: DragDropTaskBoa
               <TaskCard key={task.id} task={task} />
             ))}
             {urgentTasks.length === 0 && (
-              <div className="flex items-center justify-center h-full text-slate-400 text-sm">
+              <div className="flex items-center justify-center h-full text-slate-400 text-sm border-2 border-dashed border-slate-200 rounded-lg p-8">
                 Déposez ici les tâches urgentes
               </div>
             )}
@@ -139,8 +193,12 @@ const DragDropTaskBoard = ({ tasks, onTaskUpdate, onTaskClick }: DragDropTaskBoa
 
       {/* Tâches importantes */}
       <Card 
-        className="bg-white border border-slate-200 shadow-sm"
+        className={`bg-white border border-slate-200 shadow-sm transition-all duration-200 ${
+          dragOverCategory === 'IMPORTANT' ? 'ring-2 ring-orange-400 bg-orange-50' : ''
+        }`}
         onDragOver={handleDragOver}
+        onDragEnter={(e) => handleDragEnter(e, 'IMPORTANT')}
+        onDragLeave={handleDragLeave}
         onDrop={(e) => handleDrop(e, 'IMPORTANT')}
       >
         <CardHeader className="bg-orange-50 border-b border-orange-200">
@@ -155,7 +213,7 @@ const DragDropTaskBoard = ({ tasks, onTaskUpdate, onTaskClick }: DragDropTaskBoa
               <TaskCard key={task.id} task={task} />
             ))}
             {importantTasks.length === 0 && (
-              <div className="flex items-center justify-center h-full text-slate-400 text-sm">
+              <div className="flex items-center justify-center h-full text-slate-400 text-sm border-2 border-dashed border-slate-200 rounded-lg p-8">
                 Déposez ici les tâches importantes
               </div>
             )}
@@ -165,8 +223,12 @@ const DragDropTaskBoard = ({ tasks, onTaskUpdate, onTaskClick }: DragDropTaskBoa
 
       {/* Tâches normales */}
       <Card 
-        className="bg-white border border-slate-200 shadow-sm"
+        className={`bg-white border border-slate-200 shadow-sm transition-all duration-200 ${
+          dragOverCategory === 'NORMAL' ? 'ring-2 ring-blue-400 bg-blue-50' : ''
+        }`}
         onDragOver={handleDragOver}
+        onDragEnter={(e) => handleDragEnter(e, 'NORMAL')}
+        onDragLeave={handleDragLeave}
         onDrop={(e) => handleDrop(e, 'NORMAL')}
       >
         <CardHeader className="bg-blue-50 border-b border-blue-200">
@@ -181,7 +243,7 @@ const DragDropTaskBoard = ({ tasks, onTaskUpdate, onTaskClick }: DragDropTaskBoa
               <TaskCard key={task.id} task={task} />
             ))}
             {normalTasks.length === 0 && (
-              <div className="flex items-center justify-center h-full text-slate-400 text-sm">
+              <div className="flex items-center justify-center h-full text-slate-400 text-sm border-2 border-dashed border-slate-200 rounded-lg p-8">
                 Déposez ici les tâches normales
               </div>
             )}
