@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -80,26 +79,45 @@ const ListeConseillers = () => {
 
   const fetchConseillers = async () => {
     try {
-      console.log('Fetching conseillers...');
-      const { data, error } = await supabase
+      console.log('Fetching all conseillers...');
+      
+      // First, let's check the current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      console.log('Current user:', user);
+      
+      if (userError) {
+        console.error('User error:', userError);
+        throw userError;
+      }
+
+      // Fetch all conseillers - remove any potential user filtering
+      const { data, error, count } = await supabase
         .from('conseillers')
-        .select('*')
+        .select('*', { count: 'exact' })
         .order('created_at', { ascending: false });
 
-      console.log('Supabase query result:', { data, error });
+      console.log('Supabase query result:', { data, error, count });
+      console.log('Number of conseillers found:', data?.length || 0);
 
       if (error) {
         console.error('Supabase error:', error);
         throw error;
       }
 
-      console.log('Fetched conseillers:', data);
+      console.log('All fetched conseillers:', data);
       setConseillers(data || []);
+      
+      if (data && data.length > 0) {
+        console.log('Successfully loaded', data.length, 'conseillers');
+      } else {
+        console.log('No conseillers found in database');
+      }
+
     } catch (error) {
       console.error('Erreur lors du chargement des conseillers:', error);
       toast({
         title: "Erreur",
-        description: "Impossible de charger la liste des conseillers.",
+        description: `Impossible de charger la liste des conseillers: ${error.message}`,
         variant: "destructive",
       });
     } finally {
@@ -239,6 +257,11 @@ const ListeConseillers = () => {
               <p className="text-slate-500">
                 {searchTerm ? 'Aucun conseiller trouvé pour cette recherche.' : 'Aucun conseiller enregistré.'}
               </p>
+              {conseillers.length > 0 && searchTerm && (
+                <p className="text-slate-400 text-sm mt-2">
+                  {conseillers.length} conseiller{conseillers.length > 1 ? 's' : ''} total
+                </p>
+              )}
             </div>
           ) : (
             <Table>
