@@ -75,6 +75,33 @@ export type Database = {
         }
         Relationships: []
       }
+      permissions: {
+        Row: {
+          command: Database["public"]["Enums"]["command_type"]
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          permission_level: Database["public"]["Enums"]["permission_level"]
+        }
+        Insert: {
+          command: Database["public"]["Enums"]["command_type"]
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          permission_level?: Database["public"]["Enums"]["permission_level"]
+        }
+        Update: {
+          command?: Database["public"]["Enums"]["command_type"]
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          permission_level?: Database["public"]["Enums"]["permission_level"]
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -167,6 +194,69 @@ export type Database = {
           },
         ]
       }
+      role_permissions: {
+        Row: {
+          created_at: string
+          id: string
+          permission_id: string
+          role_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          permission_id: string
+          role_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          permission_id?: string
+          role_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_permissions_permission_id_fkey"
+            columns: ["permission_id"]
+            isOneToOne: false
+            referencedRelation: "permissions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "role_permissions_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roles: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_system_role: boolean | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_system_role?: boolean | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_system_role?: boolean | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           auto_goal: boolean | null
@@ -217,6 +307,38 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      user_roles: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          id: string
+          role_id: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          id?: string
+          role_id: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          id?: string
+          role_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       weekly_performance: {
         Row: {
@@ -271,8 +393,46 @@ export type Database = {
         }
         Returns: string
       }
+      get_user_roles: {
+        Args: { user_uuid: string }
+        Returns: {
+          role_name: string
+        }[]
+      }
+      user_has_permission: {
+        Args: {
+          user_uuid: string
+          command_name: Database["public"]["Enums"]["command_type"]
+        }
+        Returns: boolean
+      }
+      user_has_role: {
+        Args: { user_uuid: string; role_name: string }
+        Returns: boolean
+      }
     }
     Enums: {
+      command_type:
+        | "CREATE_USER"
+        | "EDIT_USER"
+        | "VIEW_USER"
+        | "DELETE_USER"
+        | "CREATE_CONSEILLER"
+        | "EDIT_CONSEILLER"
+        | "VIEW_CONSEILLER"
+        | "DELETE_CONSEILLER"
+        | "CREATE_PROPERTY"
+        | "EDIT_PROPERTY"
+        | "VIEW_PROPERTY"
+        | "DELETE_PROPERTY"
+        | "CREATE_TASK"
+        | "EDIT_TASK"
+        | "VIEW_TASK"
+        | "DELETE_TASK"
+        | "VIEW_REPORTS"
+        | "MANAGE_ROLES"
+        | "MANAGE_PERMISSIONS"
+      permission_level: "GLOBAL" | "ACCOUNT" | "OWN"
       task_category: "URGENT" | "IMPORTANT" | "NORMAL" | "AUTO_GOAL"
       task_status:
         | "EN_FILE"
@@ -396,6 +556,28 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      command_type: [
+        "CREATE_USER",
+        "EDIT_USER",
+        "VIEW_USER",
+        "DELETE_USER",
+        "CREATE_CONSEILLER",
+        "EDIT_CONSEILLER",
+        "VIEW_CONSEILLER",
+        "DELETE_CONSEILLER",
+        "CREATE_PROPERTY",
+        "EDIT_PROPERTY",
+        "VIEW_PROPERTY",
+        "DELETE_PROPERTY",
+        "CREATE_TASK",
+        "EDIT_TASK",
+        "VIEW_TASK",
+        "DELETE_TASK",
+        "VIEW_REPORTS",
+        "MANAGE_ROLES",
+        "MANAGE_PERMISSIONS",
+      ],
+      permission_level: ["GLOBAL", "ACCOUNT", "OWN"],
       task_category: ["URGENT", "IMPORTANT", "NORMAL", "AUTO_GOAL"],
       task_status: [
         "EN_FILE",
