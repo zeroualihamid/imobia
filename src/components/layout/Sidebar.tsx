@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -17,9 +18,11 @@ import {
   ChevronRight,
   Mic,
   ClipboardList,
-  Settings
+  Settings,
+  Shield
 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import PermissionGuard from '@/components/rbac/PermissionGuard';
 
 const Sidebar = () => {
   const location = useLocation();
@@ -171,6 +174,24 @@ const Sidebar = () => {
             )}
           </div>
         ))}
+
+        {/* Admin Section - Only visible to Admin users */}
+        <PermissionGuard role="Admin">
+          <div className="pt-4 border-t border-slate-200 mt-4">
+            <Link
+              to="/admin/roles"
+              className={cn(
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-slate-100",
+                location.pathname === "/admin/roles"
+                  ? "bg-slate-100 text-slate-900"
+                  : "text-red-600"
+              )}
+            >
+              <Shield className="h-5 w-5 flex-shrink-0" />
+              Gestion des rôles
+            </Link>
+          </div>
+        </PermissionGuard>
       </nav>
     </div>
   );

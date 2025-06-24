@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import UserRoleDisplay from '@/components/rbac/UserRoleDisplay';
 import InitialAdminSetup from '@/components/rbac/InitialAdminSetup';
+import CreateAdminUser from '@/components/rbac/CreateAdminUser';
 import PermissionGuard from '@/components/rbac/PermissionGuard';
 
 const Dashboard = () => {
@@ -30,9 +31,16 @@ const Dashboard = () => {
       </div>
 
       {/* Admin Setup Section */}
-      <PermissionGuard role="Admin" fallback={<InitialAdminSetup />}>
-        <div></div>
-      </PermissionGuard>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <PermissionGuard role="Admin" fallback={<InitialAdminSetup />}>
+          <div></div>
+        </PermissionGuard>
+        
+        {/* Admin User Creation Tool */}
+        <PermissionGuard role="Admin" fallback={<CreateAdminUser />}>
+          <div></div>
+        </PermissionGuard>
+      </div>
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -179,7 +187,7 @@ const Dashboard = () => {
             </div>
           </div>
         </CardContent>
-      </Card>
+      </div>
     </div>
   );
 };
