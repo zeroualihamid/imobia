@@ -24,7 +24,7 @@ interface UserRole {
   profiles?: {
     email: string;
     full_name?: string;
-  };
+  } | null;
   roles: {
     name: string;
     description: string;
@@ -56,18 +56,35 @@ const RoleManagement = () => {
       if (rolesError) throw rolesError;
       setRoles(rolesData || []);
 
-      // Fetch user roles with user data
+      // Fetch user roles with user data - Fixed query to properly join tables
       const { data: userRolesData, error: userRolesError } = await supabase
         .from('user_roles')
         .select(`
-          *,
-          profiles(email, full_name),
-          roles(name, description)
+          user_id,
+          role_id,
+          assigned_at,
+          roles!inner(name, description)
         `)
         .order('assigned_at', { ascending: false });
 
       if (userRolesError) throw userRolesError;
-      setUserRoles(userRolesData || []);
+
+      // Fetch profile data separately and merge
+      const userIds = userRolesData?.map(ur => ur.user_id) || [];
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, email, full_name')
+        .in('id', userIds);
+
+      if (profilesError) throw profilesError;
+
+      // Merge the data
+      const mergedUserRoles = userRolesData?.map(userRole => ({
+        ...userRole,
+        profiles: profilesData?.find(profile => profile.id === userRole.user_id) || null
+      })) || [];
+
+      setUserRoles(mergedUserRoles);
 
       // Fetch users from profiles
       const { data: usersData, error: usersError } = await supabase
@@ -136,12 +153,13 @@ const RoleManagement = () => {
     }
   };
 
-  const removeRole = async (userRoleId: string) => {
+  const removeRole = async (userId: string, roleId: string) => {
     try {
       const { error } = await supabase
         .from('user_roles')
         .delete()
-        .eq('id', userRoleId);
+        .eq('user_id', userId)
+        .eq('role_id', roleId);
 
       if (error) throw error;
 
@@ -282,13 +300,13 @@ const RoleManagement = () => {
               </TableHeader>
               <TableBody>
                 {filteredUserRoles.map((userRole) => (
-                  <TableRow key={userRole.user_id + userRole.role_id}>
+                  <TableRow key={`${userRole.user_id}-${userRole.role_id}`}>
                     <TableCell>
                       <div className="font-medium">
                         {userRole.profiles?.full_name || 'Utilisateur'}
                       </div>
                     </TableCell>
-                    <TableCell>{userRole.profiles?.email}</TableCell>
+                    <TableCell>{userRole.profiles?.email || 'Email non trouvé'}</TableCell>
                     <TableCell>
                       <Badge variant="secondary">
                         {userRole.roles.name}
@@ -301,7 +319,7 @@ const RoleManagement = () => {
                       <Button
                         variant="destructive"
                         size="sm"
-                        onClick={() => removeRole(userRole.user_id + userRole.role_id)}
+                        onClick={() => removeRole(userRole.user_id, userRole.role_id)}
                       >
                         Retirer
                       </Button>
