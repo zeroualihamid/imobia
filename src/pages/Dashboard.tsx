@@ -1,153 +1,185 @@
+
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Building2, Users, FileText, Calendar, TrendingUp, Home } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
+import { 
+  Building2, 
+  Users, 
+  CheckSquare, 
+  TrendingUp, 
+  Shield,
+  Settings
+} from 'lucide-react';
+import UserRoleDisplay from '@/components/rbac/UserRoleDisplay';
+import InitialAdminSetup from '@/components/rbac/InitialAdminSetup';
+import PermissionGuard from '@/components/rbac/PermissionGuard';
 
 const Dashboard = () => {
-  const stats = [
-    {
-      title: 'Total Biens',
-      value: '156',
-      description: '+12% ce mois',
-      icon: Building2,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50'
-    },
-    {
-      title: 'Conseillers Actifs',
-      value: '24',
-      description: '+2 nouveaux',
-      icon: Users,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50'
-    },
-    {
-      title: 'Demandes en Cours',
-      value: '89',
-      description: '+5% cette semaine',
-      icon: FileText,
-      color: 'text-emerald-600',
-      bgColor: 'bg-emerald-50'
-    },
-    {
-      title: 'RDV Planifiés',
-      value: '32',
-      description: 'Cette semaine',
-      icon: Calendar,
-      color: 'text-indigo-600',
-      bgColor: 'bg-indigo-50'
-    }
-  ];
-
-  const recentActivity = [
-    { id: 1, action: 'Nouveau bien ajouté', property: 'Appartement 3P - Paris 15e', time: 'Il y a 2h' },
-    { id: 2, action: 'Demande client', property: 'Recherche studio - Paris 11e', time: 'Il y a 4h' },
-    { id: 3, action: 'Visite planifiée', property: 'Maison 5P - Neuilly', time: 'Il y a 1j' },
-    { id: 4, action: 'Mandat signé', property: 'Local commercial - Bastille', time: 'Il y a 2j' }
-  ];
-
   return (
-    <div className="space-y-8">
-      <div className="bg-white rounded-lg p-6 shadow-sm border border-slate-200">
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">
-          Tableau de bord
-        </h1>
-        <p className="text-slate-600">
-          Vue d'ensemble de votre activité immobilière
-        </p>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800">Tableau de bord</h1>
+            <p className="text-slate-600">Bienvenue sur votre interface de gestion immobilière</p>
+          </div>
+          <UserRoleDisplay />
+        </div>
       </div>
 
+      {/* Admin Setup Section */}
+      <PermissionGuard role="Admin" fallback={<InitialAdminSetup />}>
+        <div></div>
+      </PermissionGuard>
+
+      {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => (
-          <Card key={index} className="bg-white hover:shadow-lg transition-all duration-200 border border-slate-200">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600">
-                {stat.title}
+        <Card className="bg-white border border-slate-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Biens</CardTitle>
+            <Building2 className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">24</div>
+            <p className="text-xs text-slate-600">+2 ce mois</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white border border-slate-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Conseillers Actifs</CardTitle>
+            <Users className="h-4 w-4 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">8</div>
+            <p className="text-xs text-slate-600">+1 ce mois</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white border border-slate-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Tâches en cours</CardTitle>
+            <CheckSquare className="h-4 w-4 text-orange-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">15</div>
+            <p className="text-xs text-slate-600">-3 aujourd'hui</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white border border-slate-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Performance</CardTitle>
+            <TrendingUp className="h-4 w-4 text-purple-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">92%</div>
+            <p className="text-xs text-slate-600">+5% ce mois</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <Card className="bg-white border border-slate-200">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="h-5 w-5 text-blue-500" />
+              Gestion des Biens
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-slate-600">Gérez votre portefeuille immobilier</p>
+            <div className="flex gap-2">
+              <Link to="/biens" className="flex-1">
+                <Button variant="outline" className="w-full">Voir les biens</Button>
+              </Link>
+              <Link to="/biens/ajouter" className="flex-1">
+                <Button className="w-full">Ajouter</Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white border border-slate-200">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-green-500" />
+              Équipe Commerciale
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-slate-600">Gérez vos conseillers immobiliers</p>
+            <div className="flex gap-2">
+              <Link to="/conseillers" className="flex-1">
+                <Button variant="outline" className="w-full">Voir l'équipe</Button>
+              </Link>
+              <Link to="/conseillers/ajouter" className="flex-1">
+                <Button className="w-full">Recruter</Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+
+        <PermissionGuard role="Admin">
+          <Card className="bg-white border border-slate-200">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5 text-purple-500" />
+                Administration
               </CardTitle>
-              <div className={`p-2 rounded-lg ${stat.bgColor}`}>
-                <stat.icon className={`h-5 w-5 ${stat.color}`} />
-              </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-slate-900">{stat.value}</div>
-              <p className="text-xs text-slate-500 mt-1">
-                {stat.description}
-              </p>
+            <CardContent className="space-y-3">
+              <p className="text-sm text-slate-600">Gérez les utilisateurs et permissions</p>
+              <div className="flex gap-2">
+                <Link to="/admin/roles" className="flex-1">
+                  <Button variant="outline" className="w-full">
+                    <Settings className="h-4 w-4 mr-2" />
+                    Rôles & Permissions
+                  </Button>
+                </Link>
+              </div>
             </CardContent>
           </Card>
-        ))}
+        </PermissionGuard>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <Card className="bg-white border border-slate-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-emerald-600" />
-              Activité Récente
-            </CardTitle>
-            <CardDescription>
-              Dernières actions sur la plateforme
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {recentActivity.map((activity) => (
-                <div key={activity.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors">
-                  <div className="space-y-1">
-                    <p className="font-medium text-sm text-slate-900">{activity.action}</p>
-                    <p className="text-xs text-slate-500">{activity.property}</p>
-                  </div>
-                  <span className="text-xs text-slate-500 font-medium">{activity.time}</span>
-                </div>
-              ))}
+      {/* Recent Activity */}
+      <Card className="bg-white border border-slate-200">
+        <CardHeader>
+          <CardTitle>Activité récente</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-center space-x-4">
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              <div className="flex-1">
+                <p className="text-sm font-medium">Nouveau bien ajouté</p>
+                <p className="text-xs text-slate-600">Appartement 3 pièces - Casablanca</p>
+              </div>
+              <span className="text-xs text-slate-500">Il y a 2h</span>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white border border-slate-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Home className="h-5 w-5 text-blue-600" />
-              Biens les plus demandés
-            </CardTitle>
-            <CardDescription>
-              Types de biens recherchés cette semaine
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-slate-900">Appartements 2-3 pièces</span>
-                  <span className="text-sm font-semibold text-blue-600">45%</span>
-                </div>
-                <div className="w-full bg-slate-200 rounded-full h-2">
-                  <div className="bg-blue-600 h-2 rounded-full transition-all duration-300" style={{ width: '45%' }}></div>
-                </div>
+            <div className="flex items-center space-x-4">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <div className="flex-1">
+                <p className="text-sm font-medium">Tâche terminée</p>
+                <p className="text-xs text-slate-600">Visite client - Villa Rabat</p>
               </div>
-              
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-slate-900">Maisons avec jardin</span>
-                  <span className="text-sm font-semibold text-emerald-600">30%</span>
-                </div>
-                <div className="w-full bg-slate-200 rounded-full h-2">
-                  <div className="bg-emerald-600 h-2 rounded-full transition-all duration-300" style={{ width: '30%' }}></div>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-slate-900">Locaux commerciaux</span>
-                  <span className="text-sm font-semibold text-purple-600">25%</span>
-                </div>
-                <div className="w-full bg-slate-200 rounded-full h-2">
-                  <div className="bg-purple-600 h-2 rounded-full transition-all duration-300" style={{ width: '25%' }}></div>
-                </div>
-              </div>
+              <span className="text-xs text-slate-500">Il y a 4h</span>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+            <div className="flex items-center space-x-4">
+              <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+              <div className="flex-1">
+                <p className="text-sm font-medium">Nouveau conseiller</p>
+                <p className="text-xs text-slate-600">Sarah Bennani a rejoint l'équipe</p>
+              </div>
+              <span className="text-xs text-slate-500">Hier</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

@@ -20,6 +20,7 @@ import ListeConseillers from "./pages/ListeConseillers";
 import DetailConseiller from "./pages/DetailConseiller";
 import PilotageConseillers from "./pages/PilotageConseillers";
 import TaskDetail from "./pages/TaskDetail";
+import RoleManagement from "./pages/RoleManagement";
 import Auth from "./pages/Auth";
 
 const queryClient = new QueryClient();
@@ -115,6 +116,13 @@ function App() {
                   <ProtectedRoute>
                     <Layout>
                       <TaskDetail />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/roles" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <RoleManagement />
                     </Layout>
                   </ProtectedRoute>
                 } />
