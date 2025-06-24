@@ -16,7 +16,7 @@ import InitialAdminSetup from '@/components/rbac/InitialAdminSetup';
 import CreateAdminUser from '@/components/rbac/CreateAdminUser';
 import PermissionGuard from '@/components/rbac/PermissionGuard';
 
-const Dashboard = () => {
+const Dashboard: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -187,7 +187,7 @@ const Dashboard = () => {
             </div>
           </div>
         </CardContent>
-      </div>
+      </Card>
     </div>
   );
 };
