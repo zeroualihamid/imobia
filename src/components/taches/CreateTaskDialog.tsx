@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Home, X } from 'lucide-react';
@@ -257,214 +258,219 @@ const CreateTaskDialog = ({ onTaskCreated }: CreateTaskDialogProps) => {
             Ajouter
           </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-[500px] !bg-white !border-slate-200 hover:!bg-white">
-          <DialogHeader className="!bg-white hover:!bg-white">
+        <DialogContent className="sm:max-w-[500px] max-h-[90vh] !bg-white !border-slate-200 hover:!bg-white flex flex-col">
+          <DialogHeader className="!bg-white hover:!bg-white flex-shrink-0">
             <DialogTitle className="text-slate-900">Créer une nouvelle tâche</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4 !bg-white hover:!bg-white">
-            <div className="space-y-3">
-              <Label className="text-slate-900 font-medium text-red-600">Type de tâche</Label>
+          
+          <ScrollArea className="flex-1 max-h-[calc(90vh-8rem)]">
+            <form onSubmit={handleSubmit} className="space-y-4 !bg-white hover:!bg-white p-1">
+              <div className="space-y-3">
+                <Label className="text-slate-900 font-medium text-red-600">Type de tâche</Label>
+                <div className="space-y-2">
+                  <Select value={selectedTaskType} onValueChange={handleTaskTypeSelect}>
+                    <SelectTrigger className="!bg-white !border-slate-300 text-slate-900 hover:!bg-white focus:!bg-white">
+                      <SelectValue placeholder="Sélectionner un type de tâche" />
+                    </SelectTrigger>
+                    <SelectContent className="!bg-white !border-slate-300 z-50">
+                      {taskTypes.map((taskType) => (
+                        <SelectItem key={taskType.id} value={taskType.id} className="text-slate-900 hover:!bg-slate-50">
+                          {taskType.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  
+                  {!showNewTaskTypeForm ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowNewTaskTypeForm(true)}
+                      className="!bg-white !border-slate-300 text-slate-700 hover:!bg-slate-50"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Ajouter un nouveau type
+                    </Button>
+                  ) : (
+                    <div className="space-y-2 p-3 border border-slate-300 rounded-md !bg-white">
+                      <Input
+                        placeholder="Nom du nouveau type de tâche"
+                        value={newTaskType.name}
+                        onChange={(e) => setNewTaskType(prev => ({ ...prev, name: e.target.value }))}
+                        className="!bg-white !border-slate-300 text-slate-900"
+                      />
+                      <Select 
+                        value={newTaskType.category} 
+                        onValueChange={(value: 'URGENT' | 'IMPORTANT' | 'NORMAL' | 'AUTO_GOAL') => 
+                          setNewTaskType(prev => ({ ...prev, category: value }))
+                        }
+                      >
+                        <SelectTrigger className="!bg-white !border-slate-300 text-slate-900">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="!bg-white !border-slate-300 z-50">
+                          <SelectItem value="NORMAL">Normal</SelectItem>
+                          <SelectItem value="IMPORTANT">Important</SelectItem>
+                          <SelectItem value="URGENT">Urgent</SelectItem>
+                          <SelectItem value="AUTO_GOAL">Auto Goal</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={handleCreateTaskType}
+                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          Créer
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowNewTaskTypeForm(false)}
+                          className="!bg-white !border-slate-300 text-slate-700 hover:!bg-slate-50"
+                        >
+                          Annuler
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div className="space-y-2">
-                <Select value={selectedTaskType} onValueChange={handleTaskTypeSelect}>
-                  <SelectTrigger className="!bg-white !border-slate-300 text-slate-900 hover:!bg-white focus:!bg-white">
-                    <SelectValue placeholder="Sélectionner un type de tâche" />
-                  </SelectTrigger>
-                  <SelectContent className="!bg-white !border-slate-300 z-50">
-                    {taskTypes.map((taskType) => (
-                      <SelectItem key={taskType.id} value={taskType.id} className="text-slate-900 hover:!bg-slate-50">
-                        {taskType.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                
-                {!showNewTaskTypeForm ? (
+                <Label className="text-slate-900 font-medium">Bien associé</Label>
+                {selectedProperty ? (
+                  <div className="flex items-center space-x-3 p-3 border border-slate-300 rounded-md !bg-white">
+                    <div className="flex-shrink-0">
+                      {getPropertyThumbnail(selectedProperty) ? (
+                        <img
+                          src={getPropertyThumbnail(selectedProperty)}
+                          alt="Aperçu du bien"
+                          className="w-12 h-12 object-cover rounded-md"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 bg-slate-200 rounded-md flex items-center justify-center">
+                          <Home className="h-5 w-5 text-slate-400" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-medium text-slate-900 truncate">
+                        {getPropertyTitle(selectedProperty)}
+                      </h3>
+                      <p className="text-sm text-slate-500 truncate">
+                        {selectedProperty.metadata?.address || 'Adresse non spécifiée'}
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={removeSelectedProperty}
+                      className="text-slate-400 hover:text-slate-600"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
                   <Button
                     type="button"
                     variant="outline"
-                    size="sm"
-                    onClick={() => setShowNewTaskTypeForm(true)}
-                    className="!bg-white !border-slate-300 text-slate-700 hover:!bg-slate-50"
+                    onClick={() => setShowPropertyDialog(true)}
+                    className="w-full !bg-white !border-slate-300 text-slate-700 hover:!bg-slate-50"
                   >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Ajouter un nouveau type
+                    <Home className="h-4 w-4 mr-2" />
+                    Sélectionner un bien
                   </Button>
-                ) : (
-                  <div className="space-y-2 p-3 border border-slate-300 rounded-md !bg-white">
-                    <Input
-                      placeholder="Nom du nouveau type de tâche"
-                      value={newTaskType.name}
-                      onChange={(e) => setNewTaskType(prev => ({ ...prev, name: e.target.value }))}
-                      className="!bg-white !border-slate-300 text-slate-900"
-                    />
-                    <Select 
-                      value={newTaskType.category} 
-                      onValueChange={(value: 'URGENT' | 'IMPORTANT' | 'NORMAL' | 'AUTO_GOAL') => 
-                        setNewTaskType(prev => ({ ...prev, category: value }))
-                      }
-                    >
-                      <SelectTrigger className="!bg-white !border-slate-300 text-slate-900">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="!bg-white !border-slate-300 z-50">
-                        <SelectItem value="NORMAL">Normal</SelectItem>
-                        <SelectItem value="IMPORTANT">Important</SelectItem>
-                        <SelectItem value="URGENT">Urgent</SelectItem>
-                        <SelectItem value="AUTO_GOAL">Auto Goal</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        size="sm"
-                        onClick={handleCreateTaskType}
-                        className="bg-blue-600 hover:bg-blue-700 text-white"
-                      >
-                        Créer
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowNewTaskTypeForm(false)}
-                        className="!bg-white !border-slate-300 text-slate-700 hover:!bg-slate-50"
-                      >
-                        Annuler
-                      </Button>
-                    </div>
-                  </div>
                 )}
               </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label className="text-slate-900 font-medium">Bien associé</Label>
-              {selectedProperty ? (
-                <div className="flex items-center space-x-3 p-3 border border-slate-300 rounded-md !bg-white">
-                  <div className="flex-shrink-0">
-                    {getPropertyThumbnail(selectedProperty) ? (
-                      <img
-                        src={getPropertyThumbnail(selectedProperty)}
-                        alt="Aperçu du bien"
-                        className="w-12 h-12 object-cover rounded-md"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 bg-slate-200 rounded-md flex items-center justify-center">
-                        <Home className="h-5 w-5 text-slate-400" />
+              <div className="space-y-2">
+                <Label htmlFor="description" className="text-slate-900 font-medium">Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  placeholder="Description de la tâche"
+                  rows={3}
+                  className="!bg-white !border-slate-300 text-slate-900 placeholder:text-slate-500 hover:!bg-white focus:!bg-white"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-slate-900 font-medium">Catégorie</Label>
+                <div className="p-3 bg-slate-50 rounded-md">
+                  <span className="text-sm text-slate-700">
+                    {selectedTaskType 
+                      ? taskTypes.find(type => type.id === selectedTaskType)?.category || 'Normal'
+                      : 'Normal'
+                    }
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="due_date" className="text-slate-900 font-medium">Date d'échéance</Label>
+                <Input
+                  id="due_date"
+                  type="date"
+                  value={formData.due_date}
+                  onChange={(e) => handleInputChange('due_date', e.target.value)}
+                  className="!bg-white !border-slate-300 text-slate-900 hover:!bg-white focus:!bg-white"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-slate-900 font-medium">Conseillers assignés</Label>
+                <ScrollArea className="max-h-32 border border-slate-300 rounded-md p-3 !bg-white hover:!bg-white">
+                  <div className="space-y-2">
+                    {conseillers.map((conseiller) => (
+                      <div key={conseiller.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={conseiller.id}
+                          checked={selectedConseillers.includes(conseiller.id)}
+                          onCheckedChange={() => handleConseillerToggle(conseiller.id)}
+                          className="border-slate-300"
+                        />
+                        <Label htmlFor={conseiller.id} className="text-sm text-slate-900">
+                          {conseiller.prenom} {conseiller.nom}
+                        </Label>
                       </div>
+                    ))}
+                    {conseillers.length === 0 && (
+                      <p className="text-sm text-slate-500">Aucun conseiller disponible</p>
                     )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-medium text-slate-900 truncate">
-                      {getPropertyTitle(selectedProperty)}
-                    </h3>
-                    <p className="text-sm text-slate-500 truncate">
-                      {selectedProperty.metadata?.address || 'Adresse non spécifiée'}
-                    </p>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={removeSelectedProperty}
-                    className="text-slate-400 hover:text-slate-600"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ) : (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowPropertyDialog(true)}
-                  className="w-full !bg-white !border-slate-300 text-slate-700 hover:!bg-slate-50"
-                >
-                  <Home className="h-4 w-4 mr-2" />
-                  Sélectionner un bien
-                </Button>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description" className="text-slate-900 font-medium">Description</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => handleInputChange('description', e.target.value)}
-                placeholder="Description de la tâche"
-                rows={3}
-                className="!bg-white !border-slate-300 text-slate-900 placeholder:text-slate-500 hover:!bg-white focus:!bg-white"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-slate-900 font-medium">Catégorie</Label>
-              <div className="p-3 bg-slate-50 rounded-md">
-                <span className="text-sm text-slate-700">
-                  {selectedTaskType 
-                    ? taskTypes.find(type => type.id === selectedTaskType)?.category || 'Normal'
-                    : 'Normal'
-                  }
-                </span>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="due_date" className="text-slate-900 font-medium">Date d'échéance</Label>
-              <Input
-                id="due_date"
-                type="date"
-                value={formData.due_date}
-                onChange={(e) => handleInputChange('due_date', e.target.value)}
-                className="!bg-white !border-slate-300 text-slate-900 hover:!bg-white focus:!bg-white"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-slate-900 font-medium">Conseillers assignés</Label>
-              <div className="max-h-40 overflow-y-auto space-y-2 border border-slate-300 rounded-md p-3 !bg-white hover:!bg-white">
-                {conseillers.map((conseiller) => (
-                  <div key={conseiller.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={conseiller.id}
-                      checked={selectedConseillers.includes(conseiller.id)}
-                      onCheckedChange={() => handleConseillerToggle(conseiller.id)}
-                      className="border-slate-300"
-                    />
-                    <Label htmlFor={conseiller.id} className="text-sm text-slate-900">
-                      {conseiller.prenom} {conseiller.nom}
-                    </Label>
-                  </div>
-                ))}
-                {conseillers.length === 0 && (
-                  <p className="text-sm text-slate-500">Aucun conseiller disponible</p>
+                </ScrollArea>
+                {selectedConseillers.length > 0 && (
+                  <p className="text-xs text-slate-600">
+                    {selectedConseillers.length} conseiller(s) sélectionné(s)
+                  </p>
                 )}
               </div>
-              {selectedConseillers.length > 0 && (
-                <p className="text-xs text-slate-600">
-                  {selectedConseillers.length} conseiller(s) sélectionné(s)
-                </p>
-              )}
-            </div>
 
-            <div className="flex justify-end gap-2 pt-4 !bg-white hover:!bg-white">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => setOpen(false)}
-                className="!bg-white !border-slate-300 text-slate-700 hover:!bg-slate-50"
-              >
-                Annuler
-              </Button>
-              <Button 
-                type="submit" 
-                disabled={isLoading || !selectedTaskType}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                {isLoading ? 'Création...' : 'Créer la tâche'}
-              </Button>
-            </div>
-          </form>
+              <div className="flex justify-end gap-2 pt-4 !bg-white hover:!bg-white">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setOpen(false)}
+                  className="!bg-white !border-slate-300 text-slate-700 hover:!bg-slate-50"
+                >
+                  Annuler
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={isLoading || !selectedTaskType}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  {isLoading ? 'Création...' : 'Créer la tâche'}
+                </Button>
+              </div>
+            </form>
+          </ScrollArea>
         </DialogContent>
       </Dialog>
 
