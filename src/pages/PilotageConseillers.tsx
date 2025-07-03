@@ -67,6 +67,7 @@ const PilotageConseillers = () => {
 
   const fetchData = async () => {
     try {
+      console.log('Fetching data...');
       setIsLoading(true);
       
       // Fetch tasks
@@ -76,6 +77,7 @@ const PilotageConseillers = () => {
         .order('created_at', { ascending: false });
 
       if (tasksError) throw tasksError;
+      console.log('Tasks fetched:', tasksData?.length);
 
       // Fetch conseillers
       const { data: conseillersData, error: conseillersError } = await supabase
@@ -83,6 +85,7 @@ const PilotageConseillers = () => {
         .select('id, prenom, nom, email');
 
       if (conseillersError) throw conseillersError;
+      console.log('Conseillers fetched:', conseillersData?.length);
 
       // Fetch weekly performances (mock data for now)
       const mockPerformances: WeeklyPerformance[] = conseillersData?.map((c: Conseiller) => ({
@@ -158,6 +161,8 @@ const PilotageConseillers = () => {
 
   const assignTaskToMultipleConseillers = async (taskId: string, conseillerIds: string[]) => {
     try {
+      console.log('Assigning task:', taskId, 'to conseillers:', conseillerIds);
+      
       // First, insert assignments in task_conseillers table
       const assignments = conseillerIds.map(conseillerId => ({
         task_id: taskId,
@@ -169,7 +174,10 @@ const PilotageConseillers = () => {
         .from('task_conseillers')
         .insert(assignments);
 
-      if (assignmentError) throw assignmentError;
+      if (assignmentError) {
+        console.error('Assignment error:', assignmentError);
+        throw assignmentError;
+      }
 
       // Then update task status to ASSIGNEE
       const { error: updateError } = await supabase
@@ -180,19 +188,25 @@ const PilotageConseillers = () => {
         })
         .eq('id', taskId);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Update error:', updateError);
+        throw updateError;
+      }
 
       const conseillerNames = conseillerIds.map(id => {
         const conseiller = conseillers.find(c => c.id === id);
         return `${conseiller?.prenom} ${conseiller?.nom}`;
       }).join(', ');
 
+      console.log('Task assigned successfully to:', conseillerNames);
+
       toast({
         title: "Succès",
         description: `Tâche assignée à ${conseillerNames}.`,
       });
       
-      fetchData();
+      // Force a data refresh to ensure UI is updated
+      await fetchData();
     } catch (error) {
       console.error('Erreur lors de l\'assignation:', error);
       toast({
@@ -455,6 +469,13 @@ const PilotageConseillers = () => {
                       </TableCell>
                     </TableRow>
                   ))}
+                  {tasksEnFile.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center text-slate-500 py-8 bg-white">
+                        Aucune tâche en file d'attente
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
