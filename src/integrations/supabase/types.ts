@@ -296,6 +296,30 @@ export type Database = {
           },
         ]
       }
+      task_types: {
+        Row: {
+          category: Database["public"]["Enums"]["task_category"]
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["task_category"]
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["task_category"]
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           auto_goal: boolean | null
