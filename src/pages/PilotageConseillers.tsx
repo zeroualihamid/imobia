@@ -153,22 +153,40 @@ const PilotageConseillers = () => {
     return tasks.filter(task => task.category === category);
   };
 
-  const assignTask = async (taskId: string, conseillerId: string) => {
+  const assignTaskToMultipleConseillers = async (taskId: string, conseillerIds: string[]) => {
     try {
-      const { error } = await supabase
+      // First, insert assignments in task_conseillers table
+      const assignments = conseillerIds.map(conseillerId => ({
+        task_id: taskId,
+        conseiller_id: conseillerId,
+        assigned_by: null
+      }));
+
+      const { error: assignmentError } = await supabase
+        .from('task_conseillers')
+        .insert(assignments);
+
+      if (assignmentError) throw assignmentError;
+
+      // Then update task status to ASSIGNEE
+      const { error: updateError } = await supabase
         .from('tasks')
         .update({ 
-          owner_id: conseillerId, 
           status: 'ASSIGNEE',
           updated_at: new Date().toISOString()
         })
         .eq('id', taskId);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
+
+      const conseillerNames = conseillerIds.map(id => {
+        const conseiller = conseillers.find(c => c.id === id);
+        return `${conseiller?.prenom} ${conseiller?.nom}`;
+      }).join(', ');
 
       toast({
         title: "Succès",
-        description: "Tâche assignée avec succès.",
+        description: `Tâche assignée à ${conseillerNames}.`,
       });
       
       fetchData();
@@ -191,6 +209,93 @@ const PilotageConseillers = () => {
     return description.length > maxLength 
       ? description.substring(0, maxLength) + '...' 
       : description;
+  };
+
+  // Multi-select assignment component
+  const MultiSelectAssignmentDropdown = ({ taskId }: { taskId: string }) => {
+    const [selectedConseillers, setSelectedConseillers] = useState<string[]>([]);
+    const [isOpen, setIsOpen] = useState(false);
+
+    const handleConseillerToggle = (conseillerId: string) => {
+      setSelectedConseillers(prev => 
+        prev.includes(conseillerId) 
+          ? prev.filter(id => id !== conseillerId)
+          : [...prev, conseillerId]
+      );
+    };
+
+    const handleAssign = async () => {
+      if (selectedConseillers.length === 0) {
+        toast({
+          title: "Attention",
+          description: "Veuillez sélectionner au moins un conseiller.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      await assignTaskToMultipleConseillers(taskId, selectedConseillers);
+      setSelectedConseillers([]);
+      setIsOpen(false);
+    };
+
+    return (
+      <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+        <DropdownMenuTrigger asChild>
+          <Button 
+            size="sm" 
+            variant="outline"
+            className="bg-white border-slate-300 text-slate-900 hover:bg-slate-50"
+            onClick={(e) => e.stopPropagation()}
+          >
+            Assigner
+            <ChevronDown className="ml-2 h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="bg-white border-slate-300 z-50 w-64">
+          <div className="p-2">
+            <div className="text-sm font-medium text-slate-900 mb-2">
+              Sélectionner les conseillers:
+            </div>
+            <div className="max-h-40 overflow-y-auto space-y-1">
+              {conseillers.map((conseiller) => (
+                <div 
+                  key={conseiller.id}
+                  className="flex items-center space-x-2 p-1 hover:bg-slate-50 rounded cursor-pointer"
+                  onClick={() => handleConseillerToggle(conseiller.id)}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedConseillers.includes(conseiller.id)}
+                    onChange={() => handleConseillerToggle(conseiller.id)}
+                    className="rounded border-slate-300"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <span className="text-sm text-slate-900">
+                    {conseiller.prenom} {conseiller.nom}
+                  </span>
+                </div>
+              ))}
+            </div>
+            {conseillers.length === 0 && (
+              <div className="text-sm text-slate-500 py-2">
+                Aucun conseiller disponible
+              </div>
+            )}
+            <div className="mt-3 pt-2 border-t border-slate-200">
+              <Button 
+                size="sm" 
+                onClick={handleAssign}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                disabled={selectedConseillers.length === 0}
+              >
+                Assigner ({selectedConseillers.length})
+              </Button>
+            </div>
+          </div>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
   };
 
   if (isLoading) {
@@ -342,39 +447,8 @@ const PilotageConseillers = () => {
                       <TableCell className="text-slate-900">
                         {new Date(task.created_at).toLocaleDateString('fr-FR')}
                       </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              className="bg-white border-slate-300 text-slate-900 hover:bg-slate-50"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              Assigner
-                              <ChevronDown className="ml-2 h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent className="bg-white border-slate-300 z-50">
-                            {conseillers.map((conseiller) => (
-                              <DropdownMenuItem
-                                key={conseiller.id}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  assignTask(task.id, conseiller.id);
-                                }}
-                                className="text-slate-900 hover:bg-slate-50 cursor-pointer"
-                              >
-                                {conseiller.prenom} {conseiller.nom}
-                              </DropdownMenuItem>
-                            ))}
-                            {conseillers.length === 0 && (
-                              <DropdownMenuItem disabled className="text-slate-500">
-                                Aucun conseiller disponible
-                              </DropdownMenuItem>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <MultiSelectAssignmentDropdown taskId={task.id} />
                       </TableCell>
                     </TableRow>
                   ))}
