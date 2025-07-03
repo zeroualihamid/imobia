@@ -138,11 +138,11 @@ const CreateTaskDialog = ({ onTaskCreated }: CreateTaskDialogProps) => {
           Ajouter une tâche
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px] bg-white border border-slate-200">
-        <DialogHeader className="bg-white">
+      <DialogContent className="sm:max-w-[500px] !bg-white !border-slate-200 hover:!bg-white">
+        <DialogHeader className="!bg-white hover:!bg-white">
           <DialogTitle className="text-slate-900">Créer une nouvelle tâche</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 bg-white">
+        <form onSubmit={handleSubmit} className="space-y-4 !bg-white hover:!bg-white">
           <div className="space-y-2">
             <Label htmlFor="title" className="text-slate-900 font-medium">Titre *</Label>
             <Input
@@ -151,7 +151,7 @@ const CreateTaskDialog = ({ onTaskCreated }: CreateTaskDialogProps) => {
               onChange={(e) => handleInputChange('title', e.target.value)}
               placeholder="Titre de la tâche"
               required
-              className="bg-white border-slate-300 text-slate-900 placeholder:text-slate-500"
+              className="!bg-white !border-slate-300 text-slate-900 placeholder:text-slate-500 hover:!bg-white focus:!bg-white"
             />
           </div>
 
@@ -163,21 +163,21 @@ const CreateTaskDialog = ({ onTaskCreated }: CreateTaskDialogProps) => {
               onChange={(e) => handleInputChange('description', e.target.value)}
               placeholder="Description de la tâche"
               rows={3}
-              className="bg-white border-slate-300 text-slate-900 placeholder:text-slate-500"
+              className="!bg-white !border-slate-300 text-slate-900 placeholder:text-slate-500 hover:!bg-white focus:!bg-white"
             />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="category" className="text-slate-900 font-medium">Catégorie</Label>
             <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
-              <SelectTrigger className="bg-white border-slate-300 text-slate-900">
+              <SelectTrigger className="!bg-white !border-slate-300 text-slate-900 hover:!bg-white">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-white border border-slate-200">
-                <SelectItem value="URGENT" className="text-slate-900 hover:bg-slate-50">Urgent</SelectItem>
-                <SelectItem value="IMPORTANT" className="text-slate-900 hover:bg-slate-50">Important</SelectItem>
-                <SelectItem value="NORMAL" className="text-slate-900 hover:bg-slate-50">Normal</SelectItem>
-                <SelectItem value="AUTO_GOAL" className="text-slate-900 hover:bg-slate-50">Objectif auto</SelectItem>
+              <SelectContent className="!bg-white !border !border-slate-200 hover:!bg-white">
+                <SelectItem value="URGENT" className="text-slate-900 hover:!bg-slate-50">Urgent</SelectItem>
+                <SelectItem value="IMPORTANT" className="text-slate-900 hover:!bg-slate-50">Important</SelectItem>
+                <SelectItem value="NORMAL" className="text-slate-900 hover:!bg-slate-50">Normal</SelectItem>
+                <SelectItem value="AUTO_GOAL" className="text-slate-900 hover:!bg-slate-50">Objectif auto</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -189,13 +189,13 @@ const CreateTaskDialog = ({ onTaskCreated }: CreateTaskDialogProps) => {
               type="date"
               value={formData.due_date}
               onChange={(e) => handleInputChange('due_date', e.target.value)}
-              className="bg-white border-slate-300 text-slate-900"
+              className="!bg-white !border-slate-300 text-slate-900 hover:!bg-white focus:!bg-white"
             />
           </div>
 
           <div className="space-y-2">
             <Label className="text-slate-900 font-medium">Conseillers assignés</Label>
-            <div className="max-h-40 overflow-y-auto space-y-2 border border-slate-300 rounded-md p-3 bg-white">
+            <div className="max-h-40 overflow-y-auto space-y-2 border border-slate-300 rounded-md p-3 !bg-white hover:!bg-white">
               {conseillers.map((conseiller) => (
                 <div key={conseiller.id} className="flex items-center space-x-2">
                   <Checkbox
@@ -220,12 +220,12 @@ const CreateTaskDialog = ({ onTaskCreated }: CreateTaskDialogProps) => {
             )}
           </div>
 
-          <div className="flex justify-end gap-2 pt-4 bg-white">
+          <div className="flex justify-end gap-2 pt-4 !bg-white hover:!bg-white">
             <Button 
               type="button" 
               variant="outline" 
               onClick={() => setOpen(false)}
-              className="bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
+              className="!bg-white !border-slate-300 text-slate-700 hover:!bg-slate-50"
             >
               Annuler
             </Button>
