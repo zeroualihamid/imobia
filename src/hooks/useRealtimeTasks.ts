@@ -101,9 +101,14 @@ export const useRealtimeTasks = (onTasksUpdate: () => void) => {
   }, [toast, onTasksUpdate]);
 
   useEffect(() => {
+    console.log('Setting up real-time subscriptions...');
+    
+    // Create a unique channel name to avoid conflicts
+    const channelName = `pilotage-${Date.now()}`;
+    
     // Subscribe to tasks table changes
-    const tasksChannel = supabase
-      .channel('tasks-changes')
+    const channel = supabase
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -113,11 +118,6 @@ export const useRealtimeTasks = (onTasksUpdate: () => void) => {
         },
         handleTaskChange
       )
-      .subscribe();
-
-    // Subscribe to task_conseillers table changes
-    const assignmentsChannel = supabase
-      .channel('task-assignments-changes')
       .on(
         'postgres_changes',
         {
@@ -127,11 +127,16 @@ export const useRealtimeTasks = (onTasksUpdate: () => void) => {
         },
         handleTaskAssignmentChange
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Real-time subscription status:', status);
+        if (status === 'SUBSCRIBED') {
+          console.log('Successfully subscribed to real-time updates');
+        }
+      });
 
     return () => {
-      supabase.removeChannel(tasksChannel);
-      supabase.removeChannel(assignmentsChannel);
+      console.log('Cleaning up real-time subscriptions...');
+      supabase.removeChannel(channel);
     };
   }, [handleTaskChange, handleTaskAssignmentChange]);
 };

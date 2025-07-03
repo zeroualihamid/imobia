@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -64,6 +63,7 @@ const PilotageConseillers = () => {
   const [conseillers, setConseillers] = useState<Conseiller[]>([]);
   const [weeklyPerformances, setWeeklyPerformances] = useState<WeeklyPerformance[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [lastUpdate, setLastUpdate] = useState(Date.now()); // Force re-render
   const { toast } = useToast();
 
   const fetchData = async () => {
@@ -99,6 +99,7 @@ const PilotageConseillers = () => {
       setTasks(tasksData || []);
       setConseillers(conseillersData || []);
       setWeeklyPerformances(mockPerformances);
+      setLastUpdate(Date.now()); // Force re-render
     } catch (error) {
       console.error('Erreur lors du chargement:', error);
       toast({
@@ -115,8 +116,11 @@ const PilotageConseillers = () => {
     fetchData();
   }, []);
 
-  // Setup real-time subscriptions
-  useRealtimeTasks(fetchData);
+  // Setup real-time subscriptions with forced refresh
+  useRealtimeTasks(() => {
+    console.log('Real-time update triggered, refreshing data...');
+    fetchData();
+  });
 
   const getCategoryBadgeColor = (category: string) => {
     switch (category) {
@@ -226,7 +230,7 @@ const PilotageConseillers = () => {
         description: `Tâche assignée à ${conseillerNames}.`,
       });
       
-      // Force a data refresh to ensure UI is updated
+      // Force immediate data refresh to ensure UI is updated
       await fetchData();
     } catch (error) {
       console.error('Erreur lors de l\'assignation:', error);
@@ -357,7 +361,7 @@ const PilotageConseillers = () => {
   const tasksEnRetard = getTasksByStatus('EN_RETARD');
 
   return (
-    <div className="space-y-6 bg-white min-h-screen p-6">
+    <div className="space-y-6 bg-white min-h-screen p-6" key={lastUpdate}>
       {/* En-tête avec bouton d'ajout et statistiques */}
       <div className="flex justify-between items-center bg-white rounded-lg p-6 shadow-sm border border-slate-200">
         <h1 className="text-2xl font-bold text-slate-900">Pilotage des conseillers</h1>
