@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Save, Calendar, Users, Home, MapPin } from 'lucide-react';
@@ -306,221 +308,225 @@ const TaskDetail = () => {
   }
 
   return (
-    <div className="space-y-6 bg-slate-50 min-h-screen p-6">
-      {/* En-tête */}
-      <div className="flex items-center justify-between bg-white rounded-lg p-6 shadow-sm border border-slate-200">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            onClick={() => navigate('/conseillers/pilotage')}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Retour
+    <ScrollArea className="h-screen">
+      <div className="space-y-6 bg-slate-50 min-h-screen p-6">
+        {/* En-tête */}
+        <div className="flex items-center justify-between bg-white rounded-lg p-6 shadow-sm border border-slate-200">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              onClick={() => navigate('/conseillers/pilotage')}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Retour
+            </Button>
+            <h1 className="text-2xl font-bold text-slate-800">Détail de la tâche</h1>
+          </div>
+          <Button onClick={handleSave} disabled={isSaving} className="flex items-center gap-2">
+            <Save className="h-4 w-4" />
+            {isSaving ? 'Sauvegarde...' : 'Sauvegarder'}
           </Button>
-          <h1 className="text-2xl font-bold text-slate-800">Détail de la tâche</h1>
         </div>
-        <Button onClick={handleSave} disabled={isSaving} className="flex items-center gap-2">
-          <Save className="h-4 w-4" />
-          {isSaving ? 'Sauvegarde...' : 'Sauvegarder'}
-        </Button>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Informations principales */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Bien associé */}
-          {property && (
-            <Card className="bg-white border border-slate-200 shadow-sm cursor-pointer hover:shadow-md transition-shadow" onClick={handlePropertyClick}>
-              <CardHeader className="bg-white border-b border-slate-200">
-                <CardTitle className="text-slate-800 flex items-center gap-2">
-                  <Home className="h-5 w-5" />
-                  Bien associé
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="bg-white p-6">
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0">
-                    {getPropertyThumbnail(property) ? (
-                      <img
-                        src={getPropertyThumbnail(property)}
-                        alt="Aperçu du bien"
-                        className="w-24 h-24 object-cover rounded-lg border border-slate-200"
-                      />
-                    ) : (
-                      <div className="w-24 h-24 bg-slate-200 rounded-lg flex items-center justify-center border border-slate-200">
-                        <Home className="h-8 w-8 text-slate-400" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-slate-800 mb-2">
-                      {getPropertyTitle(property)}
-                    </h3>
-                    <div className="flex items-center gap-2 text-slate-600 mb-2">
-                      <MapPin className="h-4 w-4" />
-                      <span className="text-sm">{getPropertyAddress(property)}</span>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Informations principales */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Bien associé */}
+            {property && (
+              <Card className="bg-white border border-slate-200 shadow-sm cursor-pointer hover:shadow-md transition-shadow" onClick={handlePropertyClick}>
+                <CardHeader className="bg-white border-b border-slate-200">
+                  <CardTitle className="text-slate-800 flex items-center gap-2">
+                    <Home className="h-5 w-5" />
+                    Bien associé
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="bg-white p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-shrink-0">
+                      {getPropertyThumbnail(property) ? (
+                        <img
+                          src={getPropertyThumbnail(property)}
+                          alt="Aperçu du bien"
+                          className="w-24 h-24 object-cover rounded-lg border border-slate-200"
+                        />
+                      ) : (
+                        <div className="w-24 h-24 bg-slate-200 rounded-lg flex items-center justify-center border border-slate-200">
+                          <Home className="h-8 w-8 text-slate-400" />
+                        </div>
+                      )}
                     </div>
-                    <p className="text-xs text-slate-400">
-                      Bien créé le {new Date(property.created_at).toLocaleDateString('fr-FR')}
-                    </p>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-slate-800 mb-2">
+                        {getPropertyTitle(property)}
+                      </h3>
+                      <div className="flex items-center gap-2 text-slate-600 mb-2">
+                        <MapPin className="h-4 w-4" />
+                        <span className="text-sm">{getPropertyAddress(property)}</span>
+                      </div>
+                      <p className="text-xs text-slate-400">
+                        Bien créé le {new Date(property.created_at).toLocaleDateString('fr-FR')}
+                      </p>
+                    </div>
                   </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Informations de la tâche */}
+            <Card className="bg-white border border-slate-200 shadow-sm">
+              <CardHeader className="bg-white border-b border-slate-200">
+                <CardTitle className="text-slate-800">Informations de la tâche</CardTitle>
+              </CardHeader>
+              <CardContent className="bg-white space-y-4 p-6">
+                <div className="space-y-2">
+                  <Label htmlFor="title">Titre *</Label>
+                  <Input
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => handleInputChange('title', e.target.value)}
+                    placeholder="Titre de la tâche"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => handleInputChange('description', e.target.value)}
+                    placeholder="Description de la tâche"
+                    rows={4}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="category">Catégorie</Label>
+                    <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="URGENT">Urgent</SelectItem>
+                        <SelectItem value="IMPORTANT">Important</SelectItem>
+                        <SelectItem value="NORMAL">Normal</SelectItem>
+                        <SelectItem value="AUTO_GOAL">Objectif auto</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="status">Statut</Label>
+                    <Select value={formData.status} onValueChange={(value) => handleInputChange('status', value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="EN_FILE">En file</SelectItem>
+                        <SelectItem value="ASSIGNEE">Assignée</SelectItem>
+                        <SelectItem value="EN_COURS">En cours</SelectItem>
+                        <SelectItem value="TERMINEE">Terminée</SelectItem>
+                        <SelectItem value="EN_RETARD">En retard</SelectItem>
+                        <SelectItem value="REAFFECTEE">Réaffectée</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="due_date">Date d'échéance</Label>
+                  <Input
+                    id="due_date"
+                    type="date"
+                    value={formData.due_date}
+                    onChange={(e) => handleInputChange('due_date', e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Conseillers assignés</Label>
+                  <ScrollArea className="h-40 border rounded-md p-3">
+                    <div className="space-y-2">
+                      {conseillers.map((conseiller) => (
+                        <div key={conseiller.id} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={conseiller.id}
+                            checked={assignedConseillers.includes(conseiller.id)}
+                            onCheckedChange={() => handleConseillerToggle(conseiller.id)}
+                          />
+                          <Label htmlFor={conseiller.id} className="text-sm">
+                            {conseiller.prenom} {conseiller.nom}
+                          </Label>
+                        </div>
+                      ))}
+                      {conseillers.length === 0 && (
+                        <p className="text-sm text-slate-500">Aucun conseiller disponible</p>
+                      )}
+                    </div>
+                  </ScrollArea>
+                  {assignedConseillers.length > 0 && (
+                    <div className="space-y-1">
+                      <p className="text-xs text-slate-600">
+                        {assignedConseillers.length} conseiller(s) assigné(s)
+                      </p>
+                      {formData.status === 'EN_FILE' && (
+                        <p className="text-xs text-blue-600">
+                          Le statut sera automatiquement mis à jour vers "Assignée"
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
-          )}
+          </div>
 
-          {/* Informations de la tâche */}
-          <Card className="bg-white border border-slate-200 shadow-sm">
-            <CardHeader className="bg-white border-b border-slate-200">
-              <CardTitle className="text-slate-800">Informations de la tâche</CardTitle>
-            </CardHeader>
-            <CardContent className="bg-white space-y-4 p-6">
-              <div className="space-y-2">
-                <Label htmlFor="title">Titre *</Label>
-                <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) => handleInputChange('title', e.target.value)}
-                  placeholder="Titre de la tâche"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => handleInputChange('description', e.target.value)}
-                  placeholder="Description de la tâche"
-                  rows={4}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="category">Catégorie</Label>
-                  <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="URGENT">Urgent</SelectItem>
-                      <SelectItem value="IMPORTANT">Important</SelectItem>
-                      <SelectItem value="NORMAL">Normal</SelectItem>
-                      <SelectItem value="AUTO_GOAL">Objectif auto</SelectItem>
-                    </SelectContent>
-                  </Select>
+          {/* Informations système */}
+          <div className="space-y-6">
+            <Card className="bg-white border border-slate-200 shadow-sm">
+              <CardHeader className="bg-white border-b border-slate-200">
+                <CardTitle className="text-slate-800">État actuel</CardTitle>
+              </CardHeader>
+              <CardContent className="bg-white space-y-4 p-6">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-slate-600">Catégorie</span>
+                  <Badge variant={getCategoryBadgeColor(task.category)}>
+                    {task.category}
+                  </Badge>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-slate-600">Statut</span>
+                  <Badge variant={getStatusBadgeColor(task.status)}>
+                    {task.status}
+                  </Badge>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="status">Statut</Label>
-                  <Select value={formData.status} onValueChange={(value) => handleInputChange('status', value)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="EN_FILE">En file</SelectItem>
-                      <SelectItem value="ASSIGNEE">Assignée</SelectItem>
-                      <SelectItem value="EN_COURS">En cours</SelectItem>
-                      <SelectItem value="TERMINEE">Terminée</SelectItem>
-                      <SelectItem value="EN_RETARD">En retard</SelectItem>
-                      <SelectItem value="REAFFECTEE">Réaffectée</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="due_date">Date d'échéance</Label>
-                <Input
-                  id="due_date"
-                  type="date"
-                  value={formData.due_date}
-                  onChange={(e) => handleInputChange('due_date', e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Conseillers assignés</Label>
-                <div className="max-h-40 overflow-y-auto space-y-2 border rounded-md p-3">
-                  {conseillers.map((conseiller) => (
-                    <div key={conseiller.id} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={conseiller.id}
-                        checked={assignedConseillers.includes(conseiller.id)}
-                        onCheckedChange={() => handleConseillerToggle(conseiller.id)}
-                      />
-                      <Label htmlFor={conseiller.id} className="text-sm">
-                        {conseiller.prenom} {conseiller.nom}
-                      </Label>
-                    </div>
-                  ))}
-                  {conseillers.length === 0 && (
-                    <p className="text-sm text-slate-500">Aucun conseiller disponible</p>
-                  )}
-                </div>
-                {assignedConseillers.length > 0 && (
-                  <div className="space-y-1">
-                    <p className="text-xs text-slate-600">
-                      {assignedConseillers.length} conseiller(s) assigné(s)
-                    </p>
-                    {formData.status === 'EN_FILE' && (
-                      <p className="text-xs text-blue-600">
-                        Le statut sera automatiquement mis à jour vers "Assignée"
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Informations système */}
-        <div className="space-y-6">
-          <Card className="bg-white border border-slate-200 shadow-sm">
-            <CardHeader className="bg-white border-b border-slate-200">
-              <CardTitle className="text-slate-800">État actuel</CardTitle>
-            </CardHeader>
-            <CardContent className="bg-white space-y-4 p-6">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-600">Catégorie</span>
-                <Badge variant={getCategoryBadgeColor(task.category)}>
-                  {task.category}
-                </Badge>
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-600">Statut</span>
-                <Badge variant={getStatusBadgeColor(task.status)}>
-                  {task.status}
-                </Badge>
-              </div>
-
-              <div className="flex items-center gap-2 text-sm text-slate-600">
-                <Calendar className="h-4 w-4" />
-                <span>Créée le {new Date(task.created_at).toLocaleDateString('fr-FR')}</span>
-              </div>
-
-              {task.due_date && (
                 <div className="flex items-center gap-2 text-sm text-slate-600">
                   <Calendar className="h-4 w-4" />
-                  <span>Échéance: {new Date(task.due_date).toLocaleDateString('fr-FR')}</span>
+                  <span>Créée le {new Date(task.created_at).toLocaleDateString('fr-FR')}</span>
                 </div>
-              )}
 
-              {assignedConseillers.length > 0 && (
-                <div className="flex items-center gap-2 text-sm text-slate-600">
-                  <Users className="h-4 w-4" />
-                  <span>{assignedConseillers.length} conseiller(s) assigné(s)</span>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                {task.due_date && (
+                  <div className="flex items-center gap-2 text-sm text-slate-600">
+                    <Calendar className="h-4 w-4" />
+                    <span>Échéance: {new Date(task.due_date).toLocaleDateString('fr-FR')}</span>
+                  </div>
+                )}
+
+                {assignedConseillers.length > 0 && (
+                  <div className="flex items-center gap-2 text-sm text-slate-600">
+                    <Users className="h-4 w-4" />
+                    <span>{assignedConseillers.length} conseiller(s) assigné(s)</span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
-    </div>
+    </ScrollArea>
   );
 };
 
