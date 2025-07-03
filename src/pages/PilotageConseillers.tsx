@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import CreateTaskDialog from '@/components/taches/CreateTaskDialog';
 import DragDropTaskBoard from '@/components/taches/DragDropTaskBoard';
+import { useRealtimeTasks } from '@/hooks/useRealtimeTasks';
 import {
   Users,
   AlertTriangle,
@@ -65,10 +65,6 @@ const PilotageConseillers = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
   const fetchData = async () => {
     try {
       setIsLoading(true);
@@ -110,6 +106,13 @@ const PilotageConseillers = () => {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // Setup real-time subscriptions
+  useRealtimeTasks(fetchData);
 
   const getCategoryBadgeColor = (category: string) => {
     switch (category) {
