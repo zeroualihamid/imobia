@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -163,23 +164,42 @@ const PilotageConseillers = () => {
     try {
       console.log('Assigning task:', taskId, 'to conseillers:', conseillerIds);
       
-      // First, insert assignments in task_conseillers table
-      const assignments = conseillerIds.map(conseillerId => ({
-        task_id: taskId,
-        conseiller_id: conseillerId,
-        assigned_by: null
-      }));
-
-      const { error: assignmentError } = await supabase
+      // First, check for existing assignments to avoid duplicates
+      const { data: existingAssignments, error: checkError } = await supabase
         .from('task_conseillers')
-        .insert(assignments);
+        .select('conseiller_id')
+        .eq('task_id', taskId);
 
-      if (assignmentError) {
-        console.error('Assignment error:', assignmentError);
-        throw assignmentError;
+      if (checkError) {
+        console.error('Error checking existing assignments:', checkError);
+        throw checkError;
       }
 
-      // Then update task status to ASSIGNEE
+      const existingConseillerIds = existingAssignments?.map(a => a.conseiller_id) || [];
+      const newConseillerIds = conseillerIds.filter(id => !existingConseillerIds.includes(id));
+
+      console.log('Existing assignments:', existingConseillerIds);
+      console.log('New conseillers to assign:', newConseillerIds);
+
+      // Only insert new assignments if there are any
+      if (newConseillerIds.length > 0) {
+        const assignments = newConseillerIds.map(conseillerId => ({
+          task_id: taskId,
+          conseiller_id: conseillerId,
+          assigned_by: null
+        }));
+
+        const { error: assignmentError } = await supabase
+          .from('task_conseillers')
+          .insert(assignments);
+
+        if (assignmentError) {
+          console.error('Assignment error:', assignmentError);
+          throw assignmentError;
+        }
+      }
+
+      // Update task status to ASSIGNEE regardless
       const { error: updateError } = await supabase
         .from('tasks')
         .update({ 
@@ -193,7 +213,8 @@ const PilotageConseillers = () => {
         throw updateError;
       }
 
-      const conseillerNames = conseillerIds.map(id => {
+      const allAssignedConseillers = [...existingConseillerIds, ...newConseillerIds];
+      const conseillerNames = allAssignedConseillers.map(id => {
         const conseiller = conseillers.find(c => c.id === id);
         return `${conseiller?.prenom} ${conseiller?.nom}`;
       }).join(', ');
