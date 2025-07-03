@@ -331,6 +331,7 @@ export type Database = {
           owner_id: string | null
           previous_owner_id: string | null
           progress: number | null
+          property_id: string | null
           score: number | null
           sla_hours: number | null
           status: Database["public"]["Enums"]["task_status"]
@@ -347,6 +348,7 @@ export type Database = {
           owner_id?: string | null
           previous_owner_id?: string | null
           progress?: number | null
+          property_id?: string | null
           score?: number | null
           sla_hours?: number | null
           status?: Database["public"]["Enums"]["task_status"]
@@ -363,13 +365,22 @@ export type Database = {
           owner_id?: string | null
           previous_owner_id?: string | null
           progress?: number | null
+          property_id?: string | null
           score?: number | null
           sla_hours?: number | null
           status?: Database["public"]["Enums"]["task_status"]
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tasks_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
