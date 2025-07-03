@@ -1,11 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Plus } from 'lucide-react';
@@ -14,17 +15,44 @@ interface CreateTaskDialogProps {
   onTaskCreated: () => void;
 }
 
+interface Conseiller {
+  id: string;
+  prenom: string;
+  nom: string;
+  email: string;
+}
+
 const CreateTaskDialog = ({ onTaskCreated }: CreateTaskDialogProps) => {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [conseillers, setConseillers] = useState<Conseiller[]>([]);
+  const [selectedConseillers, setSelectedConseillers] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     category: 'NORMAL' as 'URGENT' | 'IMPORTANT' | 'NORMAL' | 'AUTO_GOAL',
-    sla_hours: 24,
     due_date: ''
   });
+
+  useEffect(() => {
+    if (open) {
+      fetchConseillers();
+    }
+  }, [open]);
+
+  const fetchConseillers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('conseillers')
+        .select('id, prenom, nom, email');
+
+      if (error) throw error;
+      setConseillers(data || []);
+    } catch (error) {
+      console.error('Erreur lors du chargement des conseillers:', error);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,16 +63,31 @@ const CreateTaskDialog = ({ onTaskCreated }: CreateTaskDialogProps) => {
         title: formData.title,
         description: formData.description || null,
         category: formData.category,
-        sla_hours: formData.sla_hours,
         due_date: formData.due_date ? new Date(formData.due_date).toISOString() : null,
         status: 'EN_FILE' as const
       };
 
-      const { error } = await supabase
+      const { data: taskResult, error: taskError } = await supabase
         .from('tasks')
-        .insert([taskData]);
+        .insert([taskData])
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (taskError) throw taskError;
+
+      // Assign selected conseillers to the task
+      if (selectedConseillers.length > 0) {
+        const assignments = selectedConseillers.map(conseillerId => ({
+          task_id: taskResult.id,
+          conseiller_id: conseillerId
+        }));
+
+        const { error: assignmentError } = await supabase
+          .from('task_conseillers')
+          .insert(assignments);
+
+        if (assignmentError) throw assignmentError;
+      }
 
       toast({
         title: "Succès",
@@ -55,9 +98,9 @@ const CreateTaskDialog = ({ onTaskCreated }: CreateTaskDialogProps) => {
         title: '',
         description: '',
         category: 'NORMAL',
-        sla_hours: 24,
         due_date: ''
       });
+      setSelectedConseillers([]);
       setOpen(false);
       onTaskCreated();
     } catch (error) {
@@ -72,11 +115,19 @@ const CreateTaskDialog = ({ onTaskCreated }: CreateTaskDialogProps) => {
     }
   };
 
-  const handleInputChange = (field: string, value: string | number) => {
+  const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
+  };
+
+  const handleConseillerToggle = (conseillerId: string) => {
+    setSelectedConseillers(prev => 
+      prev.includes(conseillerId)
+        ? prev.filter(id => id !== conseillerId)
+        : [...prev, conseillerId]
+    );
   };
 
   return (
@@ -114,33 +165,19 @@ const CreateTaskDialog = ({ onTaskCreated }: CreateTaskDialogProps) => {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="category">Catégorie</Label>
-              <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="URGENT">Urgent</SelectItem>
-                  <SelectItem value="IMPORTANT">Important</SelectItem>
-                  <SelectItem value="NORMAL">Normal</SelectItem>
-                  <SelectItem value="AUTO_GOAL">Objectif auto</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="sla_hours">SLA (heures)</Label>
-              <Input
-                id="sla_hours"
-                type="number"
-                value={formData.sla_hours}
-                onChange={(e) => handleInputChange('sla_hours', parseInt(e.target.value) || 24)}
-                min="1"
-                max="720"
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="category">Catégorie</Label>
+            <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="URGENT">Urgent</SelectItem>
+                <SelectItem value="IMPORTANT">Important</SelectItem>
+                <SelectItem value="NORMAL">Normal</SelectItem>
+                <SelectItem value="AUTO_GOAL">Objectif auto</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
@@ -151,6 +188,32 @@ const CreateTaskDialog = ({ onTaskCreated }: CreateTaskDialogProps) => {
               value={formData.due_date}
               onChange={(e) => handleInputChange('due_date', e.target.value)}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Conseillers assignés</Label>
+            <div className="max-h-40 overflow-y-auto space-y-2 border rounded-md p-3">
+              {conseillers.map((conseiller) => (
+                <div key={conseiller.id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={conseiller.id}
+                    checked={selectedConseillers.includes(conseiller.id)}
+                    onCheckedChange={() => handleConseillerToggle(conseiller.id)}
+                  />
+                  <Label htmlFor={conseiller.id} className="text-sm">
+                    {conseiller.prenom} {conseiller.nom}
+                  </Label>
+                </div>
+              ))}
+              {conseillers.length === 0 && (
+                <p className="text-sm text-slate-500">Aucun conseiller disponible</p>
+              )}
+            </div>
+            {selectedConseillers.length > 0 && (
+              <p className="text-xs text-slate-600">
+                {selectedConseillers.length} conseiller(s) sélectionné(s)
+              </p>
+            )}
           </div>
 
           <div className="flex justify-end gap-2 pt-4">

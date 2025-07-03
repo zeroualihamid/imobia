@@ -257,6 +257,45 @@ export type Database = {
         }
         Relationships: []
       }
+      task_conseillers: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          conseiller_id: string
+          id: string
+          task_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          conseiller_id: string
+          id?: string
+          task_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          conseiller_id?: string
+          id?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_conseillers_conseiller_id_fkey"
+            columns: ["conseiller_id"]
+            isOneToOne: false
+            referencedRelation: "conseillers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_conseillers_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           auto_goal: boolean | null

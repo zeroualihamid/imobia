@@ -8,9 +8,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, Calendar, User, Clock } from 'lucide-react';
+import { ArrowLeft, Save, Calendar, Users } from 'lucide-react';
 
 interface Task {
   id: string;
@@ -20,12 +21,6 @@ interface Task {
   status: 'EN_FILE' | 'ASSIGNEE' | 'EN_COURS' | 'TERMINEE' | 'EN_RETARD' | 'REAFFECTEE';
   created_at: string;
   due_date: string | null;
-  sla_hours: number | null;
-  progress: number | null;
-  owner_id: string | null;
-  previous_owner_id: string | null;
-  auto_goal: boolean | null;
-  score: number | null;
 }
 
 interface Conseiller {
@@ -41,6 +36,7 @@ const TaskDetail = () => {
   const { toast } = useToast();
   const [task, setTask] = useState<Task | null>(null);
   const [conseillers, setConseillers] = useState<Conseiller[]>([]);
+  const [assignedConseillers, setAssignedConseillers] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
@@ -48,20 +44,16 @@ const TaskDetail = () => {
     description: '',
     category: 'NORMAL' as 'URGENT' | 'IMPORTANT' | 'NORMAL' | 'AUTO_GOAL',
     status: 'EN_FILE' as 'EN_FILE' | 'ASSIGNEE' | 'EN_COURS' | 'TERMINEE' | 'EN_RETARD' | 'REAFFECTEE',
-    due_date: '',
-    sla_hours: 24,
-    progress: 0,
-    owner_id: '',
-    score: 0
+    due_date: ''
   });
 
   useEffect(() => {
     if (id) {
-      fetchTaskAndConseillers();
+      fetchTaskAndData();
     }
   }, [id]);
 
-  const fetchTaskAndConseillers = async () => {
+  const fetchTaskAndData = async () => {
     try {
       setIsLoading(true);
       
@@ -81,20 +73,24 @@ const TaskDetail = () => {
 
       if (conseillersError) throw conseillersError;
 
+      // Fetch assigned conseillers
+      const { data: assignmentsData, error: assignmentsError } = await supabase
+        .from('task_conseillers')
+        .select('conseiller_id')
+        .eq('task_id', id);
+
+      if (assignmentsError) throw assignmentsError;
+
       setTask(taskData);
       setConseillers(conseillersData || []);
+      setAssignedConseillers(assignmentsData?.map(a => a.conseiller_id) || []);
       
-      // Set form data - use 'none' instead of empty string for no advisor
       setFormData({
         title: taskData.title,
         description: taskData.description || '',
         category: taskData.category,
         status: taskData.status,
-        due_date: taskData.due_date ? new Date(taskData.due_date).toISOString().slice(0, 16) : '',
-        sla_hours: taskData.sla_hours || 24,
-        progress: taskData.progress || 0,
-        owner_id: taskData.owner_id || 'none',
-        score: taskData.score || 0
+        due_date: taskData.due_date ? new Date(taskData.due_date).toISOString().slice(0, 16) : ''
       });
     } catch (error) {
       console.error('Erreur lors du chargement:', error);
@@ -108,11 +104,19 @@ const TaskDetail = () => {
     }
   };
 
-  const handleInputChange = (field: string, value: string | number) => {
+  const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
+  };
+
+  const handleConseillerToggle = (conseillerId: string) => {
+    setAssignedConseillers(prev => 
+      prev.includes(conseillerId)
+        ? prev.filter(id => id !== conseillerId)
+        : [...prev, conseillerId]
+    );
   };
 
   const handleSave = async () => {
@@ -125,19 +129,39 @@ const TaskDetail = () => {
         category: formData.category,
         status: formData.status,
         due_date: formData.due_date ? new Date(formData.due_date).toISOString() : null,
-        sla_hours: formData.sla_hours,
-        progress: formData.progress,
-        owner_id: formData.owner_id === 'none' ? null : formData.owner_id,
-        score: formData.score,
         updated_at: new Date().toISOString()
       };
 
-      const { error } = await supabase
+      // Update task
+      const { error: taskError } = await supabase
         .from('tasks')
         .update(updateData)
         .eq('id', id);
 
-      if (error) throw error;
+      if (taskError) throw taskError;
+
+      // Update conseiller assignments
+      // First, delete existing assignments
+      const { error: deleteError } = await supabase
+        .from('task_conseillers')
+        .delete()
+        .eq('task_id', id);
+
+      if (deleteError) throw deleteError;
+
+      // Then, insert new assignments
+      if (assignedConseillers.length > 0) {
+        const assignments = assignedConseillers.map(conseillerId => ({
+          task_id: id,
+          conseiller_id: conseillerId
+        }));
+
+        const { error: insertError } = await supabase
+          .from('task_conseillers')
+          .insert(assignments);
+
+        if (insertError) throw insertError;
+      }
 
       toast({
         title: "Succès",
@@ -299,70 +323,40 @@ const TaskDetail = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="sla_hours">SLA (heures)</Label>
-                  <Input
-                    id="sla_hours"
-                    type="number"
-                    value={formData.sla_hours}
-                    onChange={(e) => handleInputChange('sla_hours', parseInt(e.target.value) || 24)}
-                    min="1"
-                    max="720"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="progress">Progrès (%)</Label>
-                  <Input
-                    id="progress"
-                    type="number"
-                    value={formData.progress}
-                    onChange={(e) => handleInputChange('progress', parseInt(e.target.value) || 0)}
-                    min="0"
-                    max="100"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="due_date">Date d'échéance</Label>
-                  <Input
-                    id="due_date"
-                    type="datetime-local"
-                    value={formData.due_date}
-                    onChange={(e) => handleInputChange('due_date', e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="score">Score</Label>
-                  <Input
-                    id="score"
-                    type="number"
-                    value={formData.score}
-                    onChange={(e) => handleInputChange('score', parseInt(e.target.value) || 0)}
-                    min="0"
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="due_date">Date d'échéance</Label>
+                <Input
+                  id="due_date"
+                  type="datetime-local"
+                  value={formData.due_date}
+                  onChange={(e) => handleInputChange('due_date', e.target.value)}
+                />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="owner_id">Conseiller assigné</Label>
-                <Select value={formData.owner_id} onValueChange={(value) => handleInputChange('owner_id', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner un conseiller" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Aucun conseiller</SelectItem>
-                    {conseillers.map((conseiller) => (
-                      <SelectItem key={conseiller.id} value={conseiller.id}>
+                <Label>Conseillers assignés</Label>
+                <div className="max-h-40 overflow-y-auto space-y-2 border rounded-md p-3">
+                  {conseillers.map((conseiller) => (
+                    <div key={conseiller.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={conseiller.id}
+                        checked={assignedConseillers.includes(conseiller.id)}
+                        onCheckedChange={() => handleConseillerToggle(conseiller.id)}
+                      />
+                      <Label htmlFor={conseiller.id} className="text-sm">
                         {conseiller.prenom} {conseiller.nom}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                      </Label>
+                    </div>
+                  ))}
+                  {conseillers.length === 0 && (
+                    <p className="text-sm text-slate-500">Aucun conseiller disponible</p>
+                  )}
+                </div>
+                {assignedConseillers.length > 0 && (
+                  <p className="text-xs text-slate-600">
+                    {assignedConseillers.length} conseiller(s) assigné(s)
+                  </p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -396,15 +390,15 @@ const TaskDetail = () => {
 
               {task.due_date && (
                 <div className="flex items-center gap-2 text-sm text-slate-600">
-                  <Clock className="h-4 w-4" />
+                  <Calendar className="h-4 w-4" />
                   <span>Échéance: {new Date(task.due_date).toLocaleDateString('fr-FR')}</span>
                 </div>
               )}
 
-              {task.owner_id && (
+              {assignedConseillers.length > 0 && (
                 <div className="flex items-center gap-2 text-sm text-slate-600">
-                  <User className="h-4 w-4" />
-                  <span>Assignée</span>
+                  <Users className="h-4 w-4" />
+                  <span>{assignedConseillers.length} conseiller(s) assigné(s)</span>
                 </div>
               )}
             </CardContent>

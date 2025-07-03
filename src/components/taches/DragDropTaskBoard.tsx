@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,9 +14,11 @@ interface Task {
   status: 'EN_FILE' | 'ASSIGNEE' | 'EN_COURS' | 'TERMINEE' | 'EN_RETARD' | 'REAFFECTEE';
   created_at: string;
   due_date: string | null;
-  sla_hours: number | null;
-  progress: number | null;
-  owner_id: string | null;
+}
+
+interface TaskAssignment {
+  task_id: string;
+  conseiller_count: number;
 }
 
 interface DragDropTaskBoardProps {
@@ -29,6 +31,34 @@ const DragDropTaskBoard = ({ tasks, onTaskUpdate, onTaskClick }: DragDropTaskBoa
   const { toast } = useToast();
   const [draggedTask, setDraggedTask] = useState<string | null>(null);
   const [dragOverCategory, setDragOverCategory] = useState<string | null>(null);
+  const [taskAssignments, setTaskAssignments] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    fetchTaskAssignments();
+  }, [tasks]);
+
+  const fetchTaskAssignments = async () => {
+    try {
+      const taskIds = tasks.map(task => task.id);
+      if (taskIds.length === 0) return;
+
+      const { data, error } = await supabase
+        .from('task_conseillers')
+        .select('task_id')
+        .in('task_id', taskIds);
+
+      if (error) throw error;
+
+      const assignmentCounts: Record<string, number> = {};
+      data?.forEach(assignment => {
+        assignmentCounts[assignment.task_id] = (assignmentCounts[assignment.task_id] || 0) + 1;
+      });
+
+      setTaskAssignments(assignmentCounts);
+    } catch (error) {
+      console.error('Erreur lors du chargement des assignations:', error);
+    }
+  };
 
   const getTasksByCategory = (category: string) => {
     return tasks.filter(task => task.category === category && task.status === 'EN_FILE');
@@ -119,42 +149,49 @@ const DragDropTaskBoard = ({ tasks, onTaskUpdate, onTaskClick }: DragDropTaskBoa
     }
   };
 
-  const TaskCard = ({ task }: { task: Task }) => (
-    <div
-      draggable
-      onDragStart={(e) => handleDragStart(e, task.id)}
-      onDragEnd={handleDragEnd}
-      onClick={(e) => {
-        // Only trigger click if we're not in the middle of a drag operation
-        if (!draggedTask) {
-          onTaskClick(task);
-        }
-      }}
-      className={`p-3 border rounded-lg transition-all duration-200 bg-white select-none ${
-        draggedTask === task.id 
-          ? 'opacity-60 scale-95 rotate-3 cursor-grabbing shadow-lg' 
-          : 'opacity-100 scale-100 cursor-grab hover:shadow-md'
-      }`}
-      style={{
-        borderColor: task.category === 'URGENT' ? '#ef4444' : 
-                    task.category === 'IMPORTANT' ? '#f97316' : '#3b82f6'
-      }}
-    >
-      <h4 className="font-medium text-sm mb-2 pointer-events-none">{task.title}</h4>
-      <div className="flex items-center justify-between pointer-events-none">
-        <Badge 
-          variant={task.category === 'URGENT' ? 'destructive' : 
-                  task.category === 'IMPORTANT' ? 'default' : 'secondary'}
-          className="text-xs"
-        >
-          {task.status}
-        </Badge>
-        {task.owner_id && (
-          <span className="text-xs text-slate-600">Assignée</span>
-        )}
+  const TaskCard = ({ task }: { task: Task }) => {
+    const assignedCount = taskAssignments[task.id] || 0;
+    
+    return (
+      <div
+        draggable
+        onDragStart={(e) => handleDragStart(e, task.id)}
+        onDragEnd={handleDragEnd}
+        onClick={(e) => {
+          // Only trigger click if we're not in the middle of a drag operation
+          if (!draggedTask) {
+            onTaskClick(task);
+          }
+        }}
+        className={`p-3 border rounded-lg transition-all duration-200 bg-white select-none ${
+          draggedTask === task.id 
+            ? 'opacity-60 scale-95 rotate-3 cursor-grabbing shadow-lg' 
+            : 'opacity-100 scale-100 cursor-grab hover:shadow-md'
+        }`}
+        style={{
+          borderColor: task.category === 'URGENT' ? '#ef4444' : 
+                      task.category === 'IMPORTANT' ? '#f97316' : '#3b82f6'
+        }}
+      >
+        <h4 className="font-medium text-sm mb-2 pointer-events-none">{task.title}</h4>
+        <div className="flex items-center justify-between pointer-events-none">
+          <Badge 
+            variant={task.category === 'URGENT' ? 'destructive' : 
+                    task.category === 'IMPORTANT' ? 'default' : 'secondary'}
+            className="text-xs"
+          >
+            {task.status}
+          </Badge>
+          {assignedCount > 0 && (
+            <div className="flex items-center gap-1">
+              <Users className="h-3 w-3 text-slate-600" />
+              <span className="text-xs text-slate-600">{assignedCount}</span>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
