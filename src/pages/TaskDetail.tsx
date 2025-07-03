@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Save, Calendar, Users } from 'lucide-react';
+import { ArrowLeft, Save, Calendar, Users, Home, MapPin } from 'lucide-react';
 
 interface Task {
   id: string;
@@ -21,6 +20,13 @@ interface Task {
   status: 'EN_FILE' | 'ASSIGNEE' | 'EN_COURS' | 'TERMINEE' | 'EN_RETARD' | 'REAFFECTEE';
   created_at: string;
   due_date: string | null;
+  property_id: string | null;
+}
+
+interface Property {
+  id: string;
+  metadata: any;
+  created_at: string;
 }
 
 interface Conseiller {
@@ -35,6 +41,7 @@ const TaskDetail = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [task, setTask] = useState<Task | null>(null);
+  const [property, setProperty] = useState<Property | null>(null);
   const [conseillers, setConseillers] = useState<Conseiller[]>([]);
   const [assignedConseillers, setAssignedConseillers] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -66,6 +73,22 @@ const TaskDetail = () => {
 
       if (taskError) throw taskError;
 
+      // Fetch property if task has property_id
+      let propertyData = null;
+      if (taskData.property_id) {
+        const { data: propData, error: propError } = await supabase
+          .from('properties')
+          .select('*')
+          .eq('id', taskData.property_id)
+          .single();
+
+        if (propError) {
+          console.error('Erreur lors du chargement du bien:', propError);
+        } else {
+          propertyData = propData;
+        }
+      }
+
       // Fetch conseillers
       const { data: conseillersData, error: conseillersError } = await supabase
         .from('conseillers')
@@ -82,6 +105,7 @@ const TaskDetail = () => {
       if (assignmentsError) throw assignmentsError;
 
       setTask(taskData);
+      setProperty(propertyData);
       setConseillers(conseillersData || []);
       setAssignedConseillers(assignmentsData?.map(a => a.conseiller_id) || []);
       
@@ -238,6 +262,19 @@ const TaskDetail = () => {
     }
   };
 
+  const getPropertyThumbnail = (property: Property) => {
+    const images = property.metadata?.images || [];
+    return images.length > 0 ? images[0] : null;
+  };
+
+  const getPropertyTitle = (property: Property) => {
+    return property.metadata?.title || 'Bien sans titre';
+  };
+
+  const getPropertyAddress = (property: Property) => {
+    return property.metadata?.address || 'Adresse non spécifiée';
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64 bg-slate-50">
@@ -285,7 +322,49 @@ const TaskDetail = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Informations principales */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-6">
+          {/* Bien associé */}
+          {property && (
+            <Card className="bg-white border border-slate-200 shadow-sm">
+              <CardHeader className="bg-white border-b border-slate-200">
+                <CardTitle className="text-slate-800 flex items-center gap-2">
+                  <Home className="h-5 w-5" />
+                  Bien associé
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="bg-white p-6">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0">
+                    {getPropertyThumbnail(property) ? (
+                      <img
+                        src={getPropertyThumbnail(property)}
+                        alt="Aperçu du bien"
+                        className="w-24 h-24 object-cover rounded-lg border border-slate-200"
+                      />
+                    ) : (
+                      <div className="w-24 h-24 bg-slate-200 rounded-lg flex items-center justify-center border border-slate-200">
+                        <Home className="h-8 w-8 text-slate-400" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-slate-800 mb-2">
+                      {getPropertyTitle(property)}
+                    </h3>
+                    <div className="flex items-center gap-2 text-slate-600 mb-2">
+                      <MapPin className="h-4 w-4" />
+                      <span className="text-sm">{getPropertyAddress(property)}</span>
+                    </div>
+                    <p className="text-xs text-slate-400">
+                      Bien créé le {new Date(property.created_at).toLocaleDateString('fr-FR')}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Informations de la tâche */}
           <Card className="bg-white border border-slate-200 shadow-sm">
             <CardHeader className="bg-white border-b border-slate-200">
               <CardTitle className="text-slate-800">Informations de la tâche</CardTitle>
