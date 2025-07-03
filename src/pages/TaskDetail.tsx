@@ -151,7 +151,7 @@ const TaskDetail = () => {
         description: formData.description || null,
         category: formData.category,
         status: finalStatus,
-        due_date: formData.due_date ? new Date(formData.due_date).toISOString() : null,
+        due_date: formData.due_date ? new Date(formData.due_date + 'T00:00:00').toISOString() : null,
         updated_at: new Date().toISOString()
       };
 
@@ -350,7 +350,7 @@ const TaskDetail = () => {
                 <Label htmlFor="due_date">Date d'échéance</Label>
                 <Input
                   id="due_date"
-                  type="datetime-local"
+                  type="date"
                   value={formData.due_date}
                   onChange={(e) => handleInputChange('due_date', e.target.value)}
                 />

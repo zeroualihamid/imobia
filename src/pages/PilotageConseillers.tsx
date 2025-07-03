@@ -198,6 +198,7 @@ const PilotageConseillers = () => {
   const importantTasks = getTasksByCategory('IMPORTANT');
   const normalTasks = getTasksByCategory('NORMAL');
   const tasksEnFile = getTasksByStatus('EN_FILE');
+  const tasksAssignees = getTasksByStatus('ASSIGNEE');
   const tasksEnCours = getTasksByStatus('EN_COURS');
   const tasksTerminees = getTasksByStatus('TERMINEE');
   const tasksEnRetard = getTasksByStatus('EN_RETARD');
@@ -210,8 +211,8 @@ const PilotageConseillers = () => {
         <CreateTaskDialog onTaskCreated={fetchData} />
       </div>
 
-      {/* En-tête avec statistiques */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      {/* En-tête avec statistiques - Updated to include assigned tasks */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         <Card className="bg-white border border-slate-200 shadow-sm">
           <CardContent className="p-4 bg-white">
             <div className="flex items-center justify-between">
@@ -220,6 +221,18 @@ const PilotageConseillers = () => {
                 <p className="text-2xl font-bold text-slate-800">{tasksEnFile.length}</p>
               </div>
               <Clock className="h-8 w-8 text-slate-400" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white border border-slate-200 shadow-sm">
+          <CardContent className="p-4 bg-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-slate-600">Assignées</p>
+                <p className="text-2xl font-bold text-orange-600">{tasksAssignees.length}</p>
+              </div>
+              <Users className="h-8 w-8 text-orange-400" />
             </div>
           </CardContent>
         </Card>
@@ -291,7 +304,6 @@ const PilotageConseillers = () => {
                     <TableHead className="text-slate-700">Catégorie</TableHead>
                     <TableHead className="text-slate-700">Status</TableHead>
                     <TableHead className="text-slate-700">Créée le</TableHead>
-                    <TableHead className="text-slate-700">SLA (h)</TableHead>
                     <TableHead className="text-slate-700">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -316,7 +328,6 @@ const PilotageConseillers = () => {
                       <TableCell className="text-slate-700">
                         {new Date(task.created_at).toLocaleDateString('fr-FR')}
                       </TableCell>
-                      <TableCell className="text-slate-700">{task.sla_hours || 24}</TableCell>
                       <TableCell>
                         <Button 
                           size="sm" 
@@ -332,6 +343,70 @@ const PilotageConseillers = () => {
                       </TableCell>
                     </TableRow>
                   ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          {/* Table des tâches assignées */}
+          <Card className="bg-white border border-slate-200 shadow-sm">
+            <CardHeader className="bg-orange-50 border-b border-orange-200">
+              <CardTitle className="text-orange-800">Tâches assignées</CardTitle>
+            </CardHeader>
+            <CardContent className="bg-white">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-slate-50">
+                    <TableHead className="text-slate-700">Titre</TableHead>
+                    <TableHead className="text-slate-700">Catégorie</TableHead>
+                    <TableHead className="text-slate-700">Status</TableHead>
+                    <TableHead className="text-slate-700">Créée le</TableHead>
+                    <TableHead className="text-slate-700">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody className="bg-white">
+                  {tasksAssignees.map((task) => (
+                    <TableRow 
+                      key={task.id} 
+                      className="bg-white hover:bg-slate-50 cursor-pointer transition-colors"
+                      onClick={() => handleTaskClick(task)}
+                    >
+                      <TableCell className="font-medium text-slate-900">{task.title}</TableCell>
+                      <TableCell>
+                        <Badge variant={getCategoryBadgeColor(task.category)}>
+                          {task.category}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={getStatusBadgeColor(task.status)}>
+                          {task.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-slate-700">
+                        {new Date(task.created_at).toLocaleDateString('fr-FR')}
+                      </TableCell>
+                      <TableCell>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          className="bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleTaskClick(task);
+                          }}
+                        >
+                          Voir
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {tasksAssignees.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center text-slate-500 py-8">
+                        Aucune tâche assignée
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </CardContent>

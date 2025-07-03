@@ -184,7 +184,7 @@ const CreateTaskDialog = ({ onTaskCreated }: CreateTaskDialogProps) => {
             <Label htmlFor="due_date">Date d'échéance</Label>
             <Input
               id="due_date"
-              type="datetime-local"
+              type="date"
               value={formData.due_date}
               onChange={(e) => handleInputChange('due_date', e.target.value)}
             />
