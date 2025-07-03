@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -258,13 +259,13 @@ const CreateTaskDialog = ({ onTaskCreated }: CreateTaskDialogProps) => {
             Ajouter
           </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-[500px] max-h-[90vh] !bg-white !border-slate-200 hover:!bg-white flex flex-col">
-          <DialogHeader className="!bg-white hover:!bg-white flex-shrink-0">
+        <DialogContent className="sm:max-w-[500px] h-[90vh] !bg-white !border-slate-200 hover:!bg-white p-0">
+          <DialogHeader className="!bg-white hover:!bg-white p-6 pb-0">
             <DialogTitle className="text-slate-900">Créer une nouvelle tâche</DialogTitle>
           </DialogHeader>
           
-          <ScrollArea className="flex-1 max-h-[calc(90vh-8rem)]">
-            <form onSubmit={handleSubmit} className="space-y-4 !bg-white hover:!bg-white p-1">
+          <ScrollArea className="h-full px-6 pb-6">
+            <form onSubmit={handleSubmit} className="space-y-4 !bg-white hover:!bg-white">
               <div className="space-y-3">
                 <Label className="text-slate-900 font-medium text-red-600">Type de tâche</Label>
                 <div className="space-y-2">
@@ -425,8 +426,8 @@ const CreateTaskDialog = ({ onTaskCreated }: CreateTaskDialogProps) => {
 
               <div className="space-y-2">
                 <Label className="text-slate-900 font-medium">Conseillers assignés</Label>
-                <ScrollArea className="max-h-32 border border-slate-300 rounded-md p-3 !bg-white hover:!bg-white">
-                  <div className="space-y-2">
+                <div className="max-h-32 border border-slate-300 rounded-md !bg-white hover:!bg-white overflow-y-auto">
+                  <div className="space-y-2 p-3">
                     {conseillers.map((conseiller) => (
                       <div key={conseiller.id} className="flex items-center space-x-2">
                         <Checkbox
@@ -444,7 +445,7 @@ const CreateTaskDialog = ({ onTaskCreated }: CreateTaskDialogProps) => {
                       <p className="text-sm text-slate-500">Aucun conseiller disponible</p>
                     )}
                   </div>
-                </ScrollArea>
+                </div>
                 {selectedConseillers.length > 0 && (
                   <p className="text-xs text-slate-600">
                     {selectedConseillers.length} conseiller(s) sélectionné(s)
