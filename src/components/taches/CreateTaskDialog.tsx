@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -28,12 +27,21 @@ const CreateTaskDialog = ({ onTaskCreated }: CreateTaskDialogProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [conseillers, setConseillers] = useState<Conseiller[]>([]);
   const [selectedConseillers, setSelectedConseillers] = useState<string[]>([]);
+  const [selectedTaskType, setSelectedTaskType] = useState<string>('');
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     category: 'NORMAL' as 'URGENT' | 'IMPORTANT' | 'NORMAL' | 'AUTO_GOAL',
     due_date: ''
   });
+
+  const taskTypes = [
+    { id: 'visite', label: 'Visite', category: 'IMPORTANT' as const },
+    { id: 'recherche', label: 'Recherche de bien', category: 'NORMAL' as const },
+    { id: 'prospection', label: 'Prospection', category: 'NORMAL' as const },
+    { id: 'negociation', label: 'Négociation', category: 'IMPORTANT' as const },
+    { id: 'contrat', label: 'Signature contrat', category: 'URGENT' as const }
+  ];
 
   useEffect(() => {
     if (open) {
@@ -56,13 +64,23 @@ const CreateTaskDialog = ({ onTaskCreated }: CreateTaskDialogProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedTaskType) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner un type de tâche.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
+      const selectedType = taskTypes.find(type => type.id === selectedTaskType);
       const taskData = {
-        title: formData.title,
+        title: selectedType?.label || formData.title,
         description: formData.description || null,
-        category: formData.category,
+        category: selectedType?.category || formData.category,
         due_date: formData.due_date ? new Date(formData.due_date).toISOString() : null,
         status: 'EN_FILE' as const
       };
@@ -101,6 +119,7 @@ const CreateTaskDialog = ({ onTaskCreated }: CreateTaskDialogProps) => {
         due_date: ''
       });
       setSelectedConseillers([]);
+      setSelectedTaskType('');
       setOpen(false);
       onTaskCreated();
     } catch (error) {
@@ -130,12 +149,24 @@ const CreateTaskDialog = ({ onTaskCreated }: CreateTaskDialogProps) => {
     );
   };
 
+  const handleTaskTypeSelect = (taskTypeId: string) => {
+    setSelectedTaskType(taskTypeId);
+    const selectedType = taskTypes.find(type => type.id === taskTypeId);
+    if (selectedType) {
+      setFormData(prev => ({
+        ...prev,
+        title: selectedType.label,
+        category: selectedType.category
+      }));
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2 bg-blue-600 text-white hover:bg-blue-600 hover:text-white">
+        <Button className="gap-2 bg-blue-600 text-white hover:bg-blue-700">
           <Plus className="h-4 w-4" />
-          Ajouter une tâche
+          Ajouter
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px] !bg-white !border-slate-200 hover:!bg-white">
@@ -143,16 +174,28 @@ const CreateTaskDialog = ({ onTaskCreated }: CreateTaskDialogProps) => {
           <DialogTitle className="text-slate-900">Créer une nouvelle tâche</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 !bg-white hover:!bg-white">
-          <div className="space-y-2">
-            <Label htmlFor="title" className="text-slate-900 font-medium">Titre *</Label>
-            <Input
-              id="title"
-              value={formData.title}
-              onChange={(e) => handleInputChange('title', e.target.value)}
-              placeholder="Titre de la tâche"
-              required
-              className="!bg-white !border-slate-300 text-slate-900 placeholder:text-slate-500 hover:!bg-white focus:!bg-white"
-            />
+          <div className="space-y-3">
+            <Label className="text-slate-900 font-medium text-red-600">Type de tache</Label>
+            <div className="space-y-2">
+              {taskTypes.map((taskType) => (
+                <div key={taskType.id} className="flex items-center space-x-3">
+                  <div className="flex items-center">
+                    <input
+                      type="radio"
+                      id={taskType.id}
+                      name="taskType"
+                      value={taskType.id}
+                      checked={selectedTaskType === taskType.id}
+                      onChange={() => handleTaskTypeSelect(taskType.id)}
+                      className="h-4 w-4 text-blue-600 border-slate-300 focus:ring-blue-500"
+                    />
+                    <label htmlFor={taskType.id} className="ml-2 text-sm text-slate-900">
+                      {taskType.label}
+                    </label>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -168,18 +211,15 @@ const CreateTaskDialog = ({ onTaskCreated }: CreateTaskDialogProps) => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="category" className="text-slate-900 font-medium">Catégorie</Label>
-            <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
-              <SelectTrigger className="!bg-white !border-slate-300 text-slate-900 hover:!bg-white">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="!bg-white !border !border-slate-200 hover:!bg-white">
-                <SelectItem value="URGENT" className="text-slate-900 hover:!bg-slate-50">Urgent</SelectItem>
-                <SelectItem value="IMPORTANT" className="text-slate-900 hover:!bg-slate-50">Important</SelectItem>
-                <SelectItem value="NORMAL" className="text-slate-900 hover:!bg-slate-50">Normal</SelectItem>
-                <SelectItem value="AUTO_GOAL" className="text-slate-900 hover:!bg-slate-50">Objectif auto</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label className="text-slate-900 font-medium">Catégorie</Label>
+            <div className="p-3 bg-slate-50 rounded-md">
+              <span className="text-sm text-slate-700">
+                {selectedTaskType 
+                  ? taskTypes.find(type => type.id === selectedTaskType)?.category || 'Normal'
+                  : 'Normal'
+                }
+              </span>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -231,7 +271,7 @@ const CreateTaskDialog = ({ onTaskCreated }: CreateTaskDialogProps) => {
             </Button>
             <Button 
               type="submit" 
-              disabled={isLoading || !formData.title.trim()}
+              disabled={isLoading || !selectedTaskType}
               className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               {isLoading ? 'Création...' : 'Créer la tâche'}
