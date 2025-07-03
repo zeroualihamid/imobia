@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -45,8 +44,7 @@ const Sidebar = () => {
       isCollapsible: true,
       isOpen: biensOpen,
       setIsOpen: setBiensOpen,
-      subItems: [
-       
+      subItems: [       
         { title: 'Ajouter bien', href: '/biens/ajouter', icon: Plus },
         { title: 'Tous les biens', href: '/biens', icon: List }
       ]
@@ -110,7 +108,7 @@ const Sidebar = () => {
 
   return (
     <div className="w-64 bg-white border-r border-slate-200 h-full flex flex-col shadow-sm">
-      <div className="p-6 border-b border-slate-200">
+      <div className="p-6 border-b border-slate-200 bg-white">
         <div className="flex flex-col items-center space-y-3">
           <img 
             src="/logo_imobia.PNG" 
@@ -121,39 +119,39 @@ const Sidebar = () => {
         </div>
       </div>
       
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="flex-1 p-4 space-y-1 bg-white">
         {menuItems.map((item, index) => (
           <div key={index}>
             {item.isCollapsible ? (
               <Collapsible open={item.isOpen} onOpenChange={item.setIsOpen}>
                 <CollapsibleTrigger className="w-full">
                   <div className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-slate-100 w-full group",
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-slate-100 w-full group bg-white",
                     item.color
                   )}>
                     <item.icon className="h-5 w-5 flex-shrink-0" />
-                    <span className="flex-1 text-left">{item.title}</span>
+                    <span className="flex-1 text-left text-slate-900">{item.title}</span>
                     {item.isOpen ? (
-                      <ChevronDown className="h-4 w-4 transition-transform duration-200" />
+                      <ChevronDown className="h-4 w-4 transition-transform duration-200 text-slate-700" />
                     ) : (
-                      <ChevronRight className="h-4 w-4 transition-transform duration-200" />
+                      <ChevronRight className="h-4 w-4 transition-transform duration-200 text-slate-700" />
                     )}
                   </div>
                 </CollapsibleTrigger>
-                <CollapsibleContent className="ml-8 mt-1 space-y-1">
+                <CollapsibleContent className="ml-8 mt-1 space-y-1 bg-white">
                   {item.subItems?.map((subItem, subIndex) => (
                     <Link
                       key={subIndex}
                       to={subItem.href}
                       className={cn(
-                        "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 hover:bg-slate-100",
+                        "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 hover:bg-slate-100 bg-white",
                         location.pathname === subItem.href
                           ? "bg-slate-100 text-slate-900 font-medium"
-                          : "text-slate-600 hover:text-slate-900"
+                          : "text-slate-700 hover:text-slate-900"
                       )}
                     >
-                      <subItem.icon className="h-4 w-4 flex-shrink-0" />
-                      {subItem.title}
+                      <subItem.icon className="h-4 w-4 flex-shrink-0 text-slate-600" />
+                      <span className="text-slate-900">{subItem.title}</span>
                     </Link>
                   ))}
                 </CollapsibleContent>
@@ -162,14 +160,14 @@ const Sidebar = () => {
               <Link
                 to={item.href}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-slate-100",
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-slate-100 bg-white",
                   location.pathname === item.href
                     ? "bg-slate-100 text-slate-900"
-                    : item.color
+                    : `${item.color} hover:text-slate-900`
                 )}
               >
                 <item.icon className="h-5 w-5 flex-shrink-0" />
-                {item.title}
+                <span className="text-slate-900">{item.title}</span>
               </Link>
             )}
           </div>
@@ -177,18 +175,18 @@ const Sidebar = () => {
 
         {/* Admin Section - Only visible to Admin users */}
         <PermissionGuard role="Admin">
-          <div className="pt-4 border-t border-slate-200 mt-4">
+          <div className="pt-4 border-t border-slate-200 mt-4 bg-white">
             <Link
               to="/admin/roles"
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-slate-100",
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-slate-100 bg-white",
                 location.pathname === "/admin/roles"
                   ? "bg-slate-100 text-slate-900"
-                  : "text-red-600"
+                  : "text-red-600 hover:text-slate-900"
               )}
             >
               <Shield className="h-5 w-5 flex-shrink-0" />
-              Gestion des rôles
+              <span className="text-slate-900">Gestion des rôles</span>
             </Link>
           </div>
         </PermissionGuard>

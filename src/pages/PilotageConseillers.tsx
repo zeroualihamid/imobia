@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -204,10 +205,10 @@ const PilotageConseillers = () => {
   const tasksEnRetard = getTasksByStatus('EN_RETARD');
 
   return (
-    <div className="space-y-6 bg-slate-50 min-h-screen p-6">
+    <div className="space-y-6 bg-white min-h-screen p-6">
       {/* En-tête avec bouton d'ajout et statistiques */}
       <div className="flex justify-between items-center bg-white rounded-lg p-6 shadow-sm border border-slate-200">
-        <h1 className="text-2xl font-bold text-slate-800">Pilotage des conseillers</h1>
+        <h1 className="text-2xl font-bold text-slate-900">Pilotage des conseillers</h1>
         <CreateTaskDialog onTaskCreated={fetchData} />
       </div>
 
@@ -218,7 +219,7 @@ const PilotageConseillers = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-slate-600">En file</p>
-                <p className="text-2xl font-bold text-slate-800">{tasksEnFile.length}</p>
+                <p className="text-2xl font-bold text-slate-900">{tasksEnFile.length}</p>
               </div>
               <Clock className="h-8 w-8 text-slate-400" />
             </div>
@@ -276,10 +277,10 @@ const PilotageConseillers = () => {
 
       {/* Onglets principaux */}
       <Tabs defaultValue="file-attente" className="w-full bg-white rounded-lg border border-slate-200 shadow-sm">
-        <TabsList className="grid w-full grid-cols-3 bg-slate-100 border-b border-slate-200">
-          <TabsTrigger value="file-attente" className="bg-white data-[state=active]:bg-blue-600 data-[state=active]:text-white text-slate-700">File d'attente</TabsTrigger>
-          <TabsTrigger value="objectifs" className="bg-white data-[state=active]:bg-blue-600 data-[state=active]:text-white text-slate-700">Objectifs hebdo</TabsTrigger>
-          <TabsTrigger value="performances" className="bg-white data-[state=active]:bg-blue-600 data-[state=active]:text-white text-slate-700">Performances</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 bg-white border-b border-slate-200">
+          <TabsTrigger value="file-attente" className="bg-white data-[state=active]:bg-blue-600 data-[state=active]:text-white text-slate-900">File d'attente</TabsTrigger>
+          <TabsTrigger value="objectifs" className="bg-white data-[state=active]:bg-blue-600 data-[state=active]:text-white text-slate-900">Objectifs hebdo</TabsTrigger>
+          <TabsTrigger value="performances" className="bg-white data-[state=active]:bg-blue-600 data-[state=active]:text-white text-slate-900">Performances</TabsTrigger>
         </TabsList>
 
         {/* File d'attente */}
@@ -294,17 +295,17 @@ const PilotageConseillers = () => {
           {/* Table détaillée des tâches en file */}
           <Card className="bg-white border border-slate-200 shadow-sm">
             <CardHeader className="bg-white border-b border-slate-200">
-              <CardTitle className="text-slate-800">Tâches en file d'attente</CardTitle>
+              <CardTitle className="text-slate-900">Tâches en file d'attente</CardTitle>
             </CardHeader>
             <CardContent className="bg-white">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-50">
-                    <TableHead className="text-slate-700">Titre</TableHead>
-                    <TableHead className="text-slate-700">Catégorie</TableHead>
-                    <TableHead className="text-slate-700">Status</TableHead>
-                    <TableHead className="text-slate-700">Créée le</TableHead>
-                    <TableHead className="text-slate-700">Actions</TableHead>
+                    <TableHead className="text-slate-900">Titre</TableHead>
+                    <TableHead className="text-slate-900">Catégorie</TableHead>
+                    <TableHead className="text-slate-900">Status</TableHead>
+                    <TableHead className="text-slate-900">Créée le</TableHead>
+                    <TableHead className="text-slate-900">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody className="bg-white">
@@ -325,14 +326,14 @@ const PilotageConseillers = () => {
                           {task.status}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-slate-700">
+                      <TableCell className="text-slate-900">
                         {new Date(task.created_at).toLocaleDateString('fr-FR')}
                       </TableCell>
                       <TableCell>
                         <Button 
                           size="sm" 
                           variant="outline"
-                          className="bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
+                          className="bg-white border-slate-300 text-slate-900 hover:bg-slate-50"
                           onClick={(e) => {
                             e.stopPropagation(); // Prevent row click when clicking button
                             // Handle assignment logic here
@@ -357,11 +358,11 @@ const PilotageConseillers = () => {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-50">
-                    <TableHead className="text-slate-700">Titre</TableHead>
-                    <TableHead className="text-slate-700">Catégorie</TableHead>
-                    <TableHead className="text-slate-700">Status</TableHead>
-                    <TableHead className="text-slate-700">Créée le</TableHead>
-                    <TableHead className="text-slate-700">Actions</TableHead>
+                    <TableHead className="text-slate-900">Titre</TableHead>
+                    <TableHead className="text-slate-900">Catégorie</TableHead>
+                    <TableHead className="text-slate-900">Status</TableHead>
+                    <TableHead className="text-slate-900">Créée le</TableHead>
+                    <TableHead className="text-slate-900">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody className="bg-white">
@@ -382,14 +383,14 @@ const PilotageConseillers = () => {
                           {task.status}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-slate-700">
+                      <TableCell className="text-slate-900">
                         {new Date(task.created_at).toLocaleDateString('fr-FR')}
                       </TableCell>
                       <TableCell>
                         <Button 
                           size="sm" 
                           variant="outline"
-                          className="bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
+                          className="bg-white border-slate-300 text-slate-900 hover:bg-slate-50"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleTaskClick(task);
@@ -402,7 +403,7 @@ const PilotageConseillers = () => {
                   ))}
                   {tasksAssignees.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center text-slate-500 py-8">
+                      <TableCell colSpan={5} className="text-center text-slate-500 py-8 bg-white">
                         Aucune tâche assignée
                       </TableCell>
                     </TableRow>
@@ -418,7 +419,7 @@ const PilotageConseillers = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card className="bg-white border border-slate-200 shadow-sm">
               <CardHeader className="bg-white border-b border-slate-200">
-                <CardTitle className="flex items-center gap-2 text-slate-800">
+                <CardTitle className="flex items-center gap-2 text-slate-900">
                   <Calendar className="h-5 w-5" />
                   Visites
                 </CardTitle>
@@ -435,7 +436,7 @@ const PilotageConseillers = () => {
                       <div key={conseiller.id} className="space-y-2">
                         <div className="flex justify-between text-sm">
                           <span className="text-slate-900">{conseiller.prenom} {conseiller.nom}</span>
-                          <span className="text-slate-700">{score}/{objectif}</span>
+                          <span className="text-slate-900">{score}/{objectif}</span>
                         </div>
                         <Progress value={pourcentage} className="h-2" />
                       </div>
@@ -447,7 +448,7 @@ const PilotageConseillers = () => {
 
             <Card className="bg-white border border-slate-200 shadow-sm">
               <CardHeader className="bg-white border-b border-slate-200">
-                <CardTitle className="flex items-center gap-2 text-slate-800">
+                <CardTitle className="flex items-center gap-2 text-slate-900">
                   <BarChart3 className="h-5 w-5" />
                   Contrats
                 </CardTitle>
@@ -464,7 +465,7 @@ const PilotageConseillers = () => {
                       <div key={conseiller.id} className="space-y-2">
                         <div className="flex justify-between text-sm">
                           <span className="text-slate-900">{conseiller.prenom} {conseiller.nom}</span>
-                          <span className="text-slate-700">{score}/{objectif}</span>
+                          <span className="text-slate-900">{score}/{objectif}</span>
                         </div>
                         <Progress value={pourcentage} className="h-2" />
                       </div>
@@ -480,7 +481,7 @@ const PilotageConseillers = () => {
         <TabsContent value="performances" className="space-y-4 mt-6 p-6 bg-white">
           <Card className="bg-white border border-slate-200 shadow-sm">
             <CardHeader className="bg-white border-b border-slate-200">
-              <CardTitle className="flex items-center gap-2 text-slate-800">
+              <CardTitle className="flex items-center gap-2 text-slate-900">
                 <TrendingUp className="h-5 w-5" />
                 Performance globale
               </CardTitle>
@@ -489,10 +490,10 @@ const PilotageConseillers = () => {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-50">
-                    <TableHead className="text-slate-700">Conseiller</TableHead>
-                    <TableHead className="text-slate-700">Visites</TableHead>
-                    <TableHead className="text-slate-700">Contrats</TableHead>
-                    <TableHead className="text-slate-700">Score Total</TableHead>
+                    <TableHead className="text-slate-900">Conseiller</TableHead>
+                    <TableHead className="text-slate-900">Visites</TableHead>
+                    <TableHead className="text-slate-900">Contrats</TableHead>
+                    <TableHead className="text-slate-900">Score Total</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody className="bg-white">
@@ -512,9 +513,9 @@ const PilotageConseillers = () => {
                         <TableCell className="font-medium text-slate-900">
                           {conseiller.prenom} {conseiller.nom}
                         </TableCell>
-                        <TableCell className="text-slate-700">{performance?.score_visites || 0}</TableCell>
-                        <TableCell className="text-slate-700">{performance?.score_contrats || 0}</TableCell>
-                        <TableCell className="text-slate-700">{performance?.score_total || 0}</TableCell>
+                        <TableCell className="text-slate-900">{performance?.score_visites || 0}</TableCell>
+                        <TableCell className="text-slate-900">{performance?.score_contrats || 0}</TableCell>
+                        <TableCell className="text-slate-900">{performance?.score_total || 0}</TableCell>
                       </TableRow>
                     );
                   })}

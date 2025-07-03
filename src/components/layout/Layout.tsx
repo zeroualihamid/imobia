@@ -15,13 +15,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { signOut } = useAuth();
 
   return (
-    <div className="flex h-screen bg-slate-50">
+    <div className="flex h-screen bg-white">
       <Sidebar />
       <main className="flex-1 overflow-auto bg-white">
         <header className="sticky top-0 z-10 bg-white border-b border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between px-6 py-4">
+          <div className="flex items-center justify-between px-6 py-4 bg-white">
             <div className="flex items-center space-x-4">
-              <h2 className="text-lg font-semibold text-slate-800">
+              <h2 className="text-lg font-semibold text-slate-900">
                 Gestion Immobilière
               </h2>
             </div>
@@ -31,7 +31,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 variant="outline"
                 size="sm"
                 onClick={signOut}
-                className="border-slate-300 text-slate-700 hover:bg-slate-50"
+                className="border-slate-300 text-slate-700 hover:bg-slate-50 bg-white"
               >
                 <LogOut className="h-4 w-4 mr-2" />
                 Déconnexion
@@ -39,7 +39,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </div>
           </div>
         </header>
-        <div className="p-6 bg-slate-50 min-h-full">
+        <div className="p-6 bg-white min-h-full">
           {children}
         </div>
       </main>
