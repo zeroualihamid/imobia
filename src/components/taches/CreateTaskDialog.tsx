@@ -133,7 +133,7 @@ const CreateTaskDialog = ({ onTaskCreated }: CreateTaskDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2 bg-blue-600 hover:bg-blue-700 text-white">
+        <Button className="gap-2 bg-blue-600 text-white hover:bg-blue-600 hover:text-white">
           <Plus className="h-4 w-4" />
           Ajouter une tâche
         </Button>
