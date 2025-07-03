@@ -133,74 +133,78 @@ const CreateTaskDialog = ({ onTaskCreated }: CreateTaskDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2">
+        <Button className="gap-2 bg-blue-600 hover:bg-blue-700 text-white">
           <Plus className="h-4 w-4" />
           Ajouter une tâche
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Créer une nouvelle tâche</DialogTitle>
+      <DialogContent className="sm:max-w-[500px] bg-white border border-slate-200">
+        <DialogHeader className="bg-white">
+          <DialogTitle className="text-slate-900">Créer une nouvelle tâche</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 bg-white">
           <div className="space-y-2">
-            <Label htmlFor="title">Titre *</Label>
+            <Label htmlFor="title" className="text-slate-900 font-medium">Titre *</Label>
             <Input
               id="title"
               value={formData.title}
               onChange={(e) => handleInputChange('title', e.target.value)}
               placeholder="Titre de la tâche"
               required
+              className="bg-white border-slate-300 text-slate-900 placeholder:text-slate-500"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description" className="text-slate-900 font-medium">Description</Label>
             <Textarea
               id="description"
               value={formData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
               placeholder="Description de la tâche"
               rows={3}
+              className="bg-white border-slate-300 text-slate-900 placeholder:text-slate-500"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="category">Catégorie</Label>
+            <Label htmlFor="category" className="text-slate-900 font-medium">Catégorie</Label>
             <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
-              <SelectTrigger>
+              <SelectTrigger className="bg-white border-slate-300 text-slate-900">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="URGENT">Urgent</SelectItem>
-                <SelectItem value="IMPORTANT">Important</SelectItem>
-                <SelectItem value="NORMAL">Normal</SelectItem>
-                <SelectItem value="AUTO_GOAL">Objectif auto</SelectItem>
+              <SelectContent className="bg-white border border-slate-200">
+                <SelectItem value="URGENT" className="text-slate-900 hover:bg-slate-50">Urgent</SelectItem>
+                <SelectItem value="IMPORTANT" className="text-slate-900 hover:bg-slate-50">Important</SelectItem>
+                <SelectItem value="NORMAL" className="text-slate-900 hover:bg-slate-50">Normal</SelectItem>
+                <SelectItem value="AUTO_GOAL" className="text-slate-900 hover:bg-slate-50">Objectif auto</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="due_date">Date d'échéance</Label>
+            <Label htmlFor="due_date" className="text-slate-900 font-medium">Date d'échéance</Label>
             <Input
               id="due_date"
               type="date"
               value={formData.due_date}
               onChange={(e) => handleInputChange('due_date', e.target.value)}
+              className="bg-white border-slate-300 text-slate-900"
             />
           </div>
 
           <div className="space-y-2">
-            <Label>Conseillers assignés</Label>
-            <div className="max-h-40 overflow-y-auto space-y-2 border rounded-md p-3">
+            <Label className="text-slate-900 font-medium">Conseillers assignés</Label>
+            <div className="max-h-40 overflow-y-auto space-y-2 border border-slate-300 rounded-md p-3 bg-white">
               {conseillers.map((conseiller) => (
                 <div key={conseiller.id} className="flex items-center space-x-2">
                   <Checkbox
                     id={conseiller.id}
                     checked={selectedConseillers.includes(conseiller.id)}
                     onCheckedChange={() => handleConseillerToggle(conseiller.id)}
+                    className="border-slate-300"
                   />
-                  <Label htmlFor={conseiller.id} className="text-sm">
+                  <Label htmlFor={conseiller.id} className="text-sm text-slate-900">
                     {conseiller.prenom} {conseiller.nom}
                   </Label>
                 </div>
@@ -216,11 +220,20 @@ const CreateTaskDialog = ({ onTaskCreated }: CreateTaskDialogProps) => {
             )}
           </div>
 
-          <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+          <div className="flex justify-end gap-2 pt-4 bg-white">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => setOpen(false)}
+              className="bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
+            >
               Annuler
             </Button>
-            <Button type="submit" disabled={isLoading || !formData.title.trim()}>
+            <Button 
+              type="submit" 
+              disabled={isLoading || !formData.title.trim()}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
               {isLoading ? 'Création...' : 'Créer la tâche'}
             </Button>
           </div>
