@@ -112,22 +112,45 @@ const TaskDetail = () => {
   };
 
   const handleConseillerToggle = (conseillerId: string) => {
-    setAssignedConseillers(prev => 
-      prev.includes(conseillerId)
+    setAssignedConseillers(prev => {
+      const newAssignedConseillers = prev.includes(conseillerId)
         ? prev.filter(id => id !== conseillerId)
-        : [...prev, conseillerId]
-    );
+        : [...prev, conseillerId];
+      
+      // Automatically update status based on conseiller assignments
+      if (newAssignedConseillers.length > 0 && formData.status === 'EN_FILE') {
+        setFormData(currentFormData => ({
+          ...currentFormData,
+          status: 'ASSIGNEE'
+        }));
+      } else if (newAssignedConseillers.length === 0 && formData.status === 'ASSIGNEE') {
+        setFormData(currentFormData => ({
+          ...currentFormData,
+          status: 'EN_FILE'
+        }));
+      }
+      
+      return newAssignedConseillers;
+    });
   };
 
   const handleSave = async () => {
     try {
       setIsSaving(true);
       
+      // Determine the correct status based on conseiller assignments
+      let finalStatus = formData.status;
+      if (assignedConseillers.length > 0 && formData.status === 'EN_FILE') {
+        finalStatus = 'ASSIGNEE';
+      } else if (assignedConseillers.length === 0 && formData.status === 'ASSIGNEE') {
+        finalStatus = 'EN_FILE';
+      }
+      
       const updateData = {
         title: formData.title,
         description: formData.description || null,
         category: formData.category,
-        status: formData.status,
+        status: finalStatus,
         due_date: formData.due_date ? new Date(formData.due_date).toISOString() : null,
         updated_at: new Date().toISOString()
       };
@@ -353,9 +376,16 @@ const TaskDetail = () => {
                   )}
                 </div>
                 {assignedConseillers.length > 0 && (
-                  <p className="text-xs text-slate-600">
-                    {assignedConseillers.length} conseiller(s) assigné(s)
-                  </p>
+                  <div className="space-y-1">
+                    <p className="text-xs text-slate-600">
+                      {assignedConseillers.length} conseiller(s) assigné(s)
+                    </p>
+                    {formData.status === 'EN_FILE' && (
+                      <p className="text-xs text-blue-600">
+                        Le statut sera automatiquement mis à jour vers "Assignée"
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
             </CardContent>
