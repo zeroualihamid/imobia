@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import CreateTaskDialog from '@/components/taches/CreateTaskDialog';
@@ -21,7 +22,8 @@ import {
   Target,
   Calendar,
   User,
-  ArrowRight
+  ArrowRight,
+  ChevronDown
 } from 'lucide-react';
 
 interface Task {
@@ -184,6 +186,13 @@ const PilotageConseillers = () => {
     navigate(`/tasks/${task.id}/edit`);
   };
 
+  const truncateDescription = (description: string | null, maxLength: number = 50) => {
+    if (!description) return 'Aucune description';
+    return description.length > maxLength 
+      ? description.substring(0, maxLength) + '...' 
+      : description;
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64 bg-slate-50">
@@ -302,6 +311,7 @@ const PilotageConseillers = () => {
                 <TableHeader>
                   <TableRow className="bg-slate-50">
                     <TableHead className="text-slate-900">Titre</TableHead>
+                    <TableHead className="text-slate-900">Description</TableHead>
                     <TableHead className="text-slate-900">Catégorie</TableHead>
                     <TableHead className="text-slate-900">Status</TableHead>
                     <TableHead className="text-slate-900">Créée le</TableHead>
@@ -316,6 +326,9 @@ const PilotageConseillers = () => {
                       onClick={() => handleTaskClick(task)}
                     >
                       <TableCell className="font-medium text-slate-900">{task.title}</TableCell>
+                      <TableCell className="text-slate-600 text-sm">
+                        {truncateDescription(task.description)}
+                      </TableCell>
                       <TableCell>
                         <Badge variant={getCategoryBadgeColor(task.category)}>
                           {task.category}
@@ -330,17 +343,38 @@ const PilotageConseillers = () => {
                         {new Date(task.created_at).toLocaleDateString('fr-FR')}
                       </TableCell>
                       <TableCell>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          className="bg-white border-slate-300 text-slate-900 hover:bg-slate-50"
-                          onClick={(e) => {
-                            e.stopPropagation(); // Prevent row click when clicking button
-                            // Handle assignment logic here
-                          }}
-                        >
-                          Assigner
-                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              className="bg-white border-slate-300 text-slate-900 hover:bg-slate-50"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              Assigner
+                              <ChevronDown className="ml-2 h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent className="bg-white border-slate-300 z-50">
+                            {conseillers.map((conseiller) => (
+                              <DropdownMenuItem
+                                key={conseiller.id}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  assignTask(task.id, conseiller.id);
+                                }}
+                                className="text-slate-900 hover:bg-slate-50 cursor-pointer"
+                              >
+                                {conseiller.prenom} {conseiller.nom}
+                              </DropdownMenuItem>
+                            ))}
+                            {conseillers.length === 0 && (
+                              <DropdownMenuItem disabled className="text-slate-500">
+                                Aucun conseiller disponible
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -359,6 +393,7 @@ const PilotageConseillers = () => {
                 <TableHeader>
                   <TableRow className="bg-slate-50">
                     <TableHead className="text-slate-900">Titre</TableHead>
+                    <TableHead className="text-slate-900">Description</TableHead>
                     <TableHead className="text-slate-900">Catégorie</TableHead>
                     <TableHead className="text-slate-900">Status</TableHead>
                     <TableHead className="text-slate-900">Créée le</TableHead>
@@ -373,6 +408,9 @@ const PilotageConseillers = () => {
                       onClick={() => handleTaskClick(task)}
                     >
                       <TableCell className="font-medium text-slate-900">{task.title}</TableCell>
+                      <TableCell className="text-slate-600 text-sm">
+                        {truncateDescription(task.description)}
+                      </TableCell>
                       <TableCell>
                         <Badge variant={getCategoryBadgeColor(task.category)}>
                           {task.category}
@@ -403,7 +441,7 @@ const PilotageConseillers = () => {
                   ))}
                   {tasksAssignees.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center text-slate-500 py-8 bg-white">
+                      <TableCell colSpan={6} className="text-center text-slate-500 py-8 bg-white">
                         Aucune tâche assignée
                       </TableCell>
                     </TableRow>
