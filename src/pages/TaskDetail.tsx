@@ -275,6 +275,12 @@ const TaskDetail = () => {
     return property.metadata?.address || 'Adresse non spécifiée';
   };
 
+  const handlePropertyClick = () => {
+    if (property) {
+      navigate(`/biens/${property.id}`);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64 bg-slate-50">
@@ -325,7 +331,7 @@ const TaskDetail = () => {
         <div className="lg:col-span-2 space-y-6">
           {/* Bien associé */}
           {property && (
-            <Card className="bg-white border border-slate-200 shadow-sm">
+            <Card className="bg-white border border-slate-200 shadow-sm cursor-pointer hover:shadow-md transition-shadow" onClick={handlePropertyClick}>
               <CardHeader className="bg-white border-b border-slate-200">
                 <CardTitle className="text-slate-800 flex items-center gap-2">
                   <Home className="h-5 w-5" />
