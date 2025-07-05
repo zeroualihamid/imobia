@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -57,6 +56,7 @@ const TaskDetail = () => {
     status: 'EN_FILE' as 'EN_FILE' | 'ASSIGNEE' | 'EN_COURS' | 'TERMINEE' | 'EN_RETARD' | 'REAFFECTEE',
     due_date: ''
   });
+  const [conseillerProgress, setConseillerProgress] = useState<{[key: string]: {[key: string]: boolean}}>({});
 
   useEffect(() => {
     if (id) {
@@ -160,6 +160,32 @@ const TaskDetail = () => {
       
       return newAssignedConseillers;
     });
+  };
+
+  const handleProgressToggle = (conseillerId: string, activity: string) => {
+    setConseillerProgress(prev => ({
+      ...prev,
+      [conseillerId]: {
+        ...prev[conseillerId],
+        [activity]: !prev[conseillerId]?.[activity]
+      }
+    }));
+  };
+
+  const calculateProgress = (conseillerId: string) => {
+    const activities = ['bien_trouve', 'visite', 'negociation', 'signature'];
+    const completedActivities = activities.filter(activity => 
+      conseillerProgress[conseillerId]?.[activity]
+    ).length;
+    return (completedActivities / activities.length) * 100;
+  };
+
+  const calculateGlobalProgress = () => {
+    if (assignedConseillers.length === 0) return 0;
+    const totalProgress = assignedConseillers.reduce((sum, conseillerId) => 
+      sum + calculateProgress(conseillerId), 0
+    );
+    return totalProgress / assignedConseillers.length;
   };
 
   const handleSave = async () => {
@@ -283,6 +309,73 @@ const TaskDetail = () => {
     if (property) {
       navigate(`/biens/${property.id}`);
     }
+  };
+
+  const renderProgressTable = (conseillerId?: string) => {
+    const activities = [
+      { key: 'bien_trouve', label: 'Bien trouvé', percentage: 25 },
+      { key: 'visite', label: 'Visité', percentage: 25 },
+      { key: 'negociation', label: 'Négocié', percentage: 25 },
+      { key: 'signature', label: 'Signé', percentage: 25 }
+    ];
+
+    const isGlobal = !conseillerId;
+    const relevantConseillers = isGlobal ? assignedConseillers : [conseillerId];
+
+    return (
+      <div className="space-y-4">
+        <div className="border rounded-lg overflow-hidden">
+          <table className="w-full">
+            <thead className="bg-slate-50">
+              <tr>
+                <th className="text-left p-3 font-medium">Activité</th>
+                <th className="text-center p-3 font-medium">Complété</th>
+                <th className="text-right p-3 font-medium">Pourcentage</th>
+              </tr>
+            </thead>
+            <tbody>
+              {activities.map((activity) => {
+                const isCompleted = isGlobal 
+                  ? relevantConseillers.some(id => conseillerProgress[id]?.[activity.key])
+                  : conseillerProgress[conseillerId]?.[activity.key];
+                
+                return (
+                  <tr key={activity.key} className="border-t">
+                    <td className="p-3">{activity.label}</td>
+                    <td className="p-3 text-center">
+                      <Checkbox
+                        checked={isCompleted || false}
+                        onCheckedChange={() => {
+                          if (!isGlobal) {
+                            handleProgressToggle(conseillerId, activity.key);
+                          }
+                        }}
+                        disabled={isGlobal}
+                      />
+                    </td>
+                    <td className="p-3 text-right font-medium">
+                      {activity.percentage}%
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+            <tfoot className="bg-slate-50 border-t-2">
+              <tr>
+                <td className="p-3 font-semibold">Total</td>
+                <td className="p-3"></td>
+                <td className="p-3 text-right font-bold text-lg">
+                  {isGlobal 
+                    ? Math.round(calculateGlobalProgress())
+                    : Math.round(calculateProgress(conseillerId))
+                  }%
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    );
   };
 
   if (isLoading) {
@@ -524,28 +617,47 @@ const TaskDetail = () => {
                   <TabsContent value="activities" className="p-6">
                     <div className="space-y-4">
                       <h3 className="font-semibold text-slate-800">Historique des activités</h3>
-                      <div className="space-y-3">
-                        <div className="flex items-start gap-3 p-3 border rounded-lg">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-                          <div className="flex-1">
-                            <p className="text-sm font-medium">Tâche créée</p>
-                            <p className="text-xs text-slate-600">
-                              {task.created_at ? new Date(task.created_at).toLocaleDateString('fr-FR') : 'Date inconnue'}
-                            </p>
-                          </div>
-                        </div>
-                        {assignedConseillers.length > 0 && (
-                          <div className="flex items-start gap-3 p-3 border rounded-lg">
-                            <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
-                            <div className="flex-1">
-                              <p className="text-sm font-medium">Conseillers assignés</p>
-                              <p className="text-xs text-slate-600">
-                                {assignedConseillers.length} conseiller(s) assigné(s)
-                              </p>
+                      
+                      {assignedConseillers.length > 0 ? (
+                        <Tabs defaultValue="global" className="w-full">
+                          <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${assignedConseillers.length + 1}, 1fr)` }}>
+                            <TabsTrigger value="global">Global</TabsTrigger>
+                            {assignedConseillers.map((conseillerId) => {
+                              const conseiller = conseillers.find(c => c.id === conseillerId);
+                              return (
+                                <TabsTrigger key={conseillerId} value={conseillerId}>
+                                  {conseiller ? `${conseiller.prenom} ${conseiller.nom}` : 'Conseiller'}
+                                </TabsTrigger>
+                              );
+                            })}
+                          </TabsList>
+                          
+                          <TabsContent value="global" className="mt-4">
+                            <div className="space-y-4">
+                              <h4 className="font-medium text-slate-700">Vue globale des activités</h4>
+                              {renderProgressTable()}
                             </div>
-                          </div>
-                        )}
-                      </div>
+                          </TabsContent>
+                          
+                          {assignedConseillers.map((conseillerId) => {
+                            const conseiller = conseillers.find(c => c.id === conseillerId);
+                            return (
+                              <TabsContent key={conseillerId} value={conseillerId} className="mt-4">
+                                <div className="space-y-4">
+                                  <h4 className="font-medium text-slate-700">
+                                    Activités de {conseiller ? `${conseiller.prenom} ${conseiller.nom}` : 'Conseiller'}
+                                  </h4>
+                                  {renderProgressTable(conseillerId)}
+                                </div>
+                              </TabsContent>
+                            );
+                          })}
+                        </Tabs>
+                      ) : (
+                        <div className="text-center py-8">
+                          <p className="text-slate-500">Aucun conseiller assigné à cette tâche.</p>
+                        </div>
+                      )}
                     </div>
                   </TabsContent>
                 </Tabs>
