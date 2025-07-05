@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -50,7 +49,8 @@ const Sidebar = () => {
       setIsOpen: setBiensOpen,
       subItems: [       
         { title: 'Ajouter bien', href: '/biens/ajouter', icon: Plus },
-        { title: 'Tous les biens', href: '/biens', icon: List }
+        { title: 'Tous les biens', href: '/biens', icon: List },
+        { title: 'Création vocale', href: '/biens/creation-vocale', icon: Mic }
       ]
     },
     {
