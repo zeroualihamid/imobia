@@ -197,7 +197,7 @@ const DetailConseiller = () => {
         }
       ];
 
-      setKPIs(mockKPIs);
+      setKpis(mockKPIs);
     } catch (error) {
       console.error('Erreur lors du chargement des KPIs:', error);
       toast({
