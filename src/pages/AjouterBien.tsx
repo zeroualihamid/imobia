@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Building2, Save, MapPin } from 'lucide-react';
+import { Building2, Save, MapPin, User, Phone, Mail } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import NumberInput from '@/components/ui/NumberInput';
@@ -15,6 +15,7 @@ import FileUpload, { UploadedFile } from '@/components/ui/FileUpload';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { Badge } from '@/components/ui/badge';
 
 const AjouterBien = () => {
   const { t } = useLanguage();
@@ -44,6 +45,14 @@ const AjouterBien = () => {
   const [livingArea, setLivingArea] = useState('');
   const [outdoorArea, setOutdoorArea] = useState('');
 
+  // Owner state
+  const [ownerFirstName, setOwnerFirstName] = useState('');
+  const [ownerLastName, setOwnerLastName] = useState('');
+  const [ownerPhone, setOwnerPhone] = useState('');
+  const [ownerEmail, setOwnerEmail] = useState('');
+  const [ownerProperties, setOwnerProperties] = useState<any[]>([]);
+  const [ownerTasks, setOwnerTasks] = useState<any[]>([]);
+
   const features = [
     'terrace', 'elevator', 'seaView', 'parking', 
     'garden', 'pool', 'aircon', 'heating', 
@@ -55,6 +64,55 @@ const AjouterBien = () => {
       setSelectedFeatures([...selectedFeatures, feature]);
     } else {
       setSelectedFeatures(selectedFeatures.filter(f => f !== feature));
+    }
+  };
+
+  const searchOwnerProperties = async () => {
+    if (!ownerEmail) {
+      toast.error('Veuillez saisir l\'email du propriétaire');
+      return;
+    }
+
+    try {
+      // Recherche des propriétés par email du propriétaire dans les métadonnées
+      const { data: properties, error } = await supabase
+        .from('properties')
+        .select('*')
+        .or(`metadata->owner->email.eq.${ownerEmail},metadata->>owner_email.eq.${ownerEmail}`);
+
+      if (error) {
+        console.error('Erreur lors de la recherche des propriétés:', error);
+        toast.error('Erreur lors de la recherche des propriétés');
+        return;
+      }
+
+      setOwnerProperties(properties || []);
+      
+      // Recherche des tâches liées à ce propriétaire
+      if (properties && properties.length > 0) {
+        const propertyIds = properties.map(p => p.id);
+        const { data: tasks, error: tasksError } = await supabase
+          .from('tasks')
+          .select(`
+            *,
+            task_conseillers (
+              conseiller_id,
+              conseillers (nom, prenom)
+            )
+          `)
+          .in('property_id', propertyIds);
+
+        if (tasksError) {
+          console.error('Erreur lors de la recherche des tâches:', tasksError);
+        } else {
+          setOwnerTasks(tasks || []);
+        }
+      }
+
+      toast.success(`${properties?.length || 0} bien(s) trouvé(s) pour ce propriétaire`);
+    } catch (error) {
+      console.error('Erreur:', error);
+      toast.error('Erreur lors de la recherche');
     }
   };
 
@@ -83,7 +141,7 @@ const AjouterBien = () => {
     setIsLoading(true);
 
     try {
-      // Prepare metadata object
+      // Prepare metadata object with owner information
       const metadata = {
         category,
         propertyType,
@@ -103,6 +161,12 @@ const AjouterBien = () => {
           builtArea: builtArea ? parseInt(builtArea) : null,
           livingArea: livingArea ? parseInt(livingArea) : null,
           outdoorArea: outdoorArea ? parseInt(outdoorArea) : null
+        },
+        owner: {
+          firstName: ownerFirstName,
+          lastName: ownerLastName,
+          phone: ownerPhone,
+          email: ownerEmail
         }
       };
 
@@ -163,6 +227,34 @@ const AjouterBien = () => {
     }
   };
 
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'EN_FILE':
+        return <Badge className="bg-blue-100 text-blue-800">En file</Badge>;
+      case 'EN_COURS':
+        return <Badge className="bg-yellow-100 text-yellow-800">En cours</Badge>;
+      case 'TERMINEE':
+        return <Badge className="bg-green-100 text-green-800">Terminée</Badge>;
+      case 'ANNULEE':
+        return <Badge className="bg-red-100 text-red-800">Annulée</Badge>;
+      default:
+        return <Badge variant="secondary">{status}</Badge>;
+    }
+  };
+
+  const getCategoryBadge = (category: string) => {
+    switch (category) {
+      case 'URGENT':
+        return <Badge className="bg-red-100 text-red-800">Urgent</Badge>;
+      case 'IMPORTANT':
+        return <Badge className="bg-orange-100 text-orange-800">Important</Badge>;
+      case 'NORMAL':
+        return <Badge className="bg-blue-100 text-blue-800">Normal</Badge>;
+      default:
+        return <Badge variant="secondary">{category}</Badge>;
+    }
+  };
+
   return (
     <div className="space-y-8">
       <div className="bg-white rounded-lg p-6 shadow-sm border border-slate-200">
@@ -178,7 +270,7 @@ const AjouterBien = () => {
       <Card className="bg-white border border-slate-200 shadow-sm">
         <CardContent className="p-8">
           <Tabs defaultValue="category" className="w-full">
-            <TabsList className="grid w-full grid-cols-6 bg-slate-100 border border-slate-200 p-1">
+            <TabsList className="grid w-full grid-cols-7 bg-slate-100 border border-slate-200 p-1">
               <TabsTrigger 
                 value="category" 
                 className="text-xs md:text-sm text-slate-600 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm font-medium"
@@ -214,6 +306,12 @@ const AjouterBien = () => {
                 className="text-xs md:text-sm text-slate-600 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm font-medium"
               >
                 {t('property.features')}
+              </TabsTrigger>
+              <TabsTrigger 
+                value="proprietaire" 
+                className="text-xs md:text-sm text-slate-600 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm font-medium"
+              >
+                Propriétaire
               </TabsTrigger>
             </TabsList>
 
@@ -464,6 +562,170 @@ const AjouterBien = () => {
                     </div>
                   ))}
                 </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="proprietaire" className="space-y-6 mt-6">
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <User className="h-5 w-5 text-blue-600" />
+                  <h3 className="text-lg font-semibold text-slate-900">Informations du propriétaire</h3>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="ownerFirstName" className="text-slate-900">Prénom</Label>
+                    <Input 
+                      id="ownerFirstName" 
+                      placeholder="Prénom du propriétaire" 
+                      className="bg-white border-slate-300"
+                      value={ownerFirstName}
+                      onChange={(e) => setOwnerFirstName(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="ownerLastName" className="text-slate-900">Nom</Label>
+                    <Input 
+                      id="ownerLastName" 
+                      placeholder="Nom du propriétaire" 
+                      className="bg-white border-slate-300"
+                      value={ownerLastName}
+                      onChange={(e) => setOwnerLastName(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="ownerPhone" className="text-slate-900 flex items-center gap-2">
+                      <Phone className="h-4 w-4" />
+                      Téléphone
+                    </Label>
+                    <Input 
+                      id="ownerPhone" 
+                      placeholder="+212 6 XX XX XX XX" 
+                      className="bg-white border-slate-300"
+                      value={ownerPhone}
+                      onChange={(e) => setOwnerPhone(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="ownerEmail" className="text-slate-900 flex items-center gap-2">
+                      <Mail className="h-4 w-4" />
+                      Email
+                    </Label>
+                    <div className="flex gap-2">
+                      <Input 
+                        id="ownerEmail" 
+                        placeholder="proprietaire@email.com" 
+                        className="bg-white border-slate-300"
+                        value={ownerEmail}
+                        onChange={(e) => setOwnerEmail(e.target.value)}
+                      />
+                      <Button 
+                        type="button" 
+                        onClick={searchOwnerProperties}
+                        variant="outline"
+                        className="bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
+                      >
+                        Chercher
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Liste des biens du propriétaire */}
+                {ownerProperties.length > 0 && (
+                  <div className="space-y-4">
+                    <h4 className="text-base font-medium text-slate-900 flex items-center gap-2">
+                      <Building2 className="h-4 w-4" />
+                      Biens du propriétaire ({ownerProperties.length})
+                    </h4>
+                    <div className="bg-slate-50 rounded-lg border border-slate-200">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead className="bg-slate-100 border-b border-slate-200">
+                            <tr>
+                              <th className="text-left p-3 font-medium text-slate-700">Type</th>
+                              <th className="text-left p-3 font-medium text-slate-700">Localisation</th>
+                              <th className="text-left p-3 font-medium text-slate-700">Catégorie</th>
+                              <th className="text-left p-3 font-medium text-slate-700">Créé le</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {ownerProperties.map((property) => (
+                              <tr key={property.id} className="border-b border-slate-200 hover:bg-white">
+                                <td className="p-3 text-slate-900 capitalize">
+                                  {property.metadata?.propertyType || 'Non défini'}
+                                </td>
+                                <td className="p-3 text-slate-700">
+                                  {property.metadata?.location?.city || 'Non défini'}
+                                </td>
+                                <td className="p-3">
+                                  <Badge variant="outline" className="capitalize">
+                                    {property.metadata?.category || 'Non défini'}
+                                  </Badge>
+                                </td>
+                                <td className="p-3 text-slate-700">
+                                  {new Date(property.created_at).toLocaleDateString('fr-FR')}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Liste des tâches liées */}
+                {ownerTasks.length > 0 && (
+                  <div className="space-y-4">
+                    <h4 className="text-base font-medium text-slate-900">
+                      Tâches en relation ({ownerTasks.length})
+                    </h4>
+                    <div className="bg-slate-50 rounded-lg border border-slate-200">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead className="bg-slate-100 border-b border-slate-200">
+                            <tr>
+                              <th className="text-left p-3 font-medium text-slate-700">Titre</th>
+                              <th className="text-left p-3 font-medium text-slate-700">Description</th>
+                              <th className="text-left p-3 font-medium text-slate-700">Catégorie</th>
+                              <th className="text-left p-3 font-medium text-slate-700">Statut</th>
+                              <th className="text-left p-3 font-medium text-slate-700">Conseiller</th>
+                              <th className="text-left p-3 font-medium text-slate-700">Créée le</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {ownerTasks.map((task) => (
+                              <tr key={task.id} className="border-b border-slate-200 hover:bg-white">
+                                <td className="p-3 text-slate-900 font-medium">{task.title}</td>
+                                <td className="p-3 text-slate-700 max-w-xs truncate">
+                                  {task.description || 'Aucune description'}
+                                </td>
+                                <td className="p-3">{getCategoryBadge(task.category)}</td>
+                                <td className="p-3">{getStatusBadge(task.status)}</td>
+                                <td className="p-3 text-slate-700">
+                                  {task.task_conseillers?.[0]?.conseillers ? 
+                                    `${task.task_conseillers[0].conseillers.prenom} ${task.task_conseillers[0].conseillers.nom}` : 
+                                    'Non assigné'
+                                  }
+                                </td>
+                                <td className="p-3 text-slate-700">
+                                  {new Date(task.created_at).toLocaleDateString('fr-FR')}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {ownerEmail && ownerProperties.length === 0 && (
+                  <div className="text-center p-6 bg-slate-50 rounded-lg border border-slate-200">
+                    <p className="text-slate-600">Aucun bien trouvé pour cet email.</p>
+                  </div>
+                )}
               </div>
             </TabsContent>
           </Tabs>
