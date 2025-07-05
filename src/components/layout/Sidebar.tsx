@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -18,7 +19,9 @@ import {
   Mic,
   ClipboardList,
   Settings,
-  Shield
+  Shield,
+  User,
+  UsersIcon
 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import PermissionGuard from '@/components/rbac/PermissionGuard';
@@ -27,7 +30,8 @@ const Sidebar = () => {
   const location = useLocation();
   const [biensOpen, setBiensOpen] = useState(false);
   const [conseillesOpen, setConseillesOpen] = useState(false);
-  const [demandesOpen, setDemandesOpen] = useState(false);
+  const [proprietaireOpen, setProprietaireOpen] = useState(false);
+  const [clientsOpen, setClientsOpen] = useState(false);
   const [messagerieOpen, setMessagerieOpen] = useState(false);
 
   const menuItems = [
@@ -64,15 +68,27 @@ const Sidebar = () => {
       ]
     },
     {
-      title: 'Demandes',
-      icon: FileText,
-      color: 'text-indigo-600',
+      title: 'Propriétaire',
+      icon: User,
+      color: 'text-orange-600',
       isCollapsible: true,
-      isOpen: demandesOpen,
-      setIsOpen: setDemandesOpen,
+      isOpen: proprietaireOpen,
+      setIsOpen: setProprietaireOpen,
       subItems: [
-        { title: 'Demande client', href: '/demandes/client', icon: Users },
-        { title: 'Demande agent', href: '/demandes/agent', icon: Users }
+        { title: 'Ajouter', href: '/proprietaire/ajouter', icon: Plus },
+        { title: 'Tous', href: '/proprietaire', icon: List }
+      ]
+    },
+    {
+      title: 'Clients',
+      icon: UsersIcon,
+      color: 'text-red-600',
+      isCollapsible: true,
+      isOpen: clientsOpen,
+      setIsOpen: setClientsOpen,
+      subItems: [
+        { title: 'Ajouter', href: '/clients/ajouter', icon: Plus },
+        { title: 'Tous', href: '/clients', icon: List }
       ]
     },
     {
@@ -115,7 +131,6 @@ const Sidebar = () => {
             alt="IMOBIA Logo" 
             className="w-24 h-24 object-contain"
           />
-          
         </div>
       </div>
       

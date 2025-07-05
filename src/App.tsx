@@ -22,6 +22,10 @@ import PilotageConseillers from "./pages/PilotageConseillers";
 import TaskDetail from "./pages/TaskDetail";
 import RoleManagement from "./pages/RoleManagement";
 import Auth from "./pages/Auth";
+import ListeProprietaires from "./pages/ListeProprietaires";
+import AjouterProprietaire from "./pages/AjouterProprietaire";
+import ListeClients from "./pages/ListeClients";
+import AjouterClient from "./pages/AjouterClient";
 
 const queryClient = new QueryClient();
 
@@ -109,6 +113,34 @@ function App() {
                   <ProtectedRoute>
                     <Layout>
                       <PilotageConseillers />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/proprietaire" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <ListeProprietaires />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/proprietaire/ajouter" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <AjouterProprietaire />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/clients" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <ListeClients />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/clients/ajouter" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <AjouterClient />
                     </Layout>
                   </ProtectedRoute>
                 } />
