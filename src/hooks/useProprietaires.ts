@@ -122,7 +122,7 @@ export const useProprietaires = () => {
     }
   };
 
-  const addInteraction = async (interaction: Omit<InteractionProprietaire, 'id' | 'created_at'>) => {
+  const addInteraction = async (interaction: Omit<InteractionProprietaire, 'id' | 'created_at' | 'conseiller_id'>) => {
     if (!user) return null;
 
     try {
