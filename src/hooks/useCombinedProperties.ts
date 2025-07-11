@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Property, PropertyMetadata } from '@/types/property';
+import { PropertyMetadata } from '@/types/property';
 import { Bien } from '@/types/proprietaire';
 
 interface CombinedProperty {
@@ -98,9 +98,14 @@ export const useCombinedProperties = () => {
         property_media: [],
       }));
 
-      // Convert properties to same format
-      const convertedProperties: CombinedProperty[] = (propertiesData || []).map((property: Property) => ({
-        ...property,
+      // Convert properties to same format - fix the TypeScript error
+      const convertedProperties: CombinedProperty[] = (propertiesData || []).map((property: any) => ({
+        id: property.id,
+        user_id: property.user_id,
+        metadata: property.metadata as PropertyMetadata,
+        created_at: property.created_at,
+        updated_at: property.updated_at,
+        property_media: property.property_media || [],
         source: 'properties' as const,
       }));
 
