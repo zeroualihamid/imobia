@@ -3,42 +3,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Building2, Search, Plus, MapPin, Bed, Bath, Square } from 'lucide-react';
+import { Building2, Search, Plus, MapPin, Bed, Bath, Square, User } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
-import { Property, PropertyMetadata } from '@/types/property';
+import { useCombinedProperties } from '@/hooks/useCombinedProperties';
+import { PropertyMetadata } from '@/types/property';
 
 const Biens = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const { user } = useAuth();
   const navigate = useNavigate();
-
-  // Fetch properties from Supabase
-  const { data: properties = [], isLoading, error } = useQuery({
-    queryKey: ['properties', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return [];
-      
-      const { data, error } = await supabase
-        .from('properties')
-        .select(`
-          *,
-          property_media (*)
-        `)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching properties:', error);
-        throw error;
-      }
-
-      return data as Property[] || [];
-    },
-    enabled: !!user?.id,
-  });
+  const { properties, isLoading, error } = useCombinedProperties();
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -53,15 +26,6 @@ const Biens = () => {
     }
   };
 
-  const getPropertyImage = (property: Property) => {
-    const firstMedia = property.property_media?.[0];
-    if (firstMedia) {
-      const { data } = supabase.storage.from('property-media').getPublicUrl(firstMedia.file_path);
-      return data.publicUrl;
-    }
-    return null;
-  };
-
   const formatLocation = (location: PropertyMetadata['location']): string => {
     if (!location) return 'Localisation non définie';
     
@@ -69,7 +33,6 @@ const Biens = () => {
       return location;
     }
     
-    // Si c'est un objet, construire l'adresse à partir des composants
     const parts = [];
     if (location.address) parts.push(location.address);
     if (location.neighborhood) parts.push(location.neighborhood);
@@ -183,36 +146,37 @@ const Biens = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredProperties.map((property) => {
           const metadata = property.metadata as PropertyMetadata;
-          const imageUrl = getPropertyImage(property);
           const locationStr = formatLocation(metadata?.location);
           
           return (
             <Card 
               key={property.id} 
               className="bg-white hover:shadow-lg transition-all duration-200 border border-slate-200 overflow-hidden cursor-pointer"
-              onClick={() => navigate(`/biens/${property.id}`)}
+              onClick={() => {
+                if (property.source === 'properties') {
+                  navigate(`/biens/${property.id}`);
+                } else {
+                  navigate(`/proprietaires/${property.original_data?.proprietaire_id}`);
+                }
+              }}
             >
               <div className="aspect-video bg-slate-100 flex items-center justify-center overflow-hidden">
-                {imageUrl ? (
-                  <img 
-                    src={imageUrl} 
-                    alt={metadata?.title || 'Photo du bien'}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                      e.currentTarget.parentElement!.innerHTML = '<div class="flex items-center justify-center w-full h-full bg-slate-100"><Building2 class="h-12 w-12 text-slate-400" /></div>';
-                    }}
-                  />
-                ) : (
-                  <Building2 className="h-12 w-12 text-slate-400" />
-                )}
+                <Building2 className="h-12 w-12 text-slate-400" />
               </div>
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <CardTitle className="text-lg font-semibold text-foreground line-clamp-2">
                     {metadata?.title || 'Sans titre'}
                   </CardTitle>
-                  {getStatusBadge(metadata?.status || 'available')}
+                  <div className="flex flex-col gap-2">
+                    {getStatusBadge(metadata?.status || 'available')}
+                    {property.source === 'biens' && (
+                      <Badge variant="outline" className="text-xs">
+                        <User className="h-3 w-3 mr-1" />
+                        Propriétaire
+                      </Badge>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center text-slate-600 text-sm">
                   <MapPin className="h-4 w-4 mr-1" />
