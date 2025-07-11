@@ -1,27 +1,29 @@
 
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Save, User } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
+import { ArrowLeft, User, Building2, FileText } from 'lucide-react';
 import { useProprietaires } from '@/hooks/useProprietaires';
-import type { Proprietaire } from '@/types/proprietaire';
+import { useToast } from '@/hooks/use-toast';
+import type { ProprietaireType } from '@/types/proprietaire';
 
 const AjouterProprietaire = () => {
   const navigate = useNavigate();
-  const { createProprietaire } = useProprietaires();
+  const { toast } = useToast();
+  const { addProprietaire } = useProprietaires();
+  
   const [formData, setFormData] = useState({
-    type: 'PARTICULIER' as const,
+    type: 'PARTICULIER' as ProprietaireType,
     nom: '',
     prenom: '',
     raison_sociale: '',
-    telephone: '',
     email: '',
+    telephone: '',
     adresse: '',
     ville: '',
     code_postal: '',
@@ -32,18 +34,25 @@ const AjouterProprietaire = () => {
     notes: ''
   });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
+  const [loading, setLoading] = useState(false);
+
+  const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [field]: value
     }));
   };
 
-  const handleSelectChange = (name: string, value: string) => {
+  const handleTypeChange = (value: ProprietaireType) => {
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      type: value,
+      // Reset fields specific to other types
+      prenom: value !== 'PARTICULIER' ? '' : prev.prenom,
+      raison_sociale: value === 'PARTICULIER' ? '' : prev.raison_sociale,
+      date_naissance: value !== 'PARTICULIER' ? '' : prev.date_naissance,
+      cin: value !== 'PARTICULIER' ? '' : prev.cin,
+      ice: value === 'PARTICULIER' ? '' : prev.ice
     }));
   };
 
@@ -52,252 +61,264 @@ const AjouterProprietaire = () => {
     
     // Validation
     if (!formData.nom || !formData.telephone) {
-      toast.error('Veuillez remplir tous les champs obligatoires');
+      toast({
+        title: "Erreur",
+        description: "Nom et téléphone sont obligatoires",
+        variant: "destructive"
+      });
       return;
     }
 
+    // Type-specific validation
     if (formData.type === 'PARTICULIER' && !formData.prenom) {
-      toast.error('Le prénom est obligatoire pour un particulier');
+      toast({
+        title: "Erreur",
+        description: "Le prénom est obligatoire pour un particulier",
+        variant: "destructive"
+      });
       return;
     }
 
     if ((formData.type === 'PROMOTEUR' || formData.type === 'FONCIERE') && !formData.raison_sociale) {
-      toast.error('La raison sociale est obligatoire pour ce type');
+      toast({
+        title: "Erreur",
+        description: "La raison sociale est obligatoire pour une entreprise",
+        variant: "destructive"
+      });
       return;
     }
 
+    setLoading(true);
+    
     try {
       const proprietaireData = {
         ...formData,
-        date_naissance: formData.date_naissance || undefined
+        date_naissance: formData.date_naissance || null
       };
-
-      const result = await createProprietaire(proprietaireData);
       
-      if (result) {
-        toast.success('Propriétaire ajouté avec succès!');
-        navigate('/proprietaire');
-      }
+      await addProprietaire(proprietaireData);
+      
+      toast({
+        title: "Succès",
+        description: "Propriétaire ajouté avec succès"
+      });
+      
+      navigate('/proprietaire');
     } catch (error) {
-      console.error('Erreur lors de l\'ajout du propriétaire:', error);
-      toast.error('Erreur lors de l\'ajout du propriétaire');
+      console.error('Error adding proprietaire:', error);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de l'ajout du propriétaire",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Link to="/proprietaire">
-          <Button variant="outline" size="sm">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Retour
-          </Button>
-        </Link>
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">Ajouter un propriétaire</h1>
-          <p className="text-slate-600 mt-1">Enregistrez les informations d'un nouveau propriétaire</p>
-        </div>
+        <Button variant="outline" size="sm" onClick={() => navigate('/proprietaire')}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Retour
+        </Button>
+        <h1 className="text-3xl font-bold text-slate-900">Ajouter un propriétaire</h1>
       </div>
 
-      <Card className="max-w-2xl">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <User className="h-5 w-5" />
-            Informations du propriétaire
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="type">Type de propriétaire *</Label>
-              <Select
-                value={formData.type}
-                onValueChange={(value) => handleSelectChange('type', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner le type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="PARTICULIER">Particulier</SelectItem>
-                  <SelectItem value="PROMOTEUR">Promoteur</SelectItem>
-                  <SelectItem value="FONCIERE">Foncière</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {formData.type === 'PARTICULIER' ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="prenom">Prénom *</Label>
-                  <Input
-                    id="prenom"
-                    name="prenom"
-                    value={formData.prenom}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="nom">Nom *</Label>
-                  <Input
-                    id="nom"
-                    name="nom"
-                    value={formData.nom}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="raison_sociale">Raison sociale *</Label>
-                  <Input
-                    id="raison_sociale"
-                    name="raison_sociale"
-                    value={formData.raison_sociale}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="nom">Nom de contact</Label>
-                  <Input
-                    id="nom"
-                    name="nom"
-                    value={formData.nom}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </>
-            )}
-
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Informations générales */}
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <User className="h-5 w-5" />
+              Informations générales
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="telephone">Téléphone *</Label>
+              <div>
+                <Label htmlFor="type">Type de propriétaire *</Label>
+                <Select value={formData.type} onValueChange={handleTypeChange}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="PARTICULIER">Particulier</SelectItem>
+                    <SelectItem value="PROMOTEUR">Promoteur</SelectItem>
+                    <SelectItem value="FONCIERE">Foncière</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="nom">
+                  {formData.type === 'PARTICULIER' ? 'Nom' : 'Nom de l\'entreprise'} *
+                </Label>
                 <Input
-                  id="telephone"
-                  name="telephone"
-                  type="tel"
-                  value={formData.telephone}
-                  onChange={handleInputChange}
+                  id="nom"
+                  value={formData.nom}
+                  onChange={(e) => handleInputChange('nom', e.target.value)}
                   required
                 />
               </div>
-              <div className="space-y-2">
+
+              {formData.type === 'PARTICULIER' && (
+                <div>
+                  <Label htmlFor="prenom">Prénom *</Label>
+                  <Input
+                    id="prenom"
+                    value={formData.prenom}
+                    onChange={(e) => handleInputChange('prenom', e.target.value)}
+                    required
+                  />
+                </div>
+              )}
+
+              {(formData.type === 'PROMOTEUR' || formData.type === 'FONCIERE') && (
+                <div>
+                  <Label htmlFor="raison_sociale">Raison sociale *</Label>
+                  <Input
+                    id="raison_sociale"
+                    value={formData.raison_sociale}
+                    onChange={(e) => handleInputChange('raison_sociale', e.target.value)}
+                    required
+                  />
+                </div>
+              )}
+
+              <div>
+                <Label htmlFor="telephone">Téléphone *</Label>
+                <Input
+                  id="telephone"
+                  value={formData.telephone}
+                  onChange={(e) => handleInputChange('telephone', e.target.value)}
+                  required
+                />
+              </div>
+
+              <div>
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
-                  name="email"
                   type="email"
                   value={formData.email}
-                  onChange={handleInputChange}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
                 />
               </div>
+
+              {formData.type === 'PARTICULIER' && (
+                <>
+                  <div>
+                    <Label htmlFor="date_naissance">Date de naissance</Label>
+                    <Input
+                      id="date_naissance"
+                      type="date"
+                      value={formData.date_naissance}
+                      onChange={(e) => handleInputChange('date_naissance', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="cin">CIN</Label>
+                    <Input
+                      id="cin"
+                      value={formData.cin}
+                      onChange={(e) => handleInputChange('cin', e.target.value)}
+                    />
+                  </div>
+                </>
+              )}
+
+              {(formData.type === 'PROMOTEUR' || formData.type === 'FONCIERE') && (
+                <div>
+                  <Label htmlFor="ice">ICE</Label>
+                  <Input
+                    id="ice"
+                    value={formData.ice}
+                    onChange={(e) => handleInputChange('ice', e.target.value)}
+                  />
+                </div>
+              )}
             </div>
+          </CardContent>
+        </Card>
 
-            {formData.type === 'PARTICULIER' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="date_naissance">Date de naissance</Label>
-                  <Input
-                    id="date_naissance"
-                    name="date_naissance"
-                    type="date"
-                    value={formData.date_naissance}
-                    onChange={handleInputChange}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="cin">CIN</Label>
-                  <Input
-                    id="cin"
-                    name="cin"
-                    value={formData.cin}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
-            )}
-
-            {(formData.type === 'PROMOTEUR' || formData.type === 'FONCIERE') && (
-              <div className="space-y-2">
-                <Label htmlFor="ice">ICE</Label>
-                <Input
-                  id="ice"
-                  name="ice"
-                  value={formData.ice}
-                  onChange={handleInputChange}
-                />
-              </div>
-            )}
-
-            <div className="space-y-2">
+        {/* Adresse */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="h-5 w-5" />
+              Adresse
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
               <Label htmlFor="adresse">Adresse</Label>
-              <Input
-                id="adresse"
-                name="adresse"
-                value={formData.adresse}
-                onChange={handleInputChange}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="ville">Ville</Label>
-                <Input
-                  id="ville"
-                  name="ville"
-                  value={formData.ville}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="code_postal">Code postal</Label>
-                <Input
-                  id="code_postal"
-                  name="code_postal"
-                  value={formData.code_postal}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="pays">Pays</Label>
-                <Input
-                  id="pays"
-                  name="pays"
-                  value={formData.pays}
-                  onChange={handleInputChange}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="notes">Notes</Label>
               <Textarea
-                id="notes"
-                name="notes"
-                value={formData.notes}
-                onChange={handleInputChange}
+                id="adresse"
+                value={formData.adresse}
+                onChange={(e) => handleInputChange('adresse', e.target.value)}
                 rows={3}
-                placeholder="Notes additionnelles sur le propriétaire..."
               />
             </div>
 
-            <div className="flex gap-4">
-              <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-                <Save className="h-4 w-4 mr-2" />
-                Enregistrer
-              </Button>
-              <Link to="/proprietaire">
-                <Button type="button" variant="outline">
-                  Annuler
-                </Button>
-              </Link>
+            <div>
+              <Label htmlFor="ville">Ville</Label>
+              <Input
+                id="ville"
+                value={formData.ville}
+                onChange={(e) => handleInputChange('ville', e.target.value)}
+              />
             </div>
-          </form>
-        </CardContent>
-      </Card>
+
+            <div>
+              <Label htmlFor="code_postal">Code postal</Label>
+              <Input
+                id="code_postal"
+                value={formData.code_postal}
+                onChange={(e) => handleInputChange('code_postal', e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="pays">Pays</Label>
+              <Input
+                id="pays"
+                value={formData.pays}
+                onChange={(e) => handleInputChange('pays', e.target.value)}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Notes */}
+        <Card className="lg:col-span-3">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Notes
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Textarea
+              placeholder="Notes supplémentaires..."
+              value={formData.notes}
+              onChange={(e) => handleInputChange('notes', e.target.value)}
+              rows={4}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Actions */}
+        <div className="lg:col-span-3 flex justify-end gap-4">
+          <Button type="button" variant="outline" onClick={() => navigate('/proprietaire')}>
+            Annuler
+          </Button>
+          <Button type="submit" disabled={loading}>
+            {loading ? 'Ajout en cours...' : 'Ajouter le propriétaire'}
+          </Button>
+        </div>
+      </form>
     </div>
   );
 };

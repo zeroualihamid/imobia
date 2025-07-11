@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { 
   ArrowLeft, User, Building, FileText, MessageSquare, 
   Phone, Mail, MapPin, Calendar, Hash, Plus, Edit,
@@ -12,16 +12,18 @@ import {
 } from 'lucide-react';
 import { useProprietaires, useBiens, useConditions, useMandats, useInteractions } from '@/hooks/useProprietaires';
 import { useAuth } from '@/contexts/AuthContext';
+import AjouterBienForm from '@/components/AjouterBienForm';
 import type { Proprietaire } from '@/types/proprietaire';
 
 const DetailProprietaire = () => {
   const { id } = useParams<{ id: string }>();
   const [proprietaire, setProprietaire] = useState<Proprietaire | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showAddBienDialog, setShowAddBienDialog] = useState(false);
   const { user } = useAuth();
   
   const { getProprietaireById } = useProprietaires();
-  const { biens } = useBiens(id);
+  const { biens, refetch: refetchBiens } = useBiens(id);
   const { conditions } = useConditions(id);
   const { mandats } = useMandats(id);
   const { interactions, addInteraction } = useInteractions(id);
@@ -39,6 +41,11 @@ const DetailProprietaire = () => {
     const data = await getProprietaireById(id);
     setProprietaire(data);
     setLoading(false);
+  };
+
+  const handleBienAdded = () => {
+    setShowAddBienDialog(false);
+    refetchBiens();
   };
 
   const getDisplayName = (proprietaire: Proprietaire) => {
@@ -231,10 +238,25 @@ const DetailProprietaire = () => {
             <CardTitle>Actions rapides</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <Button variant="outline" className="w-full justify-start">
-              <Building className="h-4 w-4 mr-2" />
-              Ajouter un bien
-            </Button>
+            <Dialog open={showAddBienDialog} onOpenChange={setShowAddBienDialog}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="w-full justify-start">
+                  <Building className="h-4 w-4 mr-2" />
+                  Ajouter un bien
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Ajouter un bien</DialogTitle>
+                </DialogHeader>
+                <AjouterBienForm
+                  proprietaireId={proprietaire.id}
+                  onSuccess={handleBienAdded}
+                  onCancel={() => setShowAddBienDialog(false)}
+                />
+              </DialogContent>
+            </Dialog>
+            
             <Button variant="outline" className="w-full justify-start">
               <FileText className="h-4 w-4 mr-2" />
               Créer un mandat
@@ -259,10 +281,14 @@ const DetailProprietaire = () => {
         <TabsContent value="biens" className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">Biens immobiliers</h3>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Ajouter un bien
-            </Button>
+            <Dialog open={showAddBienDialog} onOpenChange={setShowAddBienDialog}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Ajouter un bien
+                </Button>
+              </DialogTrigger>
+            </Dialog>
           </div>
           
           {biens.length === 0 ? (
