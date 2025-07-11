@@ -7,8 +7,180 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instanciate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "12.2.3 (519615d)"
+  }
   public: {
     Tables: {
+      biens: {
+        Row: {
+          adresse: string
+          annee_construction: number | null
+          ascenseur: boolean | null
+          charges_mensuelles: number | null
+          chauffage: boolean | null
+          climatisation: boolean | null
+          code_postal: string | null
+          created_at: string
+          description: string | null
+          id: string
+          jardin: boolean | null
+          meuble: boolean | null
+          nombre_chambres: number | null
+          nombre_etages: number | null
+          nombre_salles_bain: number | null
+          parking: boolean | null
+          piscine: boolean | null
+          prix_location: number | null
+          prix_vente: number | null
+          proprietaire_id: string
+          quartier: string | null
+          status: Database["public"]["Enums"]["bien_status"]
+          surface_habitable: number | null
+          surface_terrain: number | null
+          titre: string
+          type: Database["public"]["Enums"]["bien_type"]
+          updated_at: string
+          ville: string
+        }
+        Insert: {
+          adresse: string
+          annee_construction?: number | null
+          ascenseur?: boolean | null
+          charges_mensuelles?: number | null
+          chauffage?: boolean | null
+          climatisation?: boolean | null
+          code_postal?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          jardin?: boolean | null
+          meuble?: boolean | null
+          nombre_chambres?: number | null
+          nombre_etages?: number | null
+          nombre_salles_bain?: number | null
+          parking?: boolean | null
+          piscine?: boolean | null
+          prix_location?: number | null
+          prix_vente?: number | null
+          proprietaire_id: string
+          quartier?: string | null
+          status?: Database["public"]["Enums"]["bien_status"]
+          surface_habitable?: number | null
+          surface_terrain?: number | null
+          titre: string
+          type: Database["public"]["Enums"]["bien_type"]
+          updated_at?: string
+          ville: string
+        }
+        Update: {
+          adresse?: string
+          annee_construction?: number | null
+          ascenseur?: boolean | null
+          charges_mensuelles?: number | null
+          chauffage?: boolean | null
+          climatisation?: boolean | null
+          code_postal?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          jardin?: boolean | null
+          meuble?: boolean | null
+          nombre_chambres?: number | null
+          nombre_etages?: number | null
+          nombre_salles_bain?: number | null
+          parking?: boolean | null
+          piscine?: boolean | null
+          prix_location?: number | null
+          prix_vente?: number | null
+          proprietaire_id?: string
+          quartier?: string | null
+          status?: Database["public"]["Enums"]["bien_status"]
+          surface_habitable?: number | null
+          surface_terrain?: number | null
+          titre?: string
+          type?: Database["public"]["Enums"]["bien_type"]
+          updated_at?: string
+          ville?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "biens_proprietaire_id_fkey"
+            columns: ["proprietaire_id"]
+            isOneToOne: false
+            referencedRelation: "proprietaires"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conditions_proprietaire: {
+        Row: {
+          bien_id: string | null
+          commission_negociable: boolean | null
+          conditions_speciales: string | null
+          created_at: string
+          delai_location: number | null
+          delai_vente: number | null
+          exclusivite_requise: boolean | null
+          horaires_visite: string | null
+          id: string
+          prix_maximum: number | null
+          prix_minimum: number | null
+          proprietaire_id: string
+          updated_at: string
+          visite_accompagnee: boolean | null
+        }
+        Insert: {
+          bien_id?: string | null
+          commission_negociable?: boolean | null
+          conditions_speciales?: string | null
+          created_at?: string
+          delai_location?: number | null
+          delai_vente?: number | null
+          exclusivite_requise?: boolean | null
+          horaires_visite?: string | null
+          id?: string
+          prix_maximum?: number | null
+          prix_minimum?: number | null
+          proprietaire_id: string
+          updated_at?: string
+          visite_accompagnee?: boolean | null
+        }
+        Update: {
+          bien_id?: string | null
+          commission_negociable?: boolean | null
+          conditions_speciales?: string | null
+          created_at?: string
+          delai_location?: number | null
+          delai_vente?: number | null
+          exclusivite_requise?: boolean | null
+          horaires_visite?: string | null
+          id?: string
+          prix_maximum?: number | null
+          prix_minimum?: number | null
+          proprietaire_id?: string
+          updated_at?: string
+          visite_accompagnee?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conditions_proprietaire_bien_id_fkey"
+            columns: ["bien_id"]
+            isOneToOne: false
+            referencedRelation: "biens"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conditions_proprietaire_proprietaire_id_fkey"
+            columns: ["proprietaire_id"]
+            isOneToOne: false
+            referencedRelation: "proprietaires"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conseillers: {
         Row: {
           adresse: string | null
@@ -74,6 +246,113 @@ export type Database = {
           ville?: string | null
         }
         Relationships: []
+      }
+      interactions_proprietaire: {
+        Row: {
+          conseiller_id: string
+          created_at: string
+          date_interaction: string
+          description: string
+          id: string
+          proprietaire_id: string
+          type_interaction: string
+        }
+        Insert: {
+          conseiller_id: string
+          created_at?: string
+          date_interaction: string
+          description: string
+          id?: string
+          proprietaire_id: string
+          type_interaction: string
+        }
+        Update: {
+          conseiller_id?: string
+          created_at?: string
+          date_interaction?: string
+          description?: string
+          id?: string
+          proprietaire_id?: string
+          type_interaction?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interactions_proprietaire_proprietaire_id_fkey"
+            columns: ["proprietaire_id"]
+            isOneToOne: false
+            referencedRelation: "proprietaires"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mandats: {
+        Row: {
+          bien_id: string
+          commission_fixe: number | null
+          commission_pourcentage: number
+          conditions_particulieres: string | null
+          created_at: string
+          created_by: string
+          date_debut: string
+          date_fin: string
+          document_url: string | null
+          id: string
+          prix_mandat: number | null
+          proprietaire_id: string
+          status: Database["public"]["Enums"]["mandat_status"]
+          type: Database["public"]["Enums"]["mandat_type"]
+          updated_at: string
+        }
+        Insert: {
+          bien_id: string
+          commission_fixe?: number | null
+          commission_pourcentage: number
+          conditions_particulieres?: string | null
+          created_at?: string
+          created_by: string
+          date_debut: string
+          date_fin: string
+          document_url?: string | null
+          id?: string
+          prix_mandat?: number | null
+          proprietaire_id: string
+          status?: Database["public"]["Enums"]["mandat_status"]
+          type: Database["public"]["Enums"]["mandat_type"]
+          updated_at?: string
+        }
+        Update: {
+          bien_id?: string
+          commission_fixe?: number | null
+          commission_pourcentage?: number
+          conditions_particulieres?: string | null
+          created_at?: string
+          created_by?: string
+          date_debut?: string
+          date_fin?: string
+          document_url?: string | null
+          id?: string
+          prix_mandat?: number | null
+          proprietaire_id?: string
+          status?: Database["public"]["Enums"]["mandat_status"]
+          type?: Database["public"]["Enums"]["mandat_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mandats_bien_id_fkey"
+            columns: ["bien_id"]
+            isOneToOne: false
+            referencedRelation: "biens"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mandats_proprietaire_id_fkey"
+            columns: ["proprietaire_id"]
+            isOneToOne: false
+            referencedRelation: "proprietaires"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       permissions: {
         Row: {
@@ -193,6 +472,69 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      proprietaires: {
+        Row: {
+          adresse: string | null
+          cin: string | null
+          code_postal: string | null
+          created_at: string
+          created_by: string
+          date_naissance: string | null
+          email: string | null
+          ice: string | null
+          id: string
+          nom: string
+          notes: string | null
+          pays: string | null
+          prenom: string | null
+          raison_sociale: string | null
+          telephone: string
+          type: Database["public"]["Enums"]["proprietaire_type"]
+          updated_at: string
+          ville: string | null
+        }
+        Insert: {
+          adresse?: string | null
+          cin?: string | null
+          code_postal?: string | null
+          created_at?: string
+          created_by: string
+          date_naissance?: string | null
+          email?: string | null
+          ice?: string | null
+          id?: string
+          nom: string
+          notes?: string | null
+          pays?: string | null
+          prenom?: string | null
+          raison_sociale?: string | null
+          telephone: string
+          type?: Database["public"]["Enums"]["proprietaire_type"]
+          updated_at?: string
+          ville?: string | null
+        }
+        Update: {
+          adresse?: string | null
+          cin?: string | null
+          code_postal?: string | null
+          created_at?: string
+          created_by?: string
+          date_naissance?: string | null
+          email?: string | null
+          ice?: string | null
+          id?: string
+          nom?: string
+          notes?: string | null
+          pays?: string | null
+          prenom?: string | null
+          raison_sociale?: string | null
+          telephone?: string
+          type?: Database["public"]["Enums"]["proprietaire_type"]
+          updated_at?: string
+          ville?: string | null
+        }
+        Relationships: []
       }
       role_permissions: {
         Row: {
@@ -473,6 +815,10 @@ export type Database = {
           role_name: string
         }[]
       }
+      mask_phone_number: {
+        Args: { phone_number: string; proprietaire_created_by: string }
+        Returns: string
+      }
       user_has_permission: {
         Args: {
           user_uuid: string
@@ -486,6 +832,8 @@ export type Database = {
       }
     }
     Enums: {
+      bien_status: "DISPONIBLE" | "RESERVE" | "VENDU" | "LOUE" | "RETIRE"
+      bien_type: "VENTE" | "LOCATION" | "VENTE_LOCATION"
       command_type:
         | "CREATE_USER"
         | "EDIT_USER"
@@ -506,7 +854,10 @@ export type Database = {
         | "VIEW_REPORTS"
         | "MANAGE_ROLES"
         | "MANAGE_PERMISSIONS"
+      mandat_status: "ACTIF" | "EXPIRE" | "RESILIE" | "SUSPENDU"
+      mandat_type: "SIMPLE" | "EXCLUSIF" | "SEMI_EXCLUSIF"
       permission_level: "GLOBAL" | "ACCOUNT" | "OWN"
+      proprietaire_type: "PARTICULIER" | "PROMOTEUR" | "FONCIERE"
       task_category: "URGENT" | "IMPORTANT" | "NORMAL" | "AUTO_GOAL"
       task_status:
         | "EN_FILE"
@@ -522,21 +873,25 @@ export type Database = {
   }
 }
 
-type DefaultSchema = Database[Extract<keyof Database, "public">]
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
@@ -554,14 +909,16 @@ export type Tables<
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
@@ -577,14 +934,16 @@ export type TablesInsert<
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
@@ -600,14 +959,16 @@ export type TablesUpdate<
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
@@ -615,14 +976,16 @@ export type Enums<
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
@@ -630,6 +993,8 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      bien_status: ["DISPONIBLE", "RESERVE", "VENDU", "LOUE", "RETIRE"],
+      bien_type: ["VENTE", "LOCATION", "VENTE_LOCATION"],
       command_type: [
         "CREATE_USER",
         "EDIT_USER",
@@ -651,7 +1016,10 @@ export const Constants = {
         "MANAGE_ROLES",
         "MANAGE_PERMISSIONS",
       ],
+      mandat_status: ["ACTIF", "EXPIRE", "RESILIE", "SUSPENDU"],
+      mandat_type: ["SIMPLE", "EXCLUSIF", "SEMI_EXCLUSIF"],
       permission_level: ["GLOBAL", "ACCOUNT", "OWN"],
+      proprietaire_type: ["PARTICULIER", "PROMOTEUR", "FONCIERE"],
       task_category: ["URGENT", "IMPORTANT", "NORMAL", "AUTO_GOAL"],
       task_status: [
         "EN_FILE",

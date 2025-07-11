@@ -4,48 +4,72 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Search, Plus, Eye, Phone, Mail, Building } from 'lucide-react';
+import { Search, Plus, Eye, Phone, Mail, Building, User, Building2, Landmark } from 'lucide-react';
 import { Link } from 'react-router-dom';
-
-interface Proprietaire {
-  id: string;
-  nom: string;
-  prenom: string;
-  telephone: string;
-  email: string;
-  nombreBiens: number;
-  dateCreation: string;
-}
+import { useProprietaires } from '@/hooks/useProprietaires';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 const ListeProprietaires = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const { proprietaires, loading } = useProprietaires();
+  const { user } = useAuth();
 
-  // Mock data - remplacer par des données réelles de Supabase
-  const proprietaires: Proprietaire[] = [
-    {
-      id: '1',
-      nom: 'Dupont',
-      prenom: 'Jean',
-      telephone: '+33 6 12 34 56 78',
-      email: 'jean.dupont@email.com',
-      nombreBiens: 3,
-      dateCreation: '2024-01-15'
-    },
-    {
-      id: '2',
-      nom: 'Martin',
-      prenom: 'Marie',
-      telephone: '+33 6 98 76 54 32',
-      email: 'marie.martin@email.com',
-      nombreBiens: 1,
-      dateCreation: '2024-02-20'
+  const filteredProprietaires = proprietaires.filter(proprietaire => {
+    const searchableText = `${proprietaire.prenom || ''} ${proprietaire.nom} ${proprietaire.raison_sociale || ''} ${proprietaire.email || ''}`.toLowerCase();
+    return searchableText.includes(searchTerm.toLowerCase());
+  });
+
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'PARTICULIER':
+        return <User className="h-3 w-3 mr-1" />;
+      case 'PROMOTEUR':
+        return <Building2 className="h-3 w-3 mr-1" />;
+      case 'FONCIERE':
+        return <Landmark className="h-3 w-3 mr-1" />;
+      default:
+        return <User className="h-3 w-3 mr-1" />;
     }
-  ];
+  };
 
-  const filteredProprietaires = proprietaires.filter(proprietaire =>
-    `${proprietaire.prenom} ${proprietaire.nom}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    proprietaire.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const getTypeLabel = (type: string) => {
+    switch (type) {
+      case 'PARTICULIER':
+        return 'Particulier';
+      case 'PROMOTEUR':
+        return 'Promoteur';
+      case 'FONCIERE':
+        return 'Foncière';
+      default:
+        return type;
+    }
+  };
+
+  const getDisplayName = (proprietaire: any) => {
+    if (proprietaire.type === 'PARTICULIER') {
+      return `${proprietaire.prenom || ''} ${proprietaire.nom}`.trim();
+    } else {
+      return proprietaire.raison_sociale || proprietaire.nom;
+    }
+  };
+
+  const maskPhoneNumber = (phone: string, createdBy: string) => {
+    // Si c'est le créateur ou un admin, montrer le numéro complet
+    if (user?.id === createdBy) {
+      return phone;
+    }
+    // Sinon masquer partiellement
+    return phone.replace(/(.{2})(.*)(.{2})/, '$1****$3');
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="text-lg">Chargement des propriétaires...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -83,25 +107,33 @@ const ListeProprietaires = () => {
             <CardHeader className="pb-3">
               <div className="flex justify-between items-start">
                 <CardTitle className="text-lg">
-                  {proprietaire.prenom} {proprietaire.nom}
+                  {getDisplayName(proprietaire)}
                 </CardTitle>
-                <Badge variant="outline">
-                  <Building className="h-3 w-3 mr-1" />
-                  {proprietaire.nombreBiens} bien{proprietaire.nombreBiens > 1 ? 's' : ''}
+                <Badge variant="outline" className="text-xs">
+                  {getTypeIcon(proprietaire.type)}
+                  {getTypeLabel(proprietaire.type)}
                 </Badge>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center text-sm text-slate-600">
                 <Phone className="h-4 w-4 mr-2" />
-                {proprietaire.telephone}
+                {maskPhoneNumber(proprietaire.telephone, proprietaire.created_by)}
               </div>
-              <div className="flex items-center text-sm text-slate-600">
-                <Mail className="h-4 w-4 mr-2" />
-                {proprietaire.email}
-              </div>
+              {proprietaire.email && (
+                <div className="flex items-center text-sm text-slate-600">
+                  <Mail className="h-4 w-4 mr-2" />
+                  {proprietaire.email}
+                </div>
+              )}
+              {proprietaire.ville && (
+                <div className="flex items-center text-sm text-slate-600">
+                  <Building className="h-4 w-4 mr-2" />
+                  {proprietaire.ville}
+                </div>
+              )}
               <div className="text-xs text-slate-500">
-                Ajouté le {new Date(proprietaire.dateCreation).toLocaleDateString('fr-FR')}
+                Ajouté le {new Date(proprietaire.created_at).toLocaleDateString('fr-FR')}
               </div>
               <div className="flex gap-2 pt-2">
                 <Link to={`/proprietaire/${proprietaire.id}`} className="flex-1">
