@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -95,7 +96,7 @@ const DetailProprietaire = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'DISPONIBLE': return 'bg-green-100 text-green-800';
-      case 'RESERVE': return 'bg-yellow-100 text-yellow-800';
+      case 'RESERVE': return 'bg-slate-100 text-slate-800';
       case 'VENDU': return 'bg-blue-100 text-blue-800';
       case 'LOUE': return 'bg-purple-100 text-purple-800';
       case 'RETIRE': return 'bg-gray-100 text-gray-800';
@@ -301,40 +302,42 @@ const DetailProprietaire = () => {
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
               {biens.map((bien) => (
-                <Card key={bien.id}>
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <CardTitle className="text-lg">{bien.titre}</CardTitle>
-                      <Badge className={getStatusColor(bien.status)}>
-                        {getStatusLabel(bien.status)}
-                      </Badge>
-                    </div>
-                    <Badge variant="outline">{getBienTypeLabel(bien.type)}</Badge>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-slate-400" />
-                        <span>{bien.adresse}, {bien.ville}</span>
+                <Link key={bien.id} to={`/biens/${bien.id}`}>
+                  <Card className="cursor-pointer transition-colors">
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <CardTitle className="text-lg">{bien.titre}</CardTitle>
+                        <Badge className={getStatusColor(bien.status)}>
+                          {getStatusLabel(bien.status)}
+                        </Badge>
                       </div>
-                      {bien.surface_habitable && (
-                        <div>Surface: {bien.surface_habitable} m²</div>
-                      )}
-                      {bien.prix_vente && (
+                      <Badge variant="outline">{getBienTypeLabel(bien.type)}</Badge>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2 text-sm">
                         <div className="flex items-center gap-2">
-                          <Euro className="h-4 w-4 text-slate-400" />
-                          <span>Vente: {bien.prix_vente.toLocaleString()} MAD</span>
+                          <MapPin className="h-4 w-4 text-slate-400" />
+                          <span>{bien.adresse}, {bien.ville}</span>
                         </div>
-                      )}
-                      {bien.prix_location && (
-                        <div className="flex items-center gap-2">
-                          <Euro className="h-4 w-4 text-slate-400" />
-                          <span>Location: {bien.prix_location.toLocaleString()} MAD/mois</span>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+                        {bien.surface_habitable && (
+                          <div>Surface: {bien.surface_habitable} m²</div>
+                        )}
+                        {bien.prix_vente && (
+                          <div className="flex items-center gap-2">
+                            <Euro className="h-4 w-4 text-slate-400" />
+                            <span>Vente: {bien.prix_vente.toLocaleString()} MAD</span>
+                          </div>
+                        )}
+                        {bien.prix_location && (
+                          <div className="flex items-center gap-2">
+                            <Euro className="h-4 w-4 text-slate-400" />
+                            <span>Location: {bien.prix_location.toLocaleString()} MAD/mois</span>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
               ))}
             </div>
           )}
