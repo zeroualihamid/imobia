@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -17,6 +16,7 @@ import ListeClients from '@/pages/ListeClients';
 import AjouterClient from '@/pages/AjouterClient';
 import Biens from '@/pages/Biens';
 import AjouterBien from '@/pages/AjouterBien';
+import DetailBien from '@/pages/DetailBien';
 import ListeConseillers from '@/pages/ListeConseillers';
 import AjouterConseiller from '@/pages/AjouterConseiller';
 import DetailConseiller from '@/pages/DetailConseiller';
@@ -116,6 +116,16 @@ function App() {
                     <ProtectedRoute>
                       <Layout>
                         <AjouterBien />
+                      </Layout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/biens/:id"
+                  element={
+                    <ProtectedRoute>
+                      <Layout>
+                        <DetailBien />
                       </Layout>
                     </ProtectedRoute>
                   }
