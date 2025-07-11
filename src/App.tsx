@@ -1,168 +1,264 @@
+import React from 'react';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate
+} from "react-router-dom";
+import { QueryClient, QueryClientProvider } from 'react-query';
+import { Toaster } from 'sonner';
 
-import React from "react";
-import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { LanguageProvider } from "./contexts/LanguageContext";
-import { AuthProvider } from "./contexts/AuthContext";
-import Layout from "./components/layout/Layout";
-import ProtectedRoute from "./components/ProtectedRoute";
-import Index from "./pages/Index";
-import Dashboard from "./pages/Dashboard";
-import Biens from "./pages/Biens";
-import AjouterBien from "./pages/AjouterBien";
-import PropertyDetail from "./pages/PropertyDetail";
-import CreationVocale from "./pages/CreationVocale";
-import TachesConseillers from "./pages/TachesConseillers";
-import AjouterConseiller from "./pages/AjouterConseiller";
-import ListeConseillers from "./pages/ListeConseillers";
-import DetailConseiller from "./pages/DetailConseiller";
-import PilotageConseillers from "./pages/PilotageConseillers";
-import TaskDetail from "./pages/TaskDetail";
-import RoleManagement from "./pages/RoleManagement";
-import Auth from "./pages/Auth";
-import ListeProprietaires from "./pages/ListeProprietaires";
-import AjouterProprietaire from "./pages/AjouterProprietaire";
-import ListeClients from "./pages/ListeClients";
-import AjouterClient from "./pages/AjouterClient";
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { LanguageProvider } from './contexts/LanguageContext';
+import Layout from './components/Layout';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import Dashboard from './pages/Dashboard';
+import Conseillers from './pages/Conseillers';
+import AjouterConseiller from './pages/AjouterConseiller';
+import ModifierConseiller from './pages/ModifierConseiller';
+import Properties from './pages/Properties';
+import AddProperty from './pages/AddProperty';
+import EditProperty from './pages/EditProperty';
+import Tasks from './pages/Tasks';
+import AddTask from './pages/AddTask';
+import EditTask from './pages/EditTask';
+import Roles from './pages/Roles';
+import Permissions from './pages/Permissions';
+import Users from './pages/Users';
+import AjouterUtilisateur from './pages/AjouterUtilisateur';
+import ModifierUtilisateur from './pages/ModifierUtilisateur';
+import ListeProprietaires from './pages/ListeProprietaires';
+import AjouterProprietaire from './pages/AjouterProprietaire';
+import DetailProprietaire from './pages/DetailProprietaire';
+import ModifierProprietaire from './pages/ModifierProprietaire';
 
 const queryClient = new QueryClient();
+
+// Protected route component
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <div>Loading...</div>; // You can replace this with a spinner or loading indicator
+  }
+
+  if (!user) {
+    // Redirect to the login page if not authenticated
+    return <Navigate to="/login" />;
+  }
+
+  return children;
+}
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <LanguageProvider>
-        <AuthProvider>
-          <TooltipProvider>
-            <Toaster />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <Index />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/dashboard" element={
+      <AuthProvider>
+        <Toaster />
+        <LanguageProvider>
+          <Router>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route
+                path="/"
+                element={
                   <ProtectedRoute>
                     <Layout>
                       <Dashboard />
                     </Layout>
                   </ProtectedRoute>
-                } />
-                <Route path="/biens" element={
+                }
+              />
+              <Route
+                path="/conseillers"
+                element={
                   <ProtectedRoute>
                     <Layout>
-                      <Biens />
+                      <Conseillers />
                     </Layout>
                   </ProtectedRoute>
-                } />
-                <Route path="/biens/ajouter" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <AjouterBien />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/biens/creation-vocale" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <CreationVocale />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/biens/:id" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <PropertyDetail />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/conseillers" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <ListeConseillers />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/conseillers/:id" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <DetailConseiller />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/conseillers/ajouter" element={
+                }
+              />
+              <Route
+                path="/conseiller/ajouter"
+                element={
                   <ProtectedRoute>
                     <Layout>
                       <AjouterConseiller />
                     </Layout>
                   </ProtectedRoute>
-                } />
-                <Route path="/conseillers/taches" element={
+                }
+              />
+              <Route
+                path="/conseiller/:id/modifier"
+                element={
                   <ProtectedRoute>
                     <Layout>
-                      <TachesConseillers />
+                      <ModifierConseiller />
                     </Layout>
                   </ProtectedRoute>
-                } />
-                <Route path="/conseillers/pilotage" element={
+                }
+              />
+              <Route
+                path="/properties"
+                element={
                   <ProtectedRoute>
                     <Layout>
-                      <PilotageConseillers />
+                      <Properties />
                     </Layout>
                   </ProtectedRoute>
-                } />
-                <Route path="/proprietaire" element={
+                }
+              />
+              <Route
+                path="/property/add"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <AddProperty />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/property/:id/edit"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <EditProperty />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/tasks"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Tasks />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/task/add"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <AddTask />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/task/:id/edit"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <EditTask />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/roles"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Roles />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/permissions"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Permissions />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+               <Route
+                path="/users"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Users />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+                <Route
+                path="/utilisateur/ajouter"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <AjouterUtilisateur />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+                <Route
+                path="/utilisateur/:id/modifier"
+                element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <ModifierUtilisateur />
+                    </Layout>
+                  </ProtectedRoute>
+                }
+              />
+                            <Route
+                path="/proprietaires"
+                element={
                   <ProtectedRoute>
                     <Layout>
                       <ListeProprietaires />
                     </Layout>
                   </ProtectedRoute>
-                } />
-                <Route path="/proprietaire/ajouter" element={
+                }
+              />
+                            <Route
+                path="/proprietaire/ajouter"
+                element={
                   <ProtectedRoute>
                     <Layout>
                       <AjouterProprietaire />
                     </Layout>
                   </ProtectedRoute>
-                } />
-                <Route path="/clients" element={
+                }
+              />
+              <Route
+                path="/proprietaire/:id"
+                element={
                   <ProtectedRoute>
                     <Layout>
-                      <ListeClients />
+                      <DetailProprietaire />
                     </Layout>
                   </ProtectedRoute>
-                } />
-                <Route path="/clients/ajouter" element={
+                }
+              />
+              <Route
+                path="/proprietaire/:id/modifier"
+                element={
                   <ProtectedRoute>
                     <Layout>
-                      <AjouterClient />
+                      <ModifierProprietaire />
                     </Layout>
                   </ProtectedRoute>
-                } />
-                <Route path="/tasks/:id/edit" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <TaskDetail />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/admin/roles" element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <RoleManagement />
-                    </Layout>
-                  </ProtectedRoute>
-                } />
-              </Routes>
-            </BrowserRouter>
-          </TooltipProvider>
-        </AuthProvider>
-      </LanguageProvider>
+                }
+              />
+            </Routes>
+          </Router>
+        </LanguageProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
