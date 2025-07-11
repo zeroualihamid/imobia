@@ -49,8 +49,17 @@ const Biens = () => {
       return `https://erbjiehcvwqhxqdvmges.supabase.co/storage/v1/object/public/property-media/${property.property_media[0].file_path}`;
     }
     
-    // Pas d'image disponible
-    return null;
+    // Images placeholder par défaut
+    const placeholderImages = [
+      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=400&h=300&fit=crop',
+      'https://images.unsplash.com/photo-1500673922987-e212871fec22?w=400&h=300&fit=crop',
+      'https://images.unsplash.com/photo-1523712999610-f77fbcfc3843?w=400&h=300&fit=crop',
+      'https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=400&h=300&fit=crop',
+    ];
+    
+    // Utiliser l'ID pour sélectionner une image de manière déterministe
+    const index = property.id.charCodeAt(0) % placeholderImages.length;
+    return placeholderImages[index];
   };
 
   const filteredProperties = properties.filter(property => {
@@ -157,7 +166,6 @@ const Biens = () => {
         {filteredProperties.map((property) => {
           const metadata = property.metadata as PropertyMetadata;
           const locationStr = formatLocation(metadata?.location);
-          const imageUrl = getPropertyImage(property);
           
           return (
             <Card 
@@ -167,27 +175,28 @@ const Biens = () => {
                 if (property.source === 'properties') {
                   navigate(`/biens/${property.id}`);
                 } else {
-                  navigate(`/biens/${property.id}`);
+                  navigate(`/proprietaires/${property.original_data?.proprietaire_id}`);
                 }
               }}
             >
-              {imageUrl && (
-                <div className="aspect-video bg-slate-100 flex items-center justify-center overflow-hidden relative">
-                  <img 
-                    src={imageUrl}
-                    alt={metadata?.title || 'Bien immobilier'}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      // Masquer l'image si elle ne charge pas
-                      const target = e.target as HTMLImageElement;
-                      const parent = target.parentElement;
-                      if (parent) {
-                        parent.style.display = 'none';
-                      }
-                    }}
-                  />
-                </div>
-              )}
+              <div className="aspect-video bg-slate-100 flex items-center justify-center overflow-hidden relative">
+                <img 
+                  src={getPropertyImage(property)}
+                  alt={metadata?.title || 'Bien immobilier'}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // Fallback si l'image ne charge pas
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const parent = target.parentElement;
+                    if (parent) {
+                      const icon = document.createElement('div');
+                      icon.innerHTML = '<svg class="h-12 w-12 text-slate-400" viewBox="0 0 24 24" fill="currentColor"><path d="M3 21V3h18v18H3zm16-2V5H5v14h14zM8 14l2.5-3.21L13 14h5l-2.5-3.21L18 7H6l2.5 3.79L10 14h-2z"/></svg>';
+                      parent.appendChild(icon);
+                    }
+                  }}
+                />
+              </div>
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <CardTitle className="text-lg font-semibold text-foreground line-clamp-2">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -17,7 +17,6 @@ import type { Proprietaire } from '@/types/proprietaire';
 
 const DetailProprietaire = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const [proprietaire, setProprietaire] = useState<Proprietaire | null>(null);
   const [loading, setLoading] = useState(true);
   const [showAddBienDialog, setShowAddBienDialog] = useState(false);
@@ -47,10 +46,6 @@ const DetailProprietaire = () => {
   const handleBienAdded = () => {
     setShowAddBienDialog(false);
     refetchBiens();
-  };
-
-  const handleBienClick = (bienId: string) => {
-    navigate(`/biens/${bienId}`);
   };
 
   const getDisplayName = (proprietaire: Proprietaire) => {
@@ -306,11 +301,7 @@ const DetailProprietaire = () => {
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
               {biens.map((bien) => (
-                <Card 
-                  key={bien.id}
-                  className="cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => handleBienClick(bien.id)}
-                >
+                <Card key={bien.id}>
                   <CardHeader>
                     <div className="flex justify-between items-start">
                       <CardTitle className="text-lg">{bien.titre}</CardTitle>
