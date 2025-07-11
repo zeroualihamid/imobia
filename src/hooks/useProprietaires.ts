@@ -14,7 +14,8 @@ export const useProprietaires = () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
+      // Utilisation directe avec any en attendant la mise à jour des types
+      const { data, error } = await (supabase as any)
         .from('proprietaires')
         .select('*')
         .order('created_at', { ascending: false });
@@ -33,7 +34,7 @@ export const useProprietaires = () => {
     if (!user) return null;
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('proprietaires')
         .insert([{ ...proprietaireData, user_id: user.id }])
         .select()
@@ -53,7 +54,7 @@ export const useProprietaires = () => {
 
   const updateProprietaire = async (id: string, updates: Partial<Proprietaire>) => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('proprietaires')
         .update(updates)
         .eq('id', id)
@@ -74,7 +75,7 @@ export const useProprietaires = () => {
 
   const deleteProprietaire = async (id: string) => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('proprietaires')
         .delete()
         .eq('id', id);
@@ -93,7 +94,7 @@ export const useProprietaires = () => {
 
   const fetchBiensByProprietaire = async (proprietaireId: string): Promise<Bien[]> => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('biens')
         .select('*')
         .eq('proprietaire_id', proprietaireId);
@@ -108,7 +109,7 @@ export const useProprietaires = () => {
 
   const fetchMandatsByProprietaire = async (proprietaireId: string): Promise<Mandat[]> => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('mandats')
         .select('*')
         .eq('proprietaire_id', proprietaireId);
@@ -125,7 +126,7 @@ export const useProprietaires = () => {
     if (!user) return null;
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('interactions_proprietaire')
         .insert([{ ...interaction, conseiller_id: user.id }])
         .select()
