@@ -75,7 +75,7 @@ const ListeProprietaires = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Propriétaires test</h1>
+          <h1 className="text-3xl font-bold text-slate-900">Propriétaires</h1>
           <p className="text-slate-600 mt-1">Gérez vos propriétaires de biens immobiliers</p>
         </div>
         <Link to="/proprietaire/ajouter">
