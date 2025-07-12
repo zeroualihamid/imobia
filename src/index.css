@@ -123,7 +123,7 @@
 /* Real estate themed components - clean design with no yellow */
 @layer components {
   .property-card {
-    @apply bg-white border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-200 rounded-lg;
+    @apply bg-white border border-slate-200 shadow-sm rounded-lg;
   }
 
   .status-available {
@@ -143,7 +143,7 @@
   }
 
   .agent-card {
-    @apply bg-white border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 rounded-lg;
+    @apply bg-white border border-slate-200 shadow-sm rounded-lg;
   }
 
   .task-card {
@@ -155,7 +155,7 @@
   }
 
   .sidebar-item {
-    @apply flex items-center px-4 py-2 rounded-lg text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors;
+    @apply flex items-center px-4 py-2 rounded-lg text-slate-700 transition-colors;
   }
 
   .sidebar-item.active {
@@ -191,7 +191,7 @@
   }
 
   .notification-item {
-    @apply bg-white border border-slate-200 rounded-lg p-4 hover:bg-slate-50 transition-colors;
+    @apply bg-white border border-slate-200 rounded-lg p-4 transition-colors;
   }
 
   .search-input {
@@ -242,240 +242,83 @@
     border-color: rgb(226 232 240) !important;
     color: rgb(15 23 42) !important;
   }
-  
-  /* Ensure dropdowns have proper backgrounds */
-  .select-content,
-  .dropdown-content,
-  [role="listbox"],
-  [role="menu"] {
+}
+
+/* COMPREHENSIVE YELLOW REMOVAL & HOVER EFFECT BLOCKING */
+@layer utilities {
+  /* Block ALL yellow colors everywhere */
+  *[style*="yellow"],
+  *[class*="yellow"],
+  *[class*="bg-yellow"],
+  *[style*="background-color: yellow"],
+  *[style*="background: yellow"],
+  *[style*="#ffff"],
+  *[style*="#fff0"],
+  *[style*="rgb(255, 255"] {
     background-color: rgb(255 255 255) !important;
-    border-color: rgb(226 232 240) !important;
-    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
-    z-index: 50 !important;
-  }
-  
-  /* Override any system warnings or alerts to use neutral colors */
-  .alert,
-  .warning,
-  [data-state="warning"],
-  .toast,
-  .notification {
-    background-color: rgb(255 255 255) !important;
-    border-color: rgb(226 232 240) !important;
-    color: rgb(15 23 42) !important;
+    background: rgb(255 255 255) !important;
+    color: rgb(51 65 85) !important;
   }
 
-  /* NO YELLOW ANYWHERE - Override any yellow/amber colors */
-  *[class*="yellow"],
-  *[class*="amber"],
-  *[style*="yellow"],
-  *[style*="amber"],
-  *[style*="#fff"],
-  *[style*="#fef"],
-  *[style*="#fed"],
-  *[style*="#fec"],
-  *[style*="#feb"],
-  *[style*="#fea"],
-  *[style*="#fe9"],
-  *[style*="#fe8"],
+  /* Block all hover background color changes */
+  *:hover {
+    background-color: inherit !important;
+  }
+  
+  /* Allow only specific safe hover effects */
+  *:hover[class*="hover:underline"] {
+    background-color: inherit !important;
+    text-decoration: underline !important;
+  }
+  
+  *:hover[class*="hover:opacity"] {
+    background-color: inherit !important;
+  }
+  
+  *:hover[class*="hover:shadow"] {
+    background-color: inherit !important;
+  }
+  
+  /* Force clean backgrounds for all components */
   .bg-yellow-50,
   .bg-yellow-100,
   .bg-yellow-200,
   .bg-yellow-300,
   .bg-yellow-400,
   .bg-yellow-500,
-  .bg-yellow-600,
-  .bg-yellow-700,
-  .bg-yellow-800,
-  .bg-yellow-900,
-  .bg-amber-50,
-  .bg-amber-100,
-  .bg-amber-200,
-  .bg-amber-300,
-  .bg-amber-400,
-  .bg-amber-500,
-  .bg-amber-600,
-  .bg-amber-700,
-  .bg-amber-800,
-  .bg-amber-900 {
-    background-color: rgb(255 255 255) !important; /* Force white background */
-    color: rgb(15 23 42) !important; /* Force dark text for contrast */
-    border-color: rgb(226 232 240) !important; /* Force slate border */
-  }
-
-  /* Force proper text contrast for any yellow text */
-  .text-yellow-50,
-  .text-yellow-100,
-  .text-yellow-200,
-  .text-yellow-300,
-  .text-yellow-400,
-  .text-yellow-500,
-  .text-yellow-600,
-  .text-yellow-700,
-  .text-yellow-800,
-  .text-yellow-900,
-  .text-amber-50,
-  .text-amber-100,
-  .text-amber-200,
-  .text-amber-300,
-  .text-amber-400,
-  .text-amber-500,
-  .text-amber-600,
-  .text-amber-700,
-  .text-amber-800,
-  .text-amber-900 {
-    color: rgb(51 65 85) !important; /* Force slate-700 text */
-  }
-
-  /* Force proper border colors */
-  .border-yellow-50,
-  .border-yellow-100,
-  .border-yellow-200,
-  .border-yellow-300,
-  .border-yellow-400,
-  .border-yellow-500,
-  .border-yellow-600,
-  .border-yellow-700,
-  .border-yellow-800,
-  .border-yellow-900,
-  .border-amber-50,
-  .border-amber-100,
-  .border-amber-200,
-  .border-amber-300,
-  .border-amber-400,
-  .border-amber-500,
-  .border-amber-600,
-  .border-amber-700,
-  .border-amber-800,
-  .border-amber-900 {
-    border-color: rgb(226 232 240) !important; /* Force slate-200 border */
-  }
-
-  /* Ensure tabs never have yellow backgrounds */
-  .tabs-trigger,
-  [data-radix-collection-item],
-  [role="tab"] {
+  [style*="background-color: #fef"] {
     background-color: rgb(255 255 255) !important;
-    color: rgb(51 65 85) !important;
-    border-color: rgb(226 232 240) !important;
   }
-
-  .tabs-trigger[data-state="active"],
-  [data-radix-collection-item][data-state="active"],
-  [role="tab"][aria-selected="true"] {
-    background-color: rgb(37 99 235) !important; /* blue-600 */
-    color: rgb(255 255 255) !important;
-  }
-
-  /* FORCE TABLE STYLING - NO YELLOW ANYWHERE */
-  table,
-  thead,
-  tbody,
-  tfoot,
-  tr,
-  th,
-  td {
-    background-color: rgb(255 255 255) !important;
-    color: rgb(15 23 42) !important;
-    border-color: rgb(226 232 240) !important;
-  }
-
-  /* Table header specific styling */
-  thead tr,
-  thead th,
-  th {
-    background-color: rgb(248 250 252) !important; /* slate-50 */
-    color: rgb(51 65 85) !important; /* slate-700 */
-    border-color: rgb(226 232 240) !important;
-  }
-
-  /* Table row hover - EXPLICITLY NO YELLOW */
-  tbody tr:hover,
-  tr:hover {
-    background-color: rgb(248 250 252) !important; /* slate-50 */
-    color: rgb(15 23 42) !important;
-  }
-
-  /* Table body styling */
-  tbody tr,
-  tbody td,
-  td {
-    background-color: rgb(255 255 255) !important;
-    color: rgb(15 23 42) !important;
-    border-color: rgb(226 232 240) !important;
-  }
-
-  /* Force override any muted backgrounds */
-  .hover\:bg-muted\/50:hover,
-  .hover\:bg-muted:hover,
-  .bg-muted\/50,
-  .bg-muted {
-    background-color: rgb(248 250 252) !important; /* slate-50 */
-    color: rgb(51 65 85) !important; /* slate-700 */
-  }
-
-  /* Ensure proper contrast for all interactive elements */
-  button,
-  input,
-  textarea,
-  select,
-  [role="button"],
-  [role="menuitem"],
-  [role="option"] {
-    min-height: 40px; /* Ensure minimum touch target size */
-  }
-
-  /* Force high contrast for all text elements */
-  h1, h2, h3, h4, h5, h6 {
-    color: rgb(15 23 42) !important; /* slate-900 */
-  }
-
-  p, span, div:not([class*="bg-"]) {
-    color: rgb(51 65 85) !important; /* slate-700 */
-  }
-
-  label {
-    color: rgb(15 23 42) !important; /* slate-900 */
-    font-weight: 500 !important;
-  }
-
-  /* Ensure proper focus states */
-  *:focus,
-  *:focus-visible {
-    outline: 2px solid rgb(37 99 235) !important; /* blue-600 */
-    outline-offset: 2px !important;
-  }
-
-  /* ABSOLUTELY NO YELLOW ON HOVER - NUCLEAR OPTION */
-  *:hover {
+  
+  /* Remove hover effects from common patterns */
+  .hover\:bg-slate-50:hover,
+  .hover\:bg-slate-100:hover,
+  .hover\:bg-blue-700:hover,
+  .hover\:bg-red-700:hover,
+  .hover\:bg-green-700:hover,
+  .hover\:bg-purple-700:hover,
+  .hover\:bg-emerald-700:hover {
     background-color: inherit !important;
   }
 
-  *:hover[class*="hover:bg-slate"] {
-    background-color: rgb(248 250 252) !important; /* slate-50 */
+  /* Block browser autofill yellow */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px rgb(255 255 255) inset !important;
+    -webkit-text-fill-color: rgb(51 65 85) !important;
+    background-color: rgb(255 255 255) !important;
   }
-
-  *:hover[class*="hover:bg-white"] {
-    background-color: rgb(255 255 255) !important; /* white */
-  }
-
-  /* Specific table row hover override */
-  table tr:hover,
-  [role="row"]:hover {
-    background-color: rgb(248 250 252) !important; /* slate-50 */
-    color: rgb(15 23 42) !important;
-  }
-}
-
-/* Smooth transitions for better UX */
-@layer utilities {
-  .transition-smooth {
-    transition-property: all;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 200ms;
-  }
-
-  .focus-ring {
-    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white;
+  
+  /* Force white backgrounds on all cards and containers */
+  [class*="card"],
+  [class*="Card"],
+  [role="dialog"],
+  [role="alertdialog"],
+  [data-radix-popper-content-wrapper],
+  .dropdown-content,
+  .select-content {
+    background-color: rgb(255 255 255) !important;
   }
 }

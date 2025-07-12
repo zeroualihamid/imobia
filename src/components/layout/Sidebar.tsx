@@ -140,7 +140,7 @@ const Sidebar = () => {
               <Collapsible open={item.isOpen} onOpenChange={item.setIsOpen}>
                 <CollapsibleTrigger className="w-full">
                   <div className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-slate-100 w-full group bg-white",
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 w-full group bg-white",
                     item.color
                   )}>
                     <item.icon className="h-5 w-5 flex-shrink-0" />
@@ -158,10 +158,10 @@ const Sidebar = () => {
                       key={subIndex}
                       to={subItem.href}
                       className={cn(
-                        "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 hover:bg-slate-100 bg-white",
+                        "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 bg-white",
                         location.pathname === subItem.href
                           ? "bg-slate-100 text-slate-900 font-medium"
-                          : "text-slate-700 hover:text-slate-900"
+                          : "text-slate-700"
                       )}
                     >
                       <subItem.icon className="h-4 w-4 flex-shrink-0 text-slate-600" />
@@ -174,10 +174,10 @@ const Sidebar = () => {
               <Link
                 to={item.href}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-slate-100 bg-white",
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 bg-white",
                   location.pathname === item.href
                     ? "bg-slate-100 text-slate-900"
-                    : `${item.color} hover:text-slate-900`
+                    : item.color
                 )}
               >
                 <item.icon className="h-5 w-5 flex-shrink-0" />
@@ -193,10 +193,10 @@ const Sidebar = () => {
             <Link
               to="/admin/roles"
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-slate-100 bg-white",
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 bg-white",
                 location.pathname === "/admin/roles"
                   ? "bg-slate-100 text-slate-900"
-                  : "text-red-600 hover:text-slate-900"
+                  : "text-red-600"
               )}
             >
               <Shield className="h-5 w-5 flex-shrink-0" />

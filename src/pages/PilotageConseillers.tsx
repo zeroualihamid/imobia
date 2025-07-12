@@ -287,7 +287,7 @@ const PilotageConseillers = () => {
           <Button 
             size="sm" 
             variant="outline"
-                                      className="bg-white border-slate-300 text-slate-900"
+            className="bg-white border-slate-300 text-slate-900"
             onClick={(e) => e.stopPropagation()}
           >
             Assigner

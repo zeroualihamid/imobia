@@ -161,7 +161,7 @@ function App() {
                   }
                 />
                 <Route
-                  path="/pilotage"
+                  path="/conseillers/pilotage"
                   element={
                     <ProtectedRoute>
                       <Layout>
