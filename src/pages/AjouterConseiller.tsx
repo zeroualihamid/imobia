@@ -376,7 +376,7 @@ const AjouterConseiller = () => {
                         <button
                           type="button"
                           onClick={() => removeVille(ville)}
-                          className="ml-2 hover:bg-purple-200 rounded-full p-0.5"
+                          className="ml-2 rounded-full p-0.5"
                         >
                           <X className="h-3 w-3" />
                         </button>
@@ -462,12 +462,12 @@ const AjouterConseiller = () => {
 
         {/* Boutons d'action */}
         <div className="flex justify-end gap-4 pt-6 border-t border-slate-200">
-          <Button variant="outline" type="button" className="bg-white border-slate-200 text-slate-700 hover:bg-slate-50">
+          <Button variant="outline" type="button" className="bg-white border-slate-200 text-slate-700">
             Annuler
           </Button>
           <Button 
             type="submit" 
-            className="bg-purple-600 hover:bg-purple-700 text-white"
+            className="bg-purple-600 text-white"
             disabled={isLoading}
           >
             {isLoading ? (

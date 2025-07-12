@@ -219,7 +219,7 @@ const ListeConseillers = () => {
                 <p className="text-sm font-medium text-slate-600">Top performer</p>
                 <p className="text-2xl font-bold text-blue-600">92%</p>
               </div>
-              <Star className="h-8 w-8 text-yellow-500" />
+              <Star className="h-8 w-8 text-blue-500" />
             </div>
           </CardContent>
         </Card>
@@ -285,7 +285,7 @@ const ListeConseillers = () => {
                   return (
                     <TableRow 
                       key={conseiller.id}
-                      className="cursor-pointer hover:bg-slate-50 transition-colors"
+                      className="cursor-pointer transition-colors"
                       onClick={() => handleRowClick(conseiller.id)}
                     >
                       <TableCell>

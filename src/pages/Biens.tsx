@@ -16,11 +16,11 @@ const Biens = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'available':
-        return <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100">Disponible</Badge>;
+        return <Badge className="bg-emerald-100 text-emerald-800">Disponible</Badge>;
       case 'pending':
-        return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">En cours</Badge>;
+        return <Badge className="bg-blue-100 text-blue-800">En cours</Badge>;
       case 'sold':
-        return <Badge className="bg-slate-100 text-slate-800 hover:bg-slate-100">Vendu</Badge>;
+        return <Badge className="bg-slate-100 text-slate-800">Vendu</Badge>;
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
@@ -84,7 +84,7 @@ const Biens = () => {
             </p>
           </div>
           <Link to="/biens/ajouter">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Button className="bg-blue-600 text-white">
               <Plus className="h-4 w-4 mr-2" />
               Ajouter un bien
             </Button>
@@ -112,7 +112,7 @@ const Biens = () => {
             </p>
           </div>
           <Link to="/biens/ajouter">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Button className="bg-blue-600 text-white">
               <Plus className="h-4 w-4 mr-2" />
               Ajouter un bien
             </Button>
@@ -143,7 +143,7 @@ const Biens = () => {
           </p>
         </div>
         <Link to="/biens/ajouter">
-          <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+          <Button className="bg-blue-600 text-white">
             <Plus className="h-4 w-4 mr-2" />
             Ajouter un bien
           </Button>
@@ -170,7 +170,7 @@ const Biens = () => {
           return (
             <Card 
               key={property.id} 
-              className="bg-white hover:shadow-lg transition-all duration-200 border border-slate-200 overflow-hidden cursor-pointer"
+              className="bg-white transition-all duration-200 border border-slate-200 overflow-hidden cursor-pointer"
               onClick={() => {
                 navigate(`/biens/${property.id}`);
               }}

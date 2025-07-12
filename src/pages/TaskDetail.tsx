@@ -446,7 +446,7 @@ const TaskDetail = () => {
                   <TabsContent value="details" className="p-6 space-y-6">
                     {/* Bien associé */}
                     {property && (
-                      <div className="border border-slate-200 rounded-lg p-4 cursor-pointer hover:bg-slate-50 transition-colors" onClick={handlePropertyClick}>
+                      <div className="border border-slate-200 rounded-lg p-4 cursor-pointer transition-colors" onClick={handlePropertyClick}>
                         <div className="flex items-start gap-4">
                           <div className="flex-shrink-0">
                             {getPropertyThumbnail(property) ? (

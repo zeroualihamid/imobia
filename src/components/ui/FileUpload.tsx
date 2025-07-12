@@ -70,7 +70,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
           className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
             isDragActive
               ? 'border-blue-400 bg-blue-50'
-              : 'border-slate-300 hover:border-slate-400 bg-slate-50'
+              : 'border-slate-300 bg-slate-50'
           }`}
         >
           <input {...getInputProps()} />
@@ -80,7 +80,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
               ? 'Déposez vos fichiers ici...'
               : 'Glissez-déposez vos photos et vidéos ici ou cliquez pour sélectionner'}
           </p>
-          <Button variant="outline" className="border-slate-300 text-slate-700 hover:bg-slate-100">
+                      <Button variant="outline" className="border-slate-300 text-slate-700">
             <Upload className="h-4 w-4 mr-2" />
             Sélectionner des fichiers
           </Button>

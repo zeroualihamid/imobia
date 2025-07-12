@@ -45,7 +45,7 @@ const NumberInput: React.FC<NumberInputProps> = ({
         size="icon"
         onClick={decrement}
         disabled={value <= min}
-        className="h-10 w-10 bg-white border-slate-300 text-slate-700 hover:bg-slate-100 disabled:opacity-50"
+        className="h-10 w-10 bg-white border-slate-300 text-slate-700 disabled:opacity-50"
       >
         <Minus className="h-4 w-4" />
       </Button>
@@ -63,7 +63,7 @@ const NumberInput: React.FC<NumberInputProps> = ({
         size="icon"
         onClick={increment}
         disabled={value >= max}
-        className="h-10 w-10 bg-white border-slate-300 text-slate-700 hover:bg-slate-100 disabled:opacity-50"
+        className="h-10 w-10 bg-white border-slate-300 text-slate-700 disabled:opacity-50"
       >
         <Plus className="h-4 w-4" />
       </Button>

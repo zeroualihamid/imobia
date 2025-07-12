@@ -94,9 +94,9 @@ const InitialAdminSetup = () => {
 
       setSelectedUser('');
       checkForAdmins();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error assigning admin role:', error);
-      if (error.code === '23505') {
+      if (error && typeof error === 'object' && 'code' in error && error.code === '23505') {
         toast({
           title: "Information",
           description: "Cet utilisateur a déjà le rôle Admin.",
@@ -131,15 +131,15 @@ const InitialAdminSetup = () => {
   }
 
   return (
-    <Card className="bg-amber-50 border-amber-200">
+    <Card className="bg-blue-50 border-blue-200">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-amber-800">
+        <CardTitle className="flex items-center gap-2 text-blue-800">
           <UserPlus className="h-5 w-5" />
           Configuration initiale requise
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-amber-700 mb-4">
+        <p className="text-sm text-blue-700 mb-4">
           Aucun administrateur n'est configuré. Assignez le rôle Admin à un utilisateur pour commencer.
         </p>
         

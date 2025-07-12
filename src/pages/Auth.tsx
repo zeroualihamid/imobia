@@ -109,13 +109,13 @@ const Auth = () => {
             <TabsList className="grid w-full grid-cols-2 bg-slate-100 border border-slate-200 p-1">
               <TabsTrigger 
                 value="signin" 
-                className="text-sm text-slate-700 font-medium bg-white data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm hover:bg-slate-50 border-slate-200"
+                className="text-sm text-slate-700 font-medium bg-white data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm border-slate-200"
               >
                 Connexion
               </TabsTrigger>
               <TabsTrigger 
                 value="signup" 
-                className="text-sm text-slate-700 font-medium bg-white data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm hover:bg-slate-50 border-slate-200"
+                className="text-sm text-slate-700 font-medium bg-white data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm border-slate-200"
               >
                 Inscription
               </TabsTrigger>
@@ -155,7 +155,7 @@ const Auth = () => {
                 </div>
                 <Button 
                   type="submit" 
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium"
+                  className="w-full bg-blue-600 text-white font-medium"
                   disabled={isLoading}
                 >
                   {isLoading ? 'Connexion...' : 'Se connecter'}
@@ -216,7 +216,7 @@ const Auth = () => {
                 </div>
                 <Button 
                   type="submit" 
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium"
+                  className="w-full bg-blue-600 text-white font-medium"
                   disabled={isLoading}
                 >
                   {isLoading ? 'Création...' : 'Créer un compte'}

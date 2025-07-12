@@ -287,7 +287,7 @@ const PilotageConseillers = () => {
           <Button 
             size="sm" 
             variant="outline"
-            className="bg-white border-slate-300 text-slate-900 hover:bg-slate-50"
+                                      className="bg-white border-slate-300 text-slate-900"
             onClick={(e) => e.stopPropagation()}
           >
             Assigner
@@ -303,7 +303,7 @@ const PilotageConseillers = () => {
               {conseillers.map((conseiller) => (
                 <div 
                   key={conseiller.id}
-                  className="flex items-center space-x-2 p-1 hover:bg-slate-50 rounded cursor-pointer"
+                  className="flex items-center space-x-2 p-1 rounded cursor-pointer"
                   onClick={() => handleConseillerToggle(conseiller.id)}
                 >
                   <input
@@ -328,7 +328,7 @@ const PilotageConseillers = () => {
               <Button 
                 size="sm" 
                 onClick={handleAssign}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                className="w-full bg-blue-600 text-white"
                 disabled={selectedConseillers.length === 0}
               >
                 Assigner ({selectedConseillers.length})
@@ -469,7 +469,7 @@ const PilotageConseillers = () => {
                   {tasksEnFile.map((task) => (
                     <TableRow 
                       key={task.id} 
-                      className="bg-white hover:bg-slate-50 cursor-pointer transition-colors"
+                      className="bg-white cursor-pointer transition-colors"
                       onClick={() => handleTaskClick(task)}
                     >
                       <TableCell className="font-medium text-slate-900">{task.title}</TableCell>
@@ -527,7 +527,7 @@ const PilotageConseillers = () => {
                   {tasksAssignees.map((task) => (
                     <TableRow 
                       key={task.id} 
-                      className="bg-white hover:bg-slate-50 cursor-pointer transition-colors"
+                      className="bg-white cursor-pointer transition-colors"
                       onClick={() => handleTaskClick(task)}
                     >
                       <TableCell className="font-medium text-slate-900">{task.title}</TableCell>
@@ -551,7 +551,7 @@ const PilotageConseillers = () => {
                         <Button 
                           size="sm" 
                           variant="outline"
-                          className="bg-white border-slate-300 text-slate-900 hover:bg-slate-50"
+                          className="bg-white border-slate-300 text-slate-900"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleTaskClick(task);
@@ -663,7 +663,7 @@ const PilotageConseillers = () => {
                     return (
                       <TableRow 
                         key={conseiller.id} 
-                        className="bg-white hover:bg-slate-50 cursor-pointer transition-colors"
+                        className="bg-white cursor-pointer transition-colors"
                         onClick={() => {
                           toast({
                             title: `Conseiller: ${conseiller.prenom} ${conseiller.nom}`,

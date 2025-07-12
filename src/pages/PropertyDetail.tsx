@@ -224,11 +224,11 @@ Soit 9000 DHS TTC`;
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'available':
-        return <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-100">Disponible</Badge>;
+        return <Badge className="bg-emerald-100 text-emerald-800">Disponible</Badge>;
       case 'pending':
-        return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">En cours</Badge>;
+        return <Badge className="bg-blue-100 text-blue-800">En cours</Badge>;
       case 'sold':
-        return <Badge className="bg-slate-100 text-slate-800 hover:bg-slate-100">Vendu</Badge>;
+        return <Badge className="bg-slate-100 text-slate-800">Vendu</Badge>;
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
@@ -584,7 +584,7 @@ Soit 9000 DHS TTC`;
             <Button 
               variant="outline" 
               onClick={() => navigate('/biens')}
-              className="bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
+              className="bg-white border-slate-300 text-slate-700"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Retour
@@ -613,8 +613,8 @@ Soit 9000 DHS TTC`;
                       variant="outline"
                       className={`border-2 font-medium ${
                         hasMandateFiles 
-                          ? 'bg-green-50 border-green-300 text-green-700 hover:bg-green-100' 
-                          : 'bg-red-50 border-red-300 text-red-700 hover:bg-red-100'
+                          ? 'bg-green-50 border-green-300 text-green-700' 
+                          : 'bg-red-50 border-red-300 text-red-700'
                       }`}
                     >
                       {hasMandateFiles ? (
@@ -657,7 +657,7 @@ Soit 9000 DHS TTC`;
                                 size="sm"
                                 variant="destructive"
                                 onClick={handleRemoveMandateFile}
-                                className="bg-red-600 hover:bg-red-700 text-white"
+                                className="bg-red-600 text-white"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -681,7 +681,7 @@ Soit 9000 DHS TTC`;
                                     href={supabase.storage.from('property-media').getPublicUrl(existingMandateFile.file_path).data.publicUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-blue-600 hover:text-blue-800 text-sm underline"
+                                    className="text-blue-600 text-sm underline"
                                   >
                                     Ouvrir le PDF
                                   </a>
@@ -694,7 +694,7 @@ Soit 9000 DHS TTC`;
                             <Button 
                               variant="outline" 
                               onClick={() => setMandateDialogOpen(false)}
-                              className="bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
+                              className="bg-white border-slate-300 text-slate-700"
                             >
                               Fermer
                             </Button>
@@ -714,14 +714,14 @@ Soit 9000 DHS TTC`;
                                 setMandateDialogOpen(false);
                                 setMandateFiles([]);
                               }}
-                              className="bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
+                              className="bg-white border-slate-300 text-slate-700"
                             >
                               Annuler
                             </Button>
                             <Button 
                               onClick={handleMandateUpload}
                               disabled={isUploadingMandate || mandateFiles.length === 0}
-                              className="bg-blue-600 hover:bg-blue-700 text-white"
+                              className="bg-blue-600 text-white"
                             >
                               <Upload className="h-4 w-4 mr-2" />
                               {isUploadingMandate ? 'Upload...' : 'Télécharger'}
@@ -734,7 +734,7 @@ Soit 9000 DHS TTC`;
                 </Dialog>
                 <Button 
                   onClick={() => setIsEditing(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  className="bg-blue-600 text-white"
                 >
                   <Edit className="h-4 w-4 mr-2" />
                   Modifier
@@ -757,13 +757,13 @@ Soit 9000 DHS TTC`;
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter className="bg-white">
-                      <AlertDialogCancel className="bg-white border-slate-300 text-slate-700 hover:bg-slate-50">
+                      <AlertDialogCancel className="bg-white border-slate-300 text-slate-700">
                         Annuler
                       </AlertDialogCancel>
                       <AlertDialogAction 
                         onClick={handleDelete}
                         disabled={isDeleting}
-                        className="bg-red-600 hover:bg-red-700 text-white"
+                        className="bg-red-600 text-white"
                       >
                         {isDeleting ? 'Suppression...' : 'Supprimer'}
                       </AlertDialogAction>
@@ -776,7 +776,7 @@ Soit 9000 DHS TTC`;
                 <Button 
                   onClick={handleSave}
                   disabled={isLoading}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  className="bg-blue-600 text-white"
                 >
                   <Save className="h-4 w-4 mr-2" />
                   {isLoading ? 'Sauvegarde...' : 'Sauvegarder'}
@@ -787,7 +787,7 @@ Soit 9000 DHS TTC`;
                     setIsEditing(false);
                     setUploadedFiles([]);
                   }}
-                  className="bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
+                  className="bg-white border-slate-300 text-slate-700"
                 >
                   Annuler
                 </Button>
@@ -877,7 +877,7 @@ Soit 9000 DHS TTC`;
                           <Button
                             size="sm"
                             variant="destructive"
-                            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-red-600 hover:bg-red-700 text-white"
+                            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-red-600 text-white"
                             onClick={() => handleRemoveImage(image.media)}
                           >
                             <X className="h-4 w-4" />
@@ -908,12 +908,12 @@ Soit 9000 DHS TTC`;
             /* Edit Mode - Complete tabs interface */
             <Tabs defaultValue="category" className="w-full">
               <TabsList className="grid w-full grid-cols-6 bg-slate-100">
-                <TabsTrigger value="category" className="text-sm bg-white data-[state=active]:bg-blue-600 data-[state=active]:text-white hover:bg-slate-50 text-slate-700 border-slate-200">Catégorie</TabsTrigger>
-                <TabsTrigger value="location" className="text-sm bg-white data-[state=active]:bg-blue-600 data-[state=active]:text-white hover:bg-slate-50 text-slate-700 border-slate-200">Emplacement</TabsTrigger>
-                <TabsTrigger value="surface" className="text-sm bg-white data-[state=active]:bg-blue-600 data-[state=active]:text-white hover:bg-slate-50 text-slate-700 border-slate-200">Surface</TabsTrigger>
-                <TabsTrigger value="composition" className="text-sm bg-white data-[state=active]:bg-blue-600 data-[state=active]:text-white hover:bg-slate-50 text-slate-700 border-slate-200">Composition</TabsTrigger>
-                <TabsTrigger value="gallery" className="text-sm bg-white data-[state=active]:bg-blue-600 data-[state=active]:text-white hover:bg-slate-50 text-slate-700 border-slate-200">Galerie</TabsTrigger>
-                <TabsTrigger value="features" className="text-sm bg-white data-[state=active]:bg-blue-600 data-[state=active]:text-white hover:bg-slate-50 text-slate-700 border-slate-200">Fonctionnalités</TabsTrigger>
+                <TabsTrigger value="category" className="text-sm bg-white data-[state=active]:bg-blue-600 data-[state=active]:text-white text-slate-700 border-slate-200">Catégorie</TabsTrigger>
+                <TabsTrigger value="location" className="text-sm bg-white data-[state=active]:bg-blue-600 data-[state=active]:text-white text-slate-700 border-slate-200">Emplacement</TabsTrigger>
+                <TabsTrigger value="surface" className="text-sm bg-white data-[state=active]:bg-blue-600 data-[state=active]:text-white text-slate-700 border-slate-200">Surface</TabsTrigger>
+                <TabsTrigger value="composition" className="text-sm bg-white data-[state=active]:bg-blue-600 data-[state=active]:text-white text-slate-700 border-slate-200">Composition</TabsTrigger>
+                <TabsTrigger value="gallery" className="text-sm bg-white data-[state=active]:bg-blue-600 data-[state=active]:text-white text-slate-700 border-slate-200">Galerie</TabsTrigger>
+                <TabsTrigger value="features" className="text-sm bg-white data-[state=active]:bg-blue-600 data-[state=active]:text-white text-slate-700 border-slate-200">Fonctionnalités</TabsTrigger>
               </TabsList>
 
               {/* Catégorie de bien */}
@@ -1199,7 +1199,7 @@ Soit 9000 DHS TTC`;
                           <Button
                             size="sm"
                             variant="destructive"
-                            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-red-600 hover:bg-red-700 text-white"
+                            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-red-600 text-white"
                             onClick={() => handleRemoveImage(image.media)}
                           >
                             <X className="h-4 w-4" />

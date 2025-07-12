@@ -76,7 +76,7 @@ const ListeClients = () => {
           <p className="text-slate-600 mt-1">Gérez vos clients et prospects</p>
         </div>
         <Link to="/clients/ajouter">
-          <Button className="bg-blue-600 hover:bg-blue-700">
+          <Button className="bg-blue-600">
             <Plus className="h-4 w-4 mr-2" />
             Ajouter un client
           </Button>
@@ -100,7 +100,7 @@ const ListeClients = () => {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filteredClients.map((client) => (
-          <Card key={client.id} className="hover:shadow-md transition-shadow">
+          <Card key={client.id} className="transition-shadow">
             <CardHeader className="pb-3">
               <div className="flex justify-between items-start">
                 <CardTitle className="text-lg">

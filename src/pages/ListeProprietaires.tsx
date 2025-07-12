@@ -79,7 +79,7 @@ const ListeProprietaires = () => {
           <p className="text-slate-600 mt-1">Gérez vos propriétaires de biens immobiliers</p>
         </div>
         <Link to="/proprietaire/ajouter">
-          <Button className="bg-blue-600 hover:bg-blue-700">
+          <Button className="bg-blue-600">
             <Plus className="h-4 w-4 mr-2" />
             Ajouter un propriétaire
           </Button>
@@ -103,7 +103,7 @@ const ListeProprietaires = () => {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filteredProprietaires.map((proprietaire) => (
-          <Card key={proprietaire.id} className="hover:shadow-md transition-shadow">
+          <Card key={proprietaire.id} className="transition-shadow">
             <CardHeader className="pb-3">
               <div className="flex justify-between items-start">
                 <CardTitle className="text-lg">

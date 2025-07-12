@@ -241,7 +241,7 @@ const VoicePropertyCreator: React.FC<VoicePropertyCreatorProps> = ({ onPropertyC
             <Button
               onClick={isListening ? stopListening : startListening}
               variant={isListening ? "destructive" : "default"}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+              className="flex items-center gap-2 bg-blue-600 text-white"
             >
               {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
               {isListening ? 'Arrêter' : 'Commencer l\'écoute'}
@@ -251,7 +251,7 @@ const VoicePropertyCreator: React.FC<VoicePropertyCreatorProps> = ({ onPropertyC
               onClick={() => speakText('Bonjour, je suis votre assistant vocal IMOBIA. Décrivez le bien immobilier que vous souhaitez enregistrer.')}
               variant="outline"
               disabled={isSpeaking}
-              className="flex items-center gap-2 border-slate-300 hover:bg-slate-100"
+              className="flex items-center gap-2 border-slate-300"
             >
               {isSpeaking ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
               Assistant vocal
@@ -353,7 +353,7 @@ const VoicePropertyCreator: React.FC<VoicePropertyCreatorProps> = ({ onPropertyC
 
           <Button
             onClick={handleSaveProperty}
-            className="w-full mt-4 bg-emerald-600 hover:bg-emerald-700 text-white border-0"
+            className="w-full mt-4 bg-emerald-600 text-white border-0"
             disabled={!propertyData.title || !propertyData.location}
           >
             <Save className="h-4 w-4 mr-2" />
