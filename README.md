@@ -1,73 +1,96 @@
-# Welcome to your Lovable project
+# IMOBIA - Artificial Intelligence for Real Estate
 
-## Project info
+A comprehensive real estate management platform built with modern web technologies.
 
-**URL**: https://lovable.dev/projects/3db71459-62b8-40b6-81fb-217f52df3697
+## Features
 
-## How can I edit this code?
+- **Property Management**: Create, edit, and manage real estate properties
+- **Voice Property Creation**: Use voice commands to create property listings
+- **Task Management**: Track and manage real estate tasks and workflows
+- **User Management**: Role-based access control for different user types
+- **Interactive Maps**: Property location visualization with Leaflet
+- **Real-time Updates**: Live task updates and notifications
+- **Multi-language Support**: Internationalization support
+- **Responsive Design**: Works on desktop and mobile devices
 
-There are several ways of editing your application.
+## Tech Stack
 
-**Use Lovable**
+- **Frontend**: React 18 with TypeScript
+- **UI Components**: shadcn/ui with Tailwind CSS
+- **Backend**: Supabase (PostgreSQL + Auth + Storage)
+- **Build Tool**: Vite
+- **State Management**: React Query (TanStack Query)
+- **Routing**: React Router DOM
+- **Maps**: Leaflet
+- **Voice**: ElevenLabs integration
+- **Forms**: React Hook Form with Zod validation
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/3db71459-62b8-40b6-81fb-217f52df3697) and start prompting.
+## Getting Started
 
-Changes made via Lovable will be committed automatically to this repo.
+### Prerequisites
 
-**Use your preferred IDE**
+- Node.js 18+ and npm
+- Supabase account and project
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Installation
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+1. Clone the repository:
+```bash
+git clone <your-repo-url>
+cd imobia
+```
 
-Follow these steps:
+2. Install dependencies:
+```bash
+npm install
+```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+3. Set up environment variables:
+Create a `.env` file in the root directory with your Supabase credentials:
+```env
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+4. Run the development server:
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+5. Open your browser and navigate to `http://localhost:8080`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Project Structure
 
-**Use GitHub Codespaces**
+```
+src/
+├── components/          # Reusable UI components
+│   ├── ui/             # shadcn/ui components
+│   ├── layout/         # Layout components
+│   ├── taches/         # Task-related components
+│   └── rbac/           # Role-based access control
+├── pages/              # Page components
+├── contexts/           # React contexts
+├── hooks/              # Custom React hooks
+├── types/              # TypeScript type definitions
+├── utils/              # Utility functions
+└── integrations/       # External service integrations
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Available Scripts
 
-## What technologies are used for this project?
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint
 
-This project is built with:
+## Contributing
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
-## How can I deploy this project?
+## License
 
-Simply open [Lovable](https://lovable.dev/projects/3db71459-62b8-40b6-81fb-217f52df3697) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+This project is licensed under the MIT License.

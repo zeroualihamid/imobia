@@ -599,6 +599,36 @@ export type Database = {
         }
         Relationships: []
       }
+      scraping: {
+        Row: {
+          id: string;
+          date: string;
+          user_id: string | null;
+          metadata: Json | null;
+          origin: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          date?: string;
+          user_id?: string | null;
+          metadata?: Json | null;
+          origin: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          date?: string;
+          user_id?: string | null;
+          metadata?: Json | null;
+          origin?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      },
       task_conseillers: {
         Row: {
           assigned_at: string

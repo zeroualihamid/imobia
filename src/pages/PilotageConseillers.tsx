@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -63,8 +63,80 @@ const PilotageConseillers = () => {
   const [conseillers, setConseillers] = useState<Conseiller[]>([]);
   const [weeklyPerformances, setWeeklyPerformances] = useState<WeeklyPerformance[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [lastUpdate, setLastUpdate] = useState(Date.now()); // Force re-render
+  const [isUpdating, setIsUpdating] = useState(false);
   const { toast } = useToast();
+
+  // Silent background update function
+  const silentUpdate = useCallback(async () => {
+    if (isUpdating) return; // Prevent multiple simultaneous updates
+    
+    try {
+      setIsUpdating(true);
+      
+      // Fetch tasks silently
+      const { data: tasksData, error: tasksError } = await supabase
+        .from('tasks')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (tasksError) {
+        console.error('Silent update error:', tasksError);
+        return;
+      }
+
+      // Update state without triggering re-renders
+      setTasks(tasksData || []);
+      
+    } catch (error) {
+      console.error('Silent update failed:', error);
+    } finally {
+      setIsUpdating(false);
+    }
+  }, [isUpdating]);
+
+  // Optimistic update for drag and drop
+  const optimisticTaskUpdate = useCallback((taskId: string, updates: Partial<Task>) => {
+    setTasks(prevTasks => 
+      prevTasks.map(task => 
+        task.id === taskId 
+          ? { ...task, ...updates, updated_at: new Date().toISOString() }
+          : task
+      )
+    );
+  }, []);
+
+  // Handle task category change from drag and drop
+  const handleTaskCategoryChange = useCallback(async (taskId: string, newCategory: 'URGENT' | 'IMPORTANT' | 'NORMAL') => {
+    // Optimistic update
+    optimisticTaskUpdate(taskId, { category: newCategory });
+    
+    try {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ 
+          category: newCategory,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', taskId);
+
+      if (error) {
+        // Revert optimistic update on error
+        silentUpdate();
+        throw error;
+      }
+
+      // Silent background update to ensure consistency
+      setTimeout(() => silentUpdate(), 100);
+      
+    } catch (error) {
+      console.error('Error updating task category:', error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour la catégorie de la tâche.",
+        variant: "destructive",
+      });
+    }
+  }, [optimisticTaskUpdate, silentUpdate, toast]);
 
   const fetchData = async () => {
     try {
@@ -99,7 +171,6 @@ const PilotageConseillers = () => {
       setTasks(tasksData || []);
       setConseillers(conseillersData || []);
       setWeeklyPerformances(mockPerformances);
-      setLastUpdate(Date.now()); // Force re-render
     } catch (error) {
       console.error('Erreur lors du chargement:', error);
       toast({
@@ -116,10 +187,10 @@ const PilotageConseillers = () => {
     fetchData();
   }, []);
 
-  // Setup real-time subscriptions with forced refresh
+  // Setup real-time subscriptions with silent updates
   useRealtimeTasks(() => {
-    console.log('Real-time update triggered, refreshing data...');
-    fetchData();
+    console.log('Real-time update triggered, performing silent update...');
+    silentUpdate();
   });
 
   const getCategoryBadgeColor = (category: string) => {
@@ -167,6 +238,9 @@ const PilotageConseillers = () => {
   const assignTaskToMultipleConseillers = async (taskId: string, conseillerIds: string[]) => {
     try {
       console.log('Assigning task:', taskId, 'to conseillers:', conseillerIds);
+      
+      // Optimistic update
+      optimisticTaskUpdate(taskId, { status: 'ASSIGNEE' });
       
       // First, check for existing assignments to avoid duplicates
       const { data: existingAssignments, error: checkError } = await supabase
@@ -230,10 +304,12 @@ const PilotageConseillers = () => {
         description: `Tâche assignée à ${conseillerNames}.`,
       });
       
-      // Force immediate data refresh to ensure UI is updated
-      await fetchData();
+      // Silent background update to ensure consistency
+      setTimeout(() => silentUpdate(), 100);
     } catch (error) {
       console.error('Erreur lors de l\'assignation:', error);
+      // Revert optimistic update on error
+      silentUpdate();
       toast({
         title: "Erreur",
         description: "Impossible d'assigner la tâche.",
@@ -361,11 +437,11 @@ const PilotageConseillers = () => {
   const tasksEnRetard = getTasksByStatus('EN_RETARD');
 
   return (
-    <div className="space-y-6 bg-white min-h-screen p-6" key={lastUpdate}>
+    <div className="space-y-6 bg-white min-h-screen p-6">
       {/* En-tête avec bouton d'ajout et statistiques */}
       <div className="flex justify-between items-center bg-white rounded-lg p-6 shadow-sm border border-slate-200">
         <h1 className="text-2xl font-bold text-slate-900">Pilotage des conseillers</h1>
-        <CreateTaskDialog onTaskCreated={fetchData} />
+        <CreateTaskDialog onTaskCreated={silentUpdate} />
       </div>
 
       {/* En-tête avec statistiques - Updated to include assigned tasks */}
@@ -444,7 +520,7 @@ const PilotageConseillers = () => {
           {/* Drag and Drop Task Board */}
           <DragDropTaskBoard 
             tasks={tasks} 
-            onTaskUpdate={fetchData} 
+            onTaskUpdate={handleTaskCategoryChange} 
             onTaskClick={handleTaskClick} 
           />
 

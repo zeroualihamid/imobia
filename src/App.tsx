@@ -25,6 +25,7 @@ import TachesConseillers from '@/pages/TachesConseillers';
 import TaskDetail from '@/pages/TaskDetail';
 import CreationVocale from '@/pages/CreationVocale';
 import PropertyDetail from '@/pages/PropertyDetail';
+import MubawabScraper from '@/pages/MubawabScraper';
 import RoleManagement from '@/pages/RoleManagement';
 import NotFound from '@/pages/NotFound';
 
@@ -206,6 +207,16 @@ function App() {
                     <ProtectedRoute>
                       <Layout>
                         <PropertyDetail />
+                      </Layout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/mubawab-scraper"
+                  element={
+                    <ProtectedRoute>
+                      <Layout>
+                        <MubawabScraper />
                       </Layout>
                     </ProtectedRoute>
                   }

@@ -20,7 +20,8 @@ import {
   Settings,
   Shield,
   User,
-  UsersIcon
+  UsersIcon,
+  Search
 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import PermissionGuard from '@/components/rbac/PermissionGuard';
@@ -50,7 +51,8 @@ const Sidebar = () => {
       subItems: [       
         { title: 'Ajouter bien', href: '/biens/ajouter', icon: Plus },
         { title: 'Tous les biens', href: '/biens', icon: List },
-        { title: 'Création vocale', href: '/biens/creation-vocale', icon: Mic }
+        { title: 'Création vocale', href: '/biens/creation-vocale', icon: Mic },
+        { title: 'Scraper Mubawab', icon: Search, href: '/mubawab-scraper' }
       ]
     },
     {
@@ -118,7 +120,8 @@ const Sidebar = () => {
       icon: Home,
       href: '/matching',
       color: 'text-teal-600'
-    }
+    },
+    
   ];
 
   return (
