@@ -6,12 +6,14 @@ import { Image, Info, Link, Loader, CheckCircle, AlertTriangle } from 'lucide-re
 import { supabase } from '@/integrations/supabase/client';
 
 interface ScrapedProperty {
-  id: string;
+  id: number;
   title: string;
   price: string;
-  location: string;
-  imageUrl: string;
-  link: string;
+  thumbnail: string;
+  url_link: string;
+  description: string;
+  show_elements: string;
+  created_at: string;
 }
 
 const MubawabScraper = () => {
@@ -31,36 +33,22 @@ const MubawabScraper = () => {
 
     try {
       const { data: properties, error: dbError } = await supabase
-        .from('scraping')
+        .from('mubawab_scrapping')
         .select('*')
-        .eq('origin', 'mubawab'); // Filter by origin
+        .order('created_at', { ascending: false });
 
       if (dbError) throw dbError;
 
-      const formattedData = properties.map(property => {
-        // Safely access metadata
-        const metadata = (property.metadata || {}) as { 
-          title?: string;
-          price?: string;
-          location?: string;
-          image_path?: string;
-          link?: string;
-        };
-        
-        const { data: imageData } = supabase
-          .storage
-          .from('scraping-images')
-          .getPublicUrl(metadata.image_path || '');
-
-        return {
-          id: property.id,
-          title: metadata.title || 'Titre non disponible',
-          price: metadata.price || 'Prix non disponible',
-          location: metadata.location || 'Lieu non disponible',
-          link: metadata.link || '#',
-          imageUrl: imageData.publicUrl,
-        };
-      });
+      const formattedData = properties.map(property => ({
+        id: property.id,
+        title: property.title || 'Titre non disponible',
+        price: property.price || 'Prix non disponible',
+        thumbnail: property.thumbnail || '',
+        url_link: property.url_link || '#',
+        description: property.description || 'Aucune description disponible',
+        show_elements: property.show_elements || '',
+        created_at: property.created_at || '',
+      }));
 
       setScrapedData(formattedData);
 
@@ -126,14 +114,25 @@ const MubawabScraper = () => {
             scrapedData.map((property) => (
               <Card key={property.id} className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 border-slate-200">
                 <CardHeader className="p-0">
-                  <img src={property.imageUrl} alt={property.title} className="w-full h-48 object-cover" />
+                  <img 
+                    src={property.thumbnail} 
+                    alt={property.title} 
+                    className="w-full h-48 object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = '/placeholder.svg';
+                    }}
+                  />
                 </CardHeader>
                 <CardContent className="p-4 bg-white">
                   <CardTitle className="text-lg font-semibold text-slate-800 mb-2 truncate">{property.title}</CardTitle>
-                  <p className="text-sm text-slate-600 mb-2">{property.location}</p>
-                  <p className="text-xl font-bold text-blue-600 mb-4">{property.price}</p>
+                  <p className="text-sm text-slate-600 mb-2">{property.show_elements}</p>
+                  <p className="text-xl font-bold text-blue-600 mb-2">{property.price}</p>
+                  {property.description && (
+                    <p className="text-sm text-slate-500 mb-4 line-clamp-2">{property.description}</p>
+                  )}
                   <Button asChild variant="outline" size="sm" className="w-full">
-                    <a href={property.link} target="_blank" rel="noopener noreferrer">
+                    <a href={property.show_elements} target="_blank" rel="noopener noreferrer">
                       Voir l'annonce
                       <Link className="ml-2 h-4 w-4" />
                     </a>
@@ -146,7 +145,7 @@ const MubawabScraper = () => {
               <div className="col-span-full text-center py-12 bg-slate-50 rounded-lg border-2 border-dashed border-slate-200">
                 <Info className="mx-auto h-12 w-12 text-slate-400" />
                 <h3 className="mt-4 text-lg font-medium text-slate-700">Aucune donnée trouvée</h3>
-                <p className="mt-1 text-sm text-slate-500">La table 'scrapping' est peut-être vide.</p>
+                <p className="mt-1 text-sm text-slate-500">La table 'mubawab_scrapping' est peut-être vide.</p>
               </div>
             )
           )}
