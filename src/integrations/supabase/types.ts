@@ -629,6 +629,39 @@ export type Database = {
         };
         Relationships: [];
       },
+      mubawab_scrapping: {
+        Row: {
+          id: number;
+          title: string | null;
+          price: string | null;
+          thumbnail: string | null;
+          url_link: string | null;
+          description: string | null;
+          show_elements: string | null;
+          created_at: string | null;
+        };
+        Insert: {
+          id?: number;
+          title?: string | null;
+          price?: string | null;
+          thumbnail?: string | null;
+          url_link?: string | null;
+          description?: string | null;
+          show_elements?: string | null;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: number;
+          title?: string | null;
+          price?: string | null;
+          thumbnail?: string | null;
+          url_link?: string | null;
+          description?: string | null;
+          show_elements?: string | null;
+          created_at?: string | null;
+        };
+        Relationships: [];
+      },
       task_conseillers: {
         Row: {
           assigned_at: string
