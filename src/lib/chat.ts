@@ -53,8 +53,16 @@ export async function sendMessage(
 
     const response = await fetch(`${config.apiUrl}/chat/`, {
       method: 'POST',
-      headers,
+      headers: {
+        ...headers,
+        'Accept': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
       body: JSON.stringify(requestBody),
+      // Add timeout and signal for better connection handling
+      signal: AbortSignal.timeout(30000), // 30 second timeout
     });
 
     console.log('📨 API: Response received', {
@@ -66,7 +74,12 @@ export async function sendMessage(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error('❌ API: Request failed', { status: response.status, errorData });
+      console.error('❌ API: Request failed', { 
+        status: response.status, 
+        statusText: response.statusText,
+        contentType: response.headers.get('content-type'),
+        errorData 
+      });
       
       if (response.status === 401 || response.status === 403) {
         throw new Error(errorData.detail || `Authentication/Authorization error: ${response.status}`);
@@ -77,10 +90,26 @@ export async function sendMessage(
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
 
+    // Verify SSE headers
+    const contentType = response.headers.get('content-type');
+    if (!contentType?.includes('text/event-stream')) {
+      console.warn('⚠️ Warning: Expected text/event-stream but got:', contentType);
+    }
+
     console.log('✅ API: Request successful, returning response for streaming');
     return response;
   } catch (error) {
     console.error('❌ API: Error in sendMessage:', error);
+    
+    // Handle specific error types
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error('Network error: Unable to connect to the server. Please check your internet connection.');
+    }
+    
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw new Error('Request timeout: The server took too long to respond. Please try again.');
+    }
+    
     throw error;
   }
 }
@@ -151,17 +180,28 @@ export async function handleChatStream(
   const reader = response.body?.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
+  let isCompleted = false;
 
   console.log('🔄 Starting SSE stream handling...');
+  
+  // Verify SSE content type
+  const contentType = response.headers.get('content-type');
+  if (!contentType?.includes('text/event-stream')) {
+    console.warn('⚠️ Warning: Response content-type is not text/event-stream:', contentType);
+  }
 
   try {
     if (!reader) {
       throw new Error('Connection error: Failed to establish stream');
     }
 
-    while (true) {
+    while (!isCompleted) {
       const { value, done } = await reader.read();
-      if (done) break;
+      
+      if (done) {
+        console.log('📡 Stream ended by server');
+        break;
+      }
       
       const chunk = decoder.decode(value, { stream: true });
       buffer += chunk;
@@ -193,10 +233,10 @@ export async function handleChatStream(
               const timestamp = new Date().toISOString();
               console.log(`📝 Content chunk at ${timestamp}:`, data.content);
               // Call onChunk immediately for each content piece (no delay)
-              // Call onChunk immediately for each content piece (no delay)
               onChunk(data.content, {});
             } else if (data.type === 'completion') {
               console.log('✅ Stream completion received');
+              isCompleted = true;
               break; // Exit the loop when completion is received
             }
           } catch (e) {
@@ -208,10 +248,15 @@ export async function handleChatStream(
     }
   } catch (error) {
     console.error('Stream error:', error);
-    throw error;
+    // Don't throw the error, just log it and complete gracefully
+    console.warn('⚠️ Stream encountered an error but continuing...');
   } finally {
     console.log('✅ SSE stream handling complete');
-    reader?.releaseLock();
+    try {
+      reader?.releaseLock();
+    } catch (e) {
+      console.warn('⚠️ Error releasing reader lock:', e);
+    }
     onComplete();
   }
 }

@@ -269,104 +269,103 @@ const ChatBot = ({ isOpen = true, onToggle }: ChatBotProps) => {
   }, [isResizing, handleMouseMove, handleMouseUp]);
 
   // Mobile floating chat button
-  if (!isOpen) {
+  if (!isOpen && onToggle) {
     return (
       <Button
         onClick={onToggle}
-        className="fixed bottom-4 right-4 z-50 w-14 h-14 rounded-full bg-blue-600 text-white shadow-lg lg:hidden"
+        size="icon"
+        className="fixed bottom-4 right-4 z-50 h-12 w-12 rounded-full shadow-lg lg:hidden"
       >
-        <MessageSquare className="h-6 w-6" />
+        <MessageSquare className="h-5 w-5" />
+        <span className="sr-only">Open chat</span>
       </Button>
     );
   }
 
   return (
     <>
-             {/* Mobile Overlay - Only show on mobile */}
-       {isOpen && (
-         <div 
-           className="fixed inset-0 bg-black z-40 lg:hidden"
-           onClick={onToggle}
-         />
-       )}
-
-                     {/* ChatBot Panel */}
+      {/* Mobile Overlay */}
+      {isOpen && onToggle && (
         <div 
-          className={cn(
-            "bg-white border-l border-slate-200 h-full flex flex-col shadow-sm transition-transform duration-300 ease-in-out",
-            // Desktop: Static positioning (handled by parent container)
-            "lg:static",
-            // Mobile: Fixed full screen with overlay
-            "fixed inset-0 z-50 w-full",
-            // Mobile positioning
-            isOpen ? "translate-x-0" : "translate-x-full lg:translate-x-0",
-            // Resize cursor when resizing
-            isResizing && "cursor-col-resize"
-          )}
-                     style={{ 
-             width: window.innerWidth >= 1024 ? `${chatWidth}px` : '100%', // Only apply custom width on desktop
-             cursor: isResizing ? 'ew-resize' : 'default' // Change cursor during resize
-           }}
-           onMouseEnter={(e) => e.stopPropagation()}
-           onMouseLeave={(e) => e.stopPropagation()}
-        >
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={onToggle}
+        />
+      )}
+
+      {/* ChatBot Panel */}
+      <div 
+        className={cn(
+          "flex h-full flex-col bg-white",
+          // Desktop: Always visible
+          "lg:relative lg:w-full",
+          // Mobile: Fixed overlay
+          onToggle && "lg:hidden fixed inset-0 z-50 transition-transform duration-300",
+          onToggle && (isOpen ? "translate-x-0" : "translate-x-full")
+        )}
+        style={{ 
+          width: !onToggle && typeof window !== 'undefined' && window.innerWidth >= 1024 ? `${chatWidth}px` : undefined,
+          cursor: isResizing ? 'ew-resize' : 'default'
+        }}
+      >
         {/* Header */}
-        <div className="p-4 border-b border-slate-200 bg-slate-50">
+        <div className="border-b border-slate-200 bg-slate-50 p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg overflow-hidden bg-white p-1">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white border border-slate-200">
                 <img 
                   src="/logo_imobia.PNG" 
                   alt="IMOBIA" 
-                  className="w-full h-full object-contain"
+                  className="h-6 w-6 object-contain"
                 />
               </div>
               <div>
-                <h3 className="font-semibold text-sm text-slate-900">Assistant IMOBIA</h3>
+                <h3 className="text-sm font-semibold text-slate-900">Assistant IMOBIA</h3>
                 <p className="text-xs text-slate-500">Assistant IA immobilier</p>
               </div>
             </div>
             
-                         {/* Control buttons */}
-             <div className="flex items-center gap-2">
-               {/* Minimize button - Desktop only */}
-               <Button
-                 variant="ghost"
-                 size="sm"
-                 onClick={() => setIsMinimized(!isMinimized)}
-                 className="hidden lg:flex h-8 w-8 p-0"
-               >
-                 <Minimize2 className="h-4 w-4" />
-               </Button>
+            <div className="flex items-center gap-1">
+              {!onToggle && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsMinimized(!isMinimized)}
+                  className="h-8 w-8 hover:bg-slate-100"
+                >
+                  <Minimize2 className="h-4 w-4" />
+                  <span className="sr-only">Minimize</span>
+                </Button>
+              )}
                
-               {/* Close button */}
-               <Button
-                 variant="ghost"
-                 size="sm"
-                 onClick={onToggle}
-                 className="h-8 w-8 p-0"
-               >
-                 <X className="h-4 w-4" />
-               </Button>
-             </div>
-           </div>
-         </div>
+              {onToggle && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onToggle}
+                  className="h-8 w-8 hover:bg-slate-100"
+                >
+                  <X className="h-4 w-4" />
+                  <span className="sr-only">Close</span>
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
 
-                   {/* Resize handle - Desktop only */}
+        {/* Resize handle - Desktop only */}
+        {!onToggle && (
           <div 
-            className="absolute left-0 top-0 bottom-0 w-1 bg-transparent hover:bg-blue-200 hidden lg:block"
+            className="absolute left-0 top-0 bottom-0 w-1 cursor-col-resize bg-transparent hover:bg-blue-200 transition-colors hidden lg:block"
             onMouseDown={handleMouseDown}
-            style={{ 
-              zIndex: 10,
-              cursor: isResizing ? 'ew-resize' : 'col-resize' // Show resize cursor on handle
-            }}
+            style={{ zIndex: 10 }}
           >
-           <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-blue-400 rounded-r opacity-0 hover:opacity-100 transition-opacity">
-             <GripVertical className="w-1 h-8 text-blue-600" />
-           </div>
-         </div>
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-400 rounded-r opacity-0 hover:opacity-100 transition-opacity">
+              <GripVertical className="h-8 w-1 text-blue-600" />
+            </div>
+          </div>
+        )}
 
-        {/* Messages Area - Hide when minimized on desktop */}
+        {/* Messages Area */}
         {!isMinimized && (
           <>
             <ScrollArea className="flex-1 p-4 bg-white" ref={scrollAreaRef}>
@@ -374,46 +373,51 @@ const ChatBot = ({ isOpen = true, onToggle }: ChatBotProps) => {
                 {messages.map((message) => (
                   <div
                     key={message.id}
-                    className={`flex gap-3 ${
+                    className={cn(
+                      "flex gap-3",
                       message.sender === 'user' ? 'justify-end' : 'justify-start'
-                    }`}
+                    )}
                   >
                     {message.sender === 'bot' && (
-                      <div className="w-8 h-8 rounded-full overflow-hidden bg-white p-1 flex-shrink-0 border border-slate-200">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white">
                         {message.isStreaming ? (
-                          <Loader className="w-full h-full animate-spin text-blue-600" />
+                          <Loader className="h-4 w-4 animate-spin text-blue-600" />
                         ) : (
                           <img 
                             src="/logo_imobia.PNG" 
-                            alt="IMOBIA Bot" 
-                            className="w-full h-full object-contain"
+                            alt="Bot" 
+                            className="h-4 w-4 object-contain"
                           />
                         )}
                       </div>
                     )}
-                                         <div
-                       className={`max-w-[70%] p-3 rounded-lg text-sm ${
-                         message.sender === 'user'
-                           ? 'bg-blue-600 text-white rounded-br-sm'
-                           : 'bg-slate-100 text-slate-900 rounded-bl-sm'
-                       }`}
-                     >
-                       {message.sender === 'bot' ? (
-                         <div 
-                           dangerouslySetInnerHTML={{ 
-                             __html: formatMessage(message.content || (message.isStreaming ? 'En train de réfléchir...' : ''))
-                           }}
-                           className="prose prose-sm max-w-none"
-                         />
-                       ) : (
-                         <span>{message.content}</span>
-                       )}
-                                               {message.isStreaming && (
-                          <span className="inline-block w-2 h-4 bg-slate-400 ml-1 animate-pulse">|</span>
-                        )}
-                     </div>
+                    
+                    <div
+                      className={cn(
+                        "max-w-[70%] rounded-lg px-3 py-2 text-sm",
+                        message.sender === 'user'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-slate-100 text-slate-900'
+                      )}
+                    >
+                      {message.sender === 'bot' ? (
+                        <div 
+                          dangerouslySetInnerHTML={{ 
+                            __html: formatMessage(message.content || (message.isStreaming ? 'En train de réfléchir...' : ''))
+                          }}
+                          className="prose prose-sm max-w-none [&_*]:text-inherit"
+                        />
+                      ) : (
+                        <span>{message.content}</span>
+                      )}
+                      
+                      {message.isStreaming && (
+                        <span className="ml-1 inline-block h-4 w-0.5 animate-pulse bg-slate-400">|</span>
+                      )}
+                    </div>
+                    
                     {message.sender === 'user' && (
-                      <div className="p-1.5 bg-blue-100 rounded-full h-8 w-8 flex items-center justify-center flex-shrink-0">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100">
                         <User className="h-4 w-4 text-blue-600" />
                       </div>
                     )}
@@ -423,26 +427,28 @@ const ChatBot = ({ isOpen = true, onToggle }: ChatBotProps) => {
             </ScrollArea>
 
             {/* Input Area */}
-            <div className="p-4 border-t border-slate-200 bg-white">
+            <div className="border-t border-slate-200 p-4 bg-white">
               <div className="flex gap-2">
                 <Input
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Tapez votre message..."
-                  className="flex-1 bg-white border-slate-300 text-slate-900 placeholder:text-slate-500 focus:bg-white focus:border-blue-500"
+                  className="flex-1 bg-white border-slate-300 text-slate-900 placeholder:text-slate-500 focus:border-blue-500"
+                  disabled={isLoading}
                 />
                 <Button 
                   onClick={handleSendMessage} 
-                  size="sm" 
-                  className="bg-emerald-600 text-white"
+                  size="icon"
                   disabled={!inputValue.trim() || isLoading}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
                 >
                   {isLoading ? (
                     <Loader className="h-4 w-4 animate-spin" />
                   ) : (
                     <Send className="h-4 w-4" />
                   )}
+                  <span className="sr-only">Send message</span>
                 </Button>
               </div>
             </div>

@@ -6,6 +6,7 @@ import LanguageSelector from '../LanguageSelector';
 import { Button } from '@/components/ui/button';
 import { LogOut, Menu, MessageSquare } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { cn } from '@/lib/utils';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -25,64 +26,75 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   };
 
   return (
-    <div className="flex h-screen bg-white">
-      <Sidebar isOpen={isSidebarOpen} onToggle={toggleSidebar} />
-      <main className="flex-1 overflow-auto bg-white">
-        <header className="sticky top-0 z-10 bg-white border-b border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between px-6 py-4 bg-white">
-            <div className="flex items-center space-x-4">
-              {/* Mobile Menu Button */}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={toggleSidebar}
-                className="lg:hidden"
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-              <h2 className="text-lg font-semibold text-slate-900">
-                Gestion Immobilière
-              </h2>
-            </div>
-            <div className="flex items-center space-x-4">
-              <LanguageSelector />
+    <div className="min-h-screen bg-white">
+      {/* Main Layout Container */}
+      <div className="flex h-screen bg-white">
+        {/* Sidebar */}
+        <Sidebar isOpen={isSidebarOpen} onToggle={toggleSidebar} />
+        
+        {/* Main Content Area */}
+        <div className="flex flex-1 flex-col overflow-hidden bg-white">
+          {/* Header */}
+          <header className="border-b border-slate-200 bg-white">
+            <div className="flex h-14 items-center justify-between px-4 lg:px-6">
+              <div className="flex items-center gap-4">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={toggleSidebar}
+                  className="lg:hidden hover:bg-slate-100"
+                >
+                  <Menu className="h-5 w-5" />
+                  <span className="sr-only">Toggle sidebar</span>
+                </Button>
+                <h1 className="text-lg font-semibold text-slate-900">Gestion Immobilière</h1>
+              </div>
               
-              {/* Mobile ChatBot Toggle Button */}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={toggleChatBot}
-                className="lg:hidden"
-              >
-                <MessageSquare className="h-5 w-5" />
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={signOut}
-                className="border-slate-300 text-slate-700 hover:bg-slate-50 bg-white"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Déconnexion
-              </Button>
+              <div className="flex items-center gap-2">
+                <LanguageSelector />
+                
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={toggleChatBot}
+                  className="lg:hidden hover:bg-slate-100"
+                >
+                  <MessageSquare className="h-5 w-5" />
+                  <span className="sr-only">Toggle chat</span>
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={signOut}
+                  className="border-slate-300 text-slate-700 hover:bg-slate-50"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Déconnexion
+                </Button>
+              </div>
             </div>
+          </header>
+          
+          {/* Content Container */}
+          <div className="flex flex-1 overflow-hidden bg-white">
+            {/* Main Content */}
+            <main className="flex-1 overflow-auto bg-white">
+              <div className="p-6">
+                {children}
+              </div>
+            </main>
+            
+            {/* Desktop ChatBot */}
+            <aside className="hidden lg:flex w-80 border-l border-slate-200">
+              <ChatBot isOpen={true} />
+            </aside>
           </div>
-        </header>
-        <div className="p-6 bg-white min-h-full">
-          {children}
         </div>
-      </main>
-      
-      {/* ChatBot - Hidden on mobile by default, always visible on desktop */}
-      <div className="hidden lg:block">
-        <ChatBot isOpen={true} />
       </div>
       
-      {/* Mobile ChatBot - Only shows when toggled */}
-      <div className="lg:hidden">
-        <ChatBot isOpen={isChatBotOpen} onToggle={toggleChatBot} />
-      </div>
+      {/* Mobile ChatBot */}
+      <ChatBot isOpen={isChatBotOpen} onToggle={toggleChatBot} />
     </div>
   );
 };
