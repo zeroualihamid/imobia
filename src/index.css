@@ -114,6 +114,23 @@
     @apply bg-slate-400;
   }
 
+  /* ChatBot specific scrollbar styling - no yellow colors */
+  .chatbot-scrollarea ::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .chatbot-scrollarea ::-webkit-scrollbar-track {
+    @apply bg-slate-50;
+  }
+
+  .chatbot-scrollarea ::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 rounded-full;
+  }
+
+  .chatbot-scrollarea ::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-400;
+  }
+
   /* Focus styles */
   :focus-visible {
     @apply outline-none ring-2 ring-blue-500 ring-offset-2 ring-offset-white;
