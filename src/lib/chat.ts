@@ -40,9 +40,13 @@ export async function sendMessage(
       // For now, assuming X-Tenant-Id is primarily for API key user differentiation.
     }
 
+    // Get current session ID from localStorage for persistent conversation
+    const currentSessionId = localStorage.getItem('chat_session_id');
+    console.log('💾 API: Current session ID from localStorage:', currentSessionId);
+
     const requestBody = {
       message,
-      session_id: authOptions.userSessionId || null
+      session_id: currentSessionId || authOptions.userSessionId || null
     };
 
     console.log('📡 API: Making fetch request to', `${config.apiUrl}/chat/`, {
@@ -175,12 +179,13 @@ export async function clearChatHistoryAPI(
 export async function handleChatStream(
   response: Response,
   onChunk: (content: string, state: Record<string, unknown>) => void,
-  onComplete: () => void
+  onComplete: (sessionInfo?: { sessionId: string; messageCount: number; totalMessages: number }) => void
 ): Promise<void> {
   const reader = response.body?.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
   let isCompleted = false;
+  let sessionInfo: { sessionId: string; messageCount: number; totalMessages: number } | undefined;
 
   console.log('🔄 Starting SSE stream handling...');
   
@@ -228,14 +233,38 @@ export async function handleChatStream(
               throw new Error(data.error);
             }
 
-            // Handle your server's format: {"type": "content", "content": "chunk"}
-            if (data.type === 'content' && data.content !== undefined) {
+            // Handle session information from backend
+            if (data.type === 'session_info') {
+              // Store session ID for future requests
+              const sessionId = data.session_id;
+              localStorage.setItem('chat_session_id', sessionId);
+              console.log(`🗂️ Session: ${sessionId.slice(0,8)}... (Message #${data.message_count})`);
+              
+              // Pass session info to state but don't call onChunk for this
+              onChunk('', { 
+                type: 'session_info', 
+                sessionId, 
+                messageCount: data.message_count 
+              });
+            }
+            // Handle content chunks
+            else if (data.type === 'content' && data.content !== undefined) {
               const timestamp = new Date().toISOString();
               console.log(`📝 Content chunk at ${timestamp}:`, data.content);
               // Call onChunk immediately for each content piece (no delay)
-              onChunk(data.content, {});
-            } else if (data.type === 'completion') {
+              onChunk(data.content, { type: 'content' });
+            }
+            // Handle completion with session info
+            else if (data.type === 'completion') {
               console.log('✅ Stream completion received');
+              if (data.session_id && data.total_messages) {
+                sessionInfo = {
+                  sessionId: data.session_id,
+                  messageCount: data.message_count || 0,
+                  totalMessages: data.total_messages
+                };
+                console.log(`🏁 Completed - Session: ${data.session_id.slice(0,8)}... (${data.total_messages} messages)`);
+              }
               isCompleted = true;
               break; // Exit the loop when completion is received
             }
@@ -257,6 +286,6 @@ export async function handleChatStream(
     } catch (e) {
       console.warn('⚠️ Error releasing reader lock:', e);
     }
-    onComplete();
+    onComplete(sessionInfo);
   }
 }

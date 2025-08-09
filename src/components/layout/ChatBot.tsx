@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { MessageSquare, Send, Bot, User, X, Minimize2, Loader, GripVertical } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { MessageSquare, Send, Bot, User, X, Minimize2, Loader, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -15,14 +15,19 @@ interface Message {
   timestamp: Date;
   isStreaming?: boolean;
   state?: Record<string, unknown>;
+  sessionInfo?: {
+    sessionId: string;
+    messageCount: number;
+  };
 }
 
 interface ChatBotProps {
   isOpen?: boolean;
   onToggle?: () => void;
+  disableResize?: boolean;
 }
 
-const ChatBot = ({ isOpen = true, onToggle }: ChatBotProps) => {
+const ChatBot = ({ isOpen = true, onToggle, disableResize = false }: ChatBotProps) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -34,10 +39,28 @@ const ChatBot = ({ isOpen = true, onToggle }: ChatBotProps) => {
   const [inputValue, setInputValue] = useState('');
   const [isMinimized, setIsMinimized] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isResizing, setIsResizing] = useState(false);
-  const [chatWidth, setChatWidth] = useState(320); // Default width in pixels
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  // Function to clear chat history and start new session
+  const clearChatHistory = () => {
+    // Clear current session ID from localStorage to start fresh
+    localStorage.removeItem('chat_session_id');
+    console.log('🗑️ ChatBot: Cleared chat session ID from localStorage');
+    
+    // Reset messages to initial state
+    setMessages([
+      {
+        id: '1',
+        content: 'Bonjour ! Je suis votre assistant IMOBIA. Comment puis-je vous aider avec la gestion de vos biens immobiliers ?',
+        sender: 'bot',
+        timestamp: new Date()
+      }
+    ]);
+    
+    console.log('🔄 ChatBot: Chat history cleared, new session will be created on next message');
+  };
 
   // Custom markdown formatter for bot messages
   const formatMessage = (content: string) => {
@@ -119,22 +142,55 @@ const ChatBot = ({ isOpen = true, onToggle }: ChatBotProps) => {
        const response = await sendMessage(messageText, { type: 'bearer' });
        console.log('✅ ChatBot: API response received, starting stream handling');
 
-       // Handle streaming response immediately
-       let chunkCount = 0;
-       console.log('🔄 ChatBot: Starting stream processing...');
-       await handleChatStream(
+             // Handle streaming response immediately
+      let chunkCount = 0;
+      console.log('🔄 ChatBot: Starting stream processing...');
+      await handleChatStream(
         response,
-                 (content: string, state: Record<string, unknown>) => {
-           chunkCount++;
-           const timestamp = new Date().toISOString();
-           console.log(`🔥 ChatBot: Received chunk #${chunkCount} at ${timestamp}:`, {
-             content: content,
-             contentLength: content.length,
-             state: state,
-             botMessageId: botMessageId
-           });
+        (content: string, state: Record<string, unknown>) => {
+          const timestamp = new Date().toISOString();
+          
+          // Handle session info (don't count as content chunk)
+          if (state.type === 'session_info') {
+            console.log(`🗂️ ChatBot: Session info received at ${timestamp}:`, {
+              sessionId: state.sessionId,
+              messageCount: state.messageCount,
+              sessionIdShort: typeof state.sessionId === 'string' ? state.sessionId.slice(0, 8) + '...' : 'unknown'
+            });
+            
+            // Update the bot message with session info but don't increment content
+            flushSync(() => {
+              setMessages(prev => {
+                return prev.map(msg => {
+                  if (msg.id === botMessageId) {
+                    return { 
+                      ...msg, 
+                      state: state,
+                      sessionInfo: {
+                        sessionId: state.sessionId as string,
+                        messageCount: state.messageCount as number
+                      },
+                      isStreaming: true
+                    };
+                  }
+                  return msg;
+                });
+              });
+            });
+            return;
+          }
 
-                       // Force immediate DOM update for streaming effect
+          // Handle content chunks
+          if (state.type === 'content' && content) {
+            chunkCount++;
+            console.log(`🔥 ChatBot: Received content chunk #${chunkCount} at ${timestamp}:`, {
+              content: content,
+              contentLength: content.length,
+              state: state,
+              botMessageId: botMessageId
+            });
+
+            // Force immediate DOM update for streaming effect
             console.log(`⚡ ChatBot: Updating DOM for chunk #${chunkCount}...`);
             
             // Use flushSync to ensure immediate DOM update
@@ -163,16 +219,25 @@ const ChatBot = ({ isOpen = true, onToggle }: ChatBotProps) => {
               });
             });
             
-                         // Force scroll to bottom after each chunk (immediate)
-             if (scrollAreaRef.current) {
-               const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
-               if (scrollContainer) {
-                 scrollContainer.scrollTop = scrollContainer.scrollHeight;
-               }
-             }
+            // Force scroll to bottom after each chunk (immediate)
+            if (scrollAreaRef.current) {
+              const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+              if (scrollContainer) {
+                scrollContainer.scrollTop = scrollContainer.scrollHeight;
+              }
+            }
+          }
         },
-        () => {
-          console.log(`🏁 ChatBot: Stream completed! Total chunks processed: ${chunkCount}`);
+        (sessionInfo) => {
+          console.log(`🏁 ChatBot: Stream completed! Total content chunks processed: ${chunkCount}`);
+          
+          if (sessionInfo) {
+            console.log(`🗂️ ChatBot: Final session info:`, {
+              sessionId: sessionInfo.sessionId.slice(0, 8) + '...',
+              messageCount: sessionInfo.messageCount,
+              totalMessages: sessionInfo.totalMessages
+            });
+          }
           
           // Mark streaming as complete
           setMessages(prev => 
@@ -185,12 +250,27 @@ const ChatBot = ({ isOpen = true, onToggle }: ChatBotProps) => {
                     content: (() => {
                       console.log(`✅ ChatBot: Final message content: "${msg.content}" (${msg.content.length} chars)`);
                       return msg.content;
-                    })()
+                    })(),
+                    ...(sessionInfo && {
+                      sessionInfo: {
+                        sessionId: sessionInfo.sessionId,
+                        messageCount: sessionInfo.messageCount
+                      }
+                    })
                   }
                 : msg
             )
           );
           setIsLoading(false);
+          
+          // Focus the input after stream completion for better UX
+          setTimeout(() => {
+            if (inputRef.current) {
+              inputRef.current.focus();
+              console.log('🎯 ChatBot: Input focused after stream completion');
+            }
+          }, 100);
+          
           console.log('🎯 ChatBot: Streaming session completed');
         }
       );
@@ -219,6 +299,14 @@ const ChatBot = ({ isOpen = true, onToggle }: ChatBotProps) => {
       });
 
       setIsLoading(false);
+      
+      // Focus the input after error for better UX
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+          console.log('🎯 ChatBot: Input focused after error');
+        }
+      }, 100);
     }
   };
 
@@ -227,46 +315,6 @@ const ChatBot = ({ isOpen = true, onToggle }: ChatBotProps) => {
       handleSendMessage();
     }
   };
-
-  // Handle resize functionality
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsResizing(true);
-  };
-
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!isResizing) return;
-    
-    const newWidth = window.innerWidth - e.clientX;
-    const minWidth = 280; // Minimum width
-    const maxWidth = window.innerWidth * 0.8; // Maximum 80% of screen width
-    
-    if (newWidth >= minWidth && newWidth <= maxWidth) {
-      setChatWidth(newWidth);
-    }
-  }, [isResizing]);
-
-  const handleMouseUp = useCallback(() => {
-    setIsResizing(false);
-  }, []);
-
-  useEffect(() => {
-    if (isResizing) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      // Change global cursor during resize
-      document.body.style.cursor = 'ew-resize';
-      document.body.style.userSelect = 'none'; // Prevent text selection during resize
-      
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-        // Reset global cursor
-        document.body.style.cursor = '';
-        document.body.style.userSelect = '';
-      };
-    }
-  }, [isResizing, handleMouseMove, handleMouseUp]);
 
   // Mobile floating chat button
   if (!isOpen && onToggle) {
@@ -296,43 +344,52 @@ const ChatBot = ({ isOpen = true, onToggle }: ChatBotProps) => {
       <div 
         className={cn(
           "flex h-full flex-col bg-white",
-          // Desktop: Always visible
-          "lg:relative lg:w-full",
+          // Desktop: Always visible with full width
+          "lg:w-full",
           // Mobile: Fixed overlay
           onToggle && "lg:hidden fixed inset-0 z-50 transition-transform duration-300",
           onToggle && (isOpen ? "translate-x-0" : "translate-x-full")
         )}
-        style={{ 
-          width: !onToggle && typeof window !== 'undefined' && window.innerWidth >= 1024 ? `${chatWidth}px` : undefined,
-          cursor: isResizing ? 'ew-resize' : 'default'
-        }}
       >
         {/* Header */}
-        <div className="border-b border-slate-200 bg-slate-50 p-4">
+        <div className="border-b border-slate-200 bg-white px-3 py-2">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white border border-slate-200">
+            <div className="flex flex-col items-center gap-1 flex-1">
+              {/* Logo moved above and centered */}
+              <div className="flex h-6 w-6 items-center justify-center">
                 <img 
                   src="/logo_imobia.PNG" 
                   alt="IMOBIA" 
-                  className="h-6 w-6 object-contain"
+                  className="h-5 w-5 object-contain"
                 />
               </div>
-              <div>
-                <h3 className="text-sm font-semibold text-slate-900">Assistant IMOBIA</h3>
+              <div className="text-center">
+                <h3 className="text-xs font-semibold text-slate-900">Assistant IMOBIA</h3>
                 <p className="text-xs text-slate-500">Assistant IA immobilier</p>
               </div>
             </div>
             
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 absolute top-2 right-2">
+              {/* Clear chat history button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={clearChatHistory}
+                className="h-6 w-6 hover:bg-slate-100"
+                title="Nouvelle conversation"
+              >
+                <RotateCcw className="h-3 w-3" />
+                <span className="sr-only">Clear chat</span>
+              </Button>
+              
               {!onToggle && (
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => setIsMinimized(!isMinimized)}
-                  className="h-8 w-8 hover:bg-slate-100"
+                  className="h-6 w-6 hover:bg-slate-100"
                 >
-                  <Minimize2 className="h-4 w-4" />
+                  <Minimize2 className="h-3 w-3" />
                   <span className="sr-only">Minimize</span>
                 </Button>
               )}
@@ -342,9 +399,9 @@ const ChatBot = ({ isOpen = true, onToggle }: ChatBotProps) => {
                   variant="ghost"
                   size="icon"
                   onClick={onToggle}
-                  className="h-8 w-8 hover:bg-slate-100"
+                  className="h-6 w-6 hover:bg-slate-100"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-3 w-3" />
                   <span className="sr-only">Close</span>
                 </Button>
               )}
@@ -352,41 +409,28 @@ const ChatBot = ({ isOpen = true, onToggle }: ChatBotProps) => {
           </div>
         </div>
 
-        {/* Resize handle - Desktop only */}
-        {!onToggle && (
-          <div 
-            className="absolute left-0 top-0 bottom-0 w-1 cursor-col-resize bg-transparent hover:bg-blue-200 transition-colors hidden lg:block"
-            onMouseDown={handleMouseDown}
-            style={{ zIndex: 10 }}
-          >
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-blue-400 rounded-r opacity-0 hover:opacity-100 transition-opacity">
-              <GripVertical className="h-8 w-1 text-blue-600" />
-            </div>
-          </div>
-        )}
-
         {/* Messages Area */}
         {!isMinimized && (
           <>
-            <ScrollArea className="flex-1 p-4 bg-white" ref={scrollAreaRef}>
-              <div className="space-y-4">
+            <ScrollArea className="flex-1 px-3 py-2 bg-white chatbot-scrollarea" ref={scrollAreaRef}>
+              <div className="space-y-3">
                 {messages.map((message) => (
                   <div
                     key={message.id}
                     className={cn(
-                      "flex gap-3",
+                      "flex gap-2",
                       message.sender === 'user' ? 'justify-end' : 'justify-start'
                     )}
                   >
                     {message.sender === 'bot' && (
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white">
+                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white">
                         {message.isStreaming ? (
-                          <Loader className="h-4 w-4 animate-spin text-blue-600" />
+                          <Loader className="h-3 w-3 animate-spin text-blue-600" />
                         ) : (
                           <img 
                             src="/logo_imobia.PNG" 
                             alt="Bot" 
-                            className="h-4 w-4 object-contain"
+                            className="h-3 w-3 object-contain"
                           />
                         )}
                       </div>
@@ -394,7 +438,7 @@ const ChatBot = ({ isOpen = true, onToggle }: ChatBotProps) => {
                     
                     <div
                       className={cn(
-                        "max-w-[70%] rounded-lg px-3 py-2 text-sm",
+                        "max-w-[75%] rounded-lg px-3 py-2 text-sm leading-relaxed",
                         message.sender === 'user'
                           ? 'bg-blue-600 text-white'
                           : 'bg-slate-100 text-slate-900'
@@ -417,8 +461,8 @@ const ChatBot = ({ isOpen = true, onToggle }: ChatBotProps) => {
                     </div>
                     
                     {message.sender === 'user' && (
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100">
-                        <User className="h-4 w-4 text-blue-600" />
+                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-100">
+                        <User className="h-3 w-3 text-blue-600" />
                       </div>
                     )}
                   </div>
@@ -427,26 +471,27 @@ const ChatBot = ({ isOpen = true, onToggle }: ChatBotProps) => {
             </ScrollArea>
 
             {/* Input Area */}
-            <div className="border-t border-slate-200 p-4 bg-white">
+            <div className="border-t border-slate-200 px-3 py-2 bg-white">
               <div className="flex gap-2">
                 <Input
+                  ref={inputRef}
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Tapez votre message..."
-                  className="flex-1 bg-white border-slate-300 text-slate-900 placeholder:text-slate-500 focus:border-blue-500"
+                  className="flex-1 bg-white border-slate-300 text-slate-900 placeholder:text-slate-500 focus:border-blue-500 text-sm h-8"
                   disabled={isLoading}
                 />
                 <Button 
                   onClick={handleSendMessage} 
                   size="icon"
                   disabled={!inputValue.trim() || isLoading}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  className="bg-blue-600 hover:bg-blue-700 text-white h-8 w-8"
                 >
                   {isLoading ? (
-                    <Loader className="h-4 w-4 animate-spin" />
+                    <Loader className="h-3 w-3 animate-spin" />
                   ) : (
-                    <Send className="h-4 w-4" />
+                    <Send className="h-3 w-3" />
                   )}
                   <span className="sr-only">Send message</span>
                 </Button>
