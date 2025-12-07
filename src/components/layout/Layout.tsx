@@ -94,7 +94,7 @@ const Layout: React.FC<LayoutProps> = ({
           <header className="border-b border-slate-200 bg-white">
             <div className="flex h-14 items-center justify-between px-4 lg:px-6">
               <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" onClick={toggleSidebar} className="lg:hidden hover:bg-slate-100">
+                <Button variant="ghost" size="icon" onClick={toggleSidebar} className="lg:hidden">
                   <Menu className="h-5 w-5" />
                   <span className="sr-only">Toggle sidebar</span>
                 </Button>
@@ -104,12 +104,12 @@ const Layout: React.FC<LayoutProps> = ({
               <div className="flex items-center gap-2">
                 <LanguageSelector />
                 
-                <Button variant="ghost" size="icon" onClick={toggleChatBot} className="lg:hidden hover:bg-slate-100">
+                <Button variant="ghost" size="icon" onClick={toggleChatBot} className="lg:hidden">
                   <MessageSquare className="h-5 w-5" />
                   <span className="sr-only">Toggle chat</span>
                 </Button>
                 
-                <Button variant="outline" size="sm" onClick={signOut} className="border-slate-300 text-slate-700 hover:bg-slate-50">
+                <Button variant="outline" size="sm" onClick={signOut} className="border-slate-300 text-slate-700">
                   <LogOut className="h-4 w-4 mr-2" />
                   Déconnexion
                 </Button>
@@ -135,7 +135,7 @@ const Layout: React.FC<LayoutProps> = ({
             maxWidth: '60vw'
           }}>
               {/* Resize Handle */}
-              <div className="absolute left-0 top-0 bottom-0 w-2 cursor-col-resize bg-transparent hover:bg-blue-50 transition-colors z-20 select-none group" onMouseDown={handleMouseDown} style={{
+              <div className="absolute left-0 top-0 bottom-0 w-2 cursor-col-resize bg-transparent transition-colors z-20 select-none group" onMouseDown={handleMouseDown} style={{
               userSelect: 'none',
               cursor: isResizing ? 'ew-resize' : 'col-resize'
             }}>
