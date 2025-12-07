@@ -180,8 +180,8 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
       {/* Informations générales */}
       <Collapsible open={openSections.general} onOpenChange={() => toggleSection('general')}>
         <Card>
-          <CardHeader className="cursor-pointer" onClick={() => toggleSection('general')}>
-            <CollapsibleTrigger asChild>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="cursor-pointer">
               <CardTitle className="flex items-center justify-between w-full">
                 <span className="flex items-center gap-2">
                   <Home className="h-5 w-5" />
@@ -189,8 +189,8 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
                 </span>
                 {openSections.general ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
               </CardTitle>
-            </CollapsibleTrigger>
-          </CardHeader>
+            </CardHeader>
+          </CollapsibleTrigger>
           <CollapsibleContent>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -254,8 +254,8 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
       {/* Localisation */}
       <Collapsible open={openSections.location} onOpenChange={() => toggleSection('location')}>
         <Card>
-          <CardHeader className="cursor-pointer" onClick={() => toggleSection('location')}>
-            <CollapsibleTrigger asChild>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="cursor-pointer">
               <CardTitle className="flex items-center justify-between w-full">
                 <span className="flex items-center gap-2">
                   <MapPin className="h-5 w-5" />
@@ -263,8 +263,8 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
                 </span>
                 {openSections.location ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
               </CardTitle>
-            </CollapsibleTrigger>
-          </CardHeader>
+            </CardHeader>
+          </CollapsibleTrigger>
           <CollapsibleContent>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -314,8 +314,8 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
       {/* Caractéristiques */}
       <Collapsible open={openSections.characteristics} onOpenChange={() => toggleSection('characteristics')}>
         <Card>
-          <CardHeader className="cursor-pointer" onClick={() => toggleSection('characteristics')}>
-            <CollapsibleTrigger asChild>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="cursor-pointer">
               <CardTitle className="flex items-center justify-between w-full">
                 <span className="flex items-center gap-2">
                   <Building className="h-5 w-5" />
@@ -323,8 +323,8 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
                 </span>
                 {openSections.characteristics ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
               </CardTitle>
-            </CollapsibleTrigger>
-          </CardHeader>
+            </CardHeader>
+          </CollapsibleTrigger>
           <CollapsibleContent>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -430,8 +430,8 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
       {/* Prix */}
       <Collapsible open={openSections.price} onOpenChange={() => toggleSection('price')}>
         <Card>
-          <CardHeader className="cursor-pointer" onClick={() => toggleSection('price')}>
-            <CollapsibleTrigger asChild>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="cursor-pointer">
               <CardTitle className="flex items-center justify-between w-full">
                 <span className="flex items-center gap-2">
                   <Euro className="h-5 w-5" />
@@ -439,8 +439,8 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
                 </span>
                 {openSections.price ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
               </CardTitle>
-            </CollapsibleTrigger>
-          </CardHeader>
+            </CardHeader>
+          </CollapsibleTrigger>
           <CollapsibleContent>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
