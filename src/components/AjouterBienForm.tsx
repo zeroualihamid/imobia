@@ -320,6 +320,42 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
     return Object.keys(newErrors).length === 0;
   };
 
+  const uploadImagesToStorage = async (bienId: string): Promise<void> => {
+    for (const image of uploadedImages) {
+      if (!image.file) continue;
+      
+      const fileExt = image.file.name.split('.').pop();
+      const fileName = `${bienId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      
+      // Upload to storage
+      const { error: uploadError } = await supabase.storage
+        .from('bien-media')
+        .upload(fileName, image.file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+      
+      if (uploadError) {
+        console.error('Error uploading image:', uploadError);
+        continue;
+      }
+      
+      // Create bien_media record
+      const { error: mediaError } = await supabase.rpc('create_bien_media', {
+        p_bien_id: bienId,
+        p_file_name: image.file.name,
+        p_file_path: fileName,
+        p_file_type: image.file.type.startsWith('image/') ? 'image' : 'document',
+        p_file_size: image.file.size,
+        p_mime_type: image.file.type
+      });
+      
+      if (mediaError) {
+        console.error('Error creating media record:', mediaError);
+      }
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -372,11 +408,18 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
         chauffage: formData.chauffage
       };
 
-      const { error } = await supabase
+      const { data: bienResult, error } = await supabase
         .from('biens')
-        .insert([bienData]);
+        .insert([bienData])
+        .select('id')
+        .single();
 
       if (error) throw error;
+
+      // Upload images if any
+      if (uploadedImages.length > 0 && bienResult?.id) {
+        await uploadImagesToStorage(bienResult.id);
+      }
 
       toast({
         title: "Succès",
