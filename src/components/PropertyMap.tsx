@@ -5,7 +5,7 @@ import 'leaflet/dist/leaflet.css';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { MapPin, Search, Navigation, Copy } from 'lucide-react';
+import { MapPin, Search, Navigation, Copy, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 // Fix pour les icônes par défaut de Leaflet
@@ -16,11 +16,19 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
 
+interface AddressData {
+  adresse: string;
+  ville: string;
+  quartier: string;
+  code_postal: string;
+}
+
 interface PropertyMapProps {
   address: string;
   city: string;
   region: string;
   onLocationUpdate?: (coordinates: [number, number]) => void;
+  onAddressUpdate?: (addressData: AddressData) => void;
   initialCoordinates?: [number, number];
 }
 
@@ -29,6 +37,7 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
   city, 
   region, 
   onLocationUpdate,
+  onAddressUpdate,
   initialCoordinates 
 }) => {
   const { toast } = useToast();
@@ -42,6 +51,62 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
   const [manualLat, setManualLat] = useState('');
   const [manualLng, setManualLng] = useState('');
   const [showManualInput, setShowManualInput] = useState(false);
+  const [isReverseGeocoding, setIsReverseGeocoding] = useState(false);
+  const [pinMoved, setPinMoved] = useState(false);
+
+  // Reverse geocode coordinates to get address
+  const reverseGeocode = async (lat: number, lng: number): Promise<AddressData | null> => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`,
+        {
+          headers: {
+            'Accept-Language': 'fr'
+          }
+        }
+      );
+      const data = await response.json();
+      
+      if (data && data.address) {
+        const addr = data.address;
+        const streetNumber = addr.house_number || '';
+        const street = addr.road || addr.street || '';
+        const fullAddress = streetNumber ? `${streetNumber} ${street}` : street;
+        
+        return {
+          adresse: fullAddress.trim(),
+          ville: addr.city || addr.town || addr.village || '',
+          quartier: addr.suburb || addr.neighbourhood || '',
+          code_postal: addr.postcode || ''
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Reverse geocoding error:', error);
+      return null;
+    }
+  };
+
+  const handleUpdateAddressFromPin = async () => {
+    setIsReverseGeocoding(true);
+    const addressData = await reverseGeocode(coordinates[1], coordinates[0]);
+    setIsReverseGeocoding(false);
+    
+    if (addressData) {
+      onAddressUpdate?.(addressData);
+      setPinMoved(false);
+      toast({
+        title: "Adresse mise à jour",
+        description: "Les champs d'adresse ont été remplis avec la position du marqueur"
+      });
+    } else {
+      toast({
+        title: "Adresse non trouvée",
+        description: "Impossible de trouver une adresse pour cette position",
+        variant: "destructive"
+      });
+    }
+  };
 
   // Fonction pour géocoder une adresse avec Nominatim
   const geocodeAddress = async (fullAddress: string) => {
@@ -150,13 +215,25 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
       setCoordinates(newCoordinates);
       setManualLat(latlng.lat.toFixed(6));
       setManualLng(latlng.lng.toFixed(6));
+      setPinMoved(true);
       onLocationUpdate?.(newCoordinates);
     });
 
     // Permettre de cliquer sur la carte pour placer le marqueur
     map.current.on('click', (e) => {
       const { lat, lng } = e.latlng;
-      updateMapPosition(lat, lng);
+      const newCoordinates: [number, number] = [lng, lat];
+      setCoordinates(newCoordinates);
+      setManualLat(lat.toFixed(6));
+      setManualLng(lng.toFixed(6));
+      setPinMoved(true);
+      
+      if (map.current && marker.current) {
+        map.current.setView([lat, lng], 16);
+        marker.current.setLatLng([lat, lng]);
+      }
+      
+      onLocationUpdate?.(newCoordinates);
     });
 
     // Set initial manual inputs
@@ -252,6 +329,18 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
           <Navigation className="h-4 w-4 mr-2" />
           {showManualInput ? 'Masquer GPS' : 'Entrer GPS'}
         </Button>
+        {pinMoved && onAddressUpdate && (
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={handleUpdateAddressFromPin}
+            disabled={isReverseGeocoding}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isReverseGeocoding ? 'animate-spin' : ''}`} />
+            {isReverseGeocoding ? 'Mise à jour...' : 'Mettre à jour l\'adresse'}
+          </Button>
+        )}
         <span className="text-sm text-muted-foreground">
           <MapPin className="h-4 w-4 inline mr-1" />
           Cliquez sur la carte ou déplacez le marqueur
