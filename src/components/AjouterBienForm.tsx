@@ -99,6 +99,13 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
     setCoordinates(coords);
   };
 
+  const handleAddressUpdate = (addressData: { adresse: string; ville: string; quartier: string; code_postal: string }) => {
+    if (addressData.adresse) handleInputChange('adresse', addressData.adresse);
+    if (addressData.ville) handleInputChange('ville', addressData.ville);
+    if (addressData.quartier) handleInputChange('quartier', addressData.quartier);
+    if (addressData.code_postal) handleInputChange('code_postal', addressData.code_postal);
+  };
+
   const handleGetGpsLocation = () => {
     console.log('GPS button clicked');
     
@@ -601,6 +608,7 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
                   city={formData.ville}
                   region="Maroc"
                   onLocationUpdate={handleLocationUpdate}
+                  onAddressUpdate={handleAddressUpdate}
                 />
               </div>
 
