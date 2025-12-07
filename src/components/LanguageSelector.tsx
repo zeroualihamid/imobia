@@ -10,13 +10,13 @@ const LanguageSelector = () => {
     <div className="flex items-center gap-2">
       <Globe className="h-4 w-4 text-slate-500" />
       <Select value={language} onValueChange={setLanguage}>
-        <SelectTrigger className="w-24 bg-white border-slate-300 text-slate-900 hover:bg-slate-50">
+        <SelectTrigger className="w-24 bg-white border-slate-300 text-slate-900">
           <SelectValue />
         </SelectTrigger>
         <SelectContent className="bg-white border-slate-200">
-          <SelectItem value="fr" className="text-slate-900 hover:bg-slate-100">FR</SelectItem>
-          <SelectItem value="en" className="text-slate-900 hover:bg-slate-100">EN</SelectItem>
-          <SelectItem value="ar" className="text-slate-900 hover:bg-slate-100">AR</SelectItem>
+          <SelectItem value="fr" className="text-slate-900">FR</SelectItem>
+          <SelectItem value="en" className="text-slate-900">EN</SelectItem>
+          <SelectItem value="ar" className="text-slate-900">AR</SelectItem>
         </SelectContent>
       </Select>
     </div>

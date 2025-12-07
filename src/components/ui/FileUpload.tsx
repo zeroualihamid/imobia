@@ -1,7 +1,7 @@
 
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, X, Image, Video, FileText } from 'lucide-react';
+import { Upload, X, Image, Video, FileText, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export interface UploadedFile {
@@ -65,28 +65,52 @@ const FileUpload: React.FC<FileUploadProps> = ({
   return (
     <div className="space-y-4">
       {uploadedFiles.length < maxFiles && (
-        <div
-          {...getRootProps()}
-          className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-            isDragActive
-              ? 'border-blue-400 bg-blue-50'
-              : 'border-slate-300 bg-slate-50'
-          }`}
-        >
-          <input {...getInputProps()} />
-          <Upload className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-          <p className="text-slate-600 mb-4">
-            {isDragActive
-              ? 'Déposez vos fichiers ici...'
-              : 'Glissez-déposez vos photos et vidéos ici ou cliquez pour sélectionner'}
-          </p>
-                      <Button variant="outline" className="border-slate-300 text-slate-700">
-            <Upload className="h-4 w-4 mr-2" />
-            Sélectionner des fichiers
-          </Button>
-          <p className="text-xs text-slate-500 mt-2">
-            Formats acceptés: Images (JPG, PNG, GIF) et Vidéos (MP4, MOV, AVI)
-          </p>
+        <div className="space-y-3">
+          {/* Drag & Drop Zone */}
+          <div
+            {...getRootProps()}
+            className={`border-2 border-dashed rounded-lg p-6 md:p-8 text-center cursor-pointer transition-colors ${
+              isDragActive
+                ? 'border-blue-400 bg-blue-50'
+                : 'border-slate-300 bg-slate-50'
+            }`}
+          >
+            <input {...getInputProps()} />
+            <Upload className="h-10 w-10 md:h-12 md:w-12 text-slate-400 mx-auto mb-3" />
+            <p className="text-slate-600 mb-3 text-sm md:text-base">
+              {isDragActive
+                ? 'Déposez vos fichiers ici...'
+                : 'Glissez-déposez vos photos ici ou cliquez pour sélectionner'}
+            </p>
+            <Button type="button" variant="outline" className="border-slate-300 text-slate-700">
+              <Upload className="h-4 w-4 mr-2" />
+              Sélectionner des fichiers
+            </Button>
+            <p className="text-xs text-slate-500 mt-2">
+              Formats acceptés: JPG, PNG, GIF
+            </p>
+          </div>
+
+          {/* Mobile Camera Button */}
+          <div className="md:hidden">
+            <label className="flex items-center justify-center gap-2 w-full py-3 px-4 bg-blue-600 text-white rounded-lg cursor-pointer">
+              <Camera className="h-5 w-5" />
+              <span>Prendre une photo</span>
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={(e) => {
+                  const files = e.target.files;
+                  if (files && files.length > 0) {
+                    onDrop(Array.from(files));
+                  }
+                  e.target.value = '';
+                }}
+              />
+            </label>
+          </div>
         </div>
       )}
 
