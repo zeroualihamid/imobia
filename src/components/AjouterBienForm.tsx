@@ -8,9 +8,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Building, MapPin, Euro, Home, ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react';
+import { Building, MapPin, Euro, Home, ChevronDown, ChevronUp, ChevronsUpDown, ImageIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import FileUpload, { UploadedFile } from '@/components/ui/FileUpload';
 import type { Database } from '@/integrations/supabase/types';
 
 type BienType = Database['public']['Enums']['bien_type'];
@@ -56,11 +57,13 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   const [loading, setLoading] = useState(false);
+  const [uploadedImages, setUploadedImages] = useState<UploadedFile[]>([]);
   const [openSections, setOpenSections] = useState({
     general: true,
     location: true,
     characteristics: true,
-    price: true
+    price: true,
+    images: true
   });
 
   const toggleSection = (section: keyof typeof openSections) => {
@@ -75,8 +78,13 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
       general: newState,
       location: newState,
       characteristics: newState,
-      price: newState
+      price: newState,
+      images: newState
     });
+  };
+
+  const handleImagesChange = (files: UploadedFile[]) => {
+    setUploadedImages(files);
   };
 
   const validateField = (field: string, value: string) => {
@@ -543,7 +551,32 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
         </Card>
       </Collapsible>
 
-      {/* Actions */}
+      {/* Photos et médias */}
+      <Collapsible open={openSections.images} onOpenChange={() => toggleSection('images')}>
+        <Card>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="cursor-pointer">
+              <CardTitle className="flex items-center justify-between w-full">
+                <span className="flex items-center gap-2">
+                  <ImageIcon className="h-5 w-5" />
+                  Photos et médias
+                </span>
+                {openSections.images ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              </CardTitle>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent>
+              <FileUpload 
+                onFilesChange={handleImagesChange}
+                maxFiles={10}
+                acceptedTypes={['image/*']}
+              />
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+
       <div className="flex justify-end gap-4">
         {onCancel && (
           <Button type="button" variant="outline" onClick={onCancel}>
