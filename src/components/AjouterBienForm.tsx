@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Building, MapPin, Euro, Home } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Building, MapPin, Euro, Home, ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { Database } from '@/integrations/supabase/types';
@@ -52,6 +53,16 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
   });
 
   const [loading, setLoading] = useState(false);
+  const [openSections, setOpenSections] = useState({
+    general: true,
+    location: true,
+    characteristics: true,
+    price: true
+  });
+
+  const toggleSection = (section: keyof typeof openSections) => {
+    setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({
@@ -141,276 +152,312 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Informations générales */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Home className="h-5 w-5" />
-            Informations générales
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="titre">Titre du bien *</Label>
-              <Input
-                id="titre"
-                value={formData.titre}
-                onChange={(e) => handleInputChange('titre', e.target.value)}
-                placeholder="Ex: Appartement 3 pièces"
-                required
-              />
-            </div>
+      <Collapsible open={openSections.general} onOpenChange={() => toggleSection('general')}>
+        <Card>
+          <CardHeader className="cursor-pointer" onClick={() => toggleSection('general')}>
+            <CollapsibleTrigger asChild>
+              <CardTitle className="flex items-center justify-between w-full">
+                <span className="flex items-center gap-2">
+                  <Home className="h-5 w-5" />
+                  Informations générales
+                </span>
+                {openSections.general ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              </CardTitle>
+            </CollapsibleTrigger>
+          </CardHeader>
+          <CollapsibleContent>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="titre">Titre du bien *</Label>
+                  <Input
+                    id="titre"
+                    value={formData.titre}
+                    onChange={(e) => handleInputChange('titre', e.target.value)}
+                    placeholder="Ex: Appartement 3 pièces"
+                    required
+                  />
+                </div>
 
-            <div>
-              <Label htmlFor="type">Type *</Label>
-              <Select value={formData.type} onValueChange={(value: BienType) => handleInputChange('type', value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="VENTE">Vente</SelectItem>
-                  <SelectItem value="LOCATION">Location</SelectItem>
-                  <SelectItem value="VENTE_LOCATION">Vente/Location</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+                <div>
+                  <Label htmlFor="type">Type *</Label>
+                  <Select value={formData.type} onValueChange={(value: BienType) => handleInputChange('type', value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="VENTE">Vente</SelectItem>
+                      <SelectItem value="LOCATION">Location</SelectItem>
+                      <SelectItem value="VENTE_LOCATION">Vente/Location</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            <div>
-              <Label htmlFor="status">Statut</Label>
-              <Select value={formData.status} onValueChange={(value: BienStatus) => handleInputChange('status', value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="DISPONIBLE">Disponible</SelectItem>
-                  <SelectItem value="RESERVE">Réservé</SelectItem>
-                  <SelectItem value="VENDU">Vendu</SelectItem>
-                  <SelectItem value="LOUE">Loué</SelectItem>
-                  <SelectItem value="RETIRE">Retiré</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+                <div>
+                  <Label htmlFor="status">Statut</Label>
+                  <Select value={formData.status} onValueChange={(value: BienStatus) => handleInputChange('status', value)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="DISPONIBLE">Disponible</SelectItem>
+                      <SelectItem value="RESERVE">Réservé</SelectItem>
+                      <SelectItem value="VENDU">Vendu</SelectItem>
+                      <SelectItem value="LOUE">Loué</SelectItem>
+                      <SelectItem value="RETIRE">Retiré</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
 
-          <div>
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => handleInputChange('description', e.target.value)}
-              placeholder="Description détaillée du bien..."
-              rows={3}
-            />
-          </div>
-        </CardContent>
-      </Card>
+              <div>
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  placeholder="Description détaillée du bien..."
+                  rows={3}
+                />
+              </div>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
 
       {/* Localisation */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <MapPin className="h-5 w-5" />
-            Localisation
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="adresse">Adresse *</Label>
-              <Input
-                id="adresse"
-                value={formData.adresse}
-                onChange={(e) => handleInputChange('adresse', e.target.value)}
-                required
-              />
-            </div>
+      <Collapsible open={openSections.location} onOpenChange={() => toggleSection('location')}>
+        <Card>
+          <CardHeader className="cursor-pointer" onClick={() => toggleSection('location')}>
+            <CollapsibleTrigger asChild>
+              <CardTitle className="flex items-center justify-between w-full">
+                <span className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  Localisation
+                </span>
+                {openSections.location ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              </CardTitle>
+            </CollapsibleTrigger>
+          </CardHeader>
+          <CollapsibleContent>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="adresse">Adresse *</Label>
+                  <Input
+                    id="adresse"
+                    value={formData.adresse}
+                    onChange={(e) => handleInputChange('adresse', e.target.value)}
+                    required
+                  />
+                </div>
 
-            <div>
-              <Label htmlFor="ville">Ville *</Label>
-              <Input
-                id="ville"
-                value={formData.ville}
-                onChange={(e) => handleInputChange('ville', e.target.value)}
-                required
-              />
-            </div>
+                <div>
+                  <Label htmlFor="ville">Ville *</Label>
+                  <Input
+                    id="ville"
+                    value={formData.ville}
+                    onChange={(e) => handleInputChange('ville', e.target.value)}
+                    required
+                  />
+                </div>
 
-            <div>
-              <Label htmlFor="quartier">Quartier</Label>
-              <Input
-                id="quartier"
-                value={formData.quartier}
-                onChange={(e) => handleInputChange('quartier', e.target.value)}
-              />
-            </div>
+                <div>
+                  <Label htmlFor="quartier">Quartier</Label>
+                  <Input
+                    id="quartier"
+                    value={formData.quartier}
+                    onChange={(e) => handleInputChange('quartier', e.target.value)}
+                  />
+                </div>
 
-            <div>
-              <Label htmlFor="code_postal">Code postal</Label>
-              <Input
-                id="code_postal"
-                value={formData.code_postal}
-                onChange={(e) => handleInputChange('code_postal', e.target.value)}
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+                <div>
+                  <Label htmlFor="code_postal">Code postal</Label>
+                  <Input
+                    id="code_postal"
+                    value={formData.code_postal}
+                    onChange={(e) => handleInputChange('code_postal', e.target.value)}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
 
       {/* Caractéristiques */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Building className="h-5 w-5" />
-            Caractéristiques
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
-              <Label htmlFor="surface_habitable">Surface habitable (m²)</Label>
-              <Input
-                id="surface_habitable"
-                type="number"
-                value={formData.surface_habitable}
-                onChange={(e) => handleInputChange('surface_habitable', e.target.value)}
-                min="0"
-                step="0.01"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="surface_terrain">Surface terrain (m²)</Label>
-              <Input
-                id="surface_terrain"
-                type="number"
-                value={formData.surface_terrain}
-                onChange={(e) => handleInputChange('surface_terrain', e.target.value)}
-                min="0"
-                step="0.01"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="nombre_chambres">Nombre de chambres</Label>
-              <Input
-                id="nombre_chambres"
-                type="number"
-                value={formData.nombre_chambres}
-                onChange={(e) => handleInputChange('nombre_chambres', e.target.value)}
-                min="0"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="nombre_salles_bain">Salles de bain</Label>
-              <Input
-                id="nombre_salles_bain"
-                type="number"
-                value={formData.nombre_salles_bain}
-                onChange={(e) => handleInputChange('nombre_salles_bain', e.target.value)}
-                min="0"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="nombre_etages">Nombre d'étages</Label>
-              <Input
-                id="nombre_etages"
-                type="number"
-                value={formData.nombre_etages}
-                onChange={(e) => handleInputChange('nombre_etages', e.target.value)}
-                min="0"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="annee_construction">Année de construction</Label>
-              <Input
-                id="annee_construction"
-                type="number"
-                value={formData.annee_construction}
-                onChange={(e) => handleInputChange('annee_construction', e.target.value)}
-                min="1900"
-                max={new Date().getFullYear()}
-              />
-            </div>
-          </div>
-
-          {/* Équipements */}
-          <div>
-            <Label className="text-base font-medium">Équipements</Label>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
-              {[
-                { key: 'meuble', label: 'Meublé' },
-                { key: 'parking', label: 'Parking' },
-                { key: 'jardin', label: 'Jardin' },
-                { key: 'piscine', label: 'Piscine' },
-                { key: 'ascenseur', label: 'Ascenseur' },
-                { key: 'climatisation', label: 'Climatisation' },
-                { key: 'chauffage', label: 'Chauffage' }
-              ].map(({ key, label }) => (
-                <div key={key} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={key}
-                    checked={formData[key as keyof typeof formData] as boolean}
-                    onCheckedChange={(checked) => handleInputChange(key, checked)}
+      <Collapsible open={openSections.characteristics} onOpenChange={() => toggleSection('characteristics')}>
+        <Card>
+          <CardHeader className="cursor-pointer" onClick={() => toggleSection('characteristics')}>
+            <CollapsibleTrigger asChild>
+              <CardTitle className="flex items-center justify-between w-full">
+                <span className="flex items-center gap-2">
+                  <Building className="h-5 w-5" />
+                  Caractéristiques
+                </span>
+                {openSections.characteristics ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              </CardTitle>
+            </CollapsibleTrigger>
+          </CardHeader>
+          <CollapsibleContent>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                  <Label htmlFor="surface_habitable">Surface habitable (m²)</Label>
+                  <Input
+                    id="surface_habitable"
+                    type="number"
+                    value={formData.surface_habitable}
+                    onChange={(e) => handleInputChange('surface_habitable', e.target.value)}
+                    min="0"
+                    step="0.01"
                   />
-                  <Label htmlFor={key}>{label}</Label>
                 </div>
-              ))}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+
+                <div>
+                  <Label htmlFor="surface_terrain">Surface terrain (m²)</Label>
+                  <Input
+                    id="surface_terrain"
+                    type="number"
+                    value={formData.surface_terrain}
+                    onChange={(e) => handleInputChange('surface_terrain', e.target.value)}
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="nombre_chambres">Nombre de chambres</Label>
+                  <Input
+                    id="nombre_chambres"
+                    type="number"
+                    value={formData.nombre_chambres}
+                    onChange={(e) => handleInputChange('nombre_chambres', e.target.value)}
+                    min="0"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="nombre_salles_bain">Salles de bain</Label>
+                  <Input
+                    id="nombre_salles_bain"
+                    type="number"
+                    value={formData.nombre_salles_bain}
+                    onChange={(e) => handleInputChange('nombre_salles_bain', e.target.value)}
+                    min="0"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="nombre_etages">Nombre d'étages</Label>
+                  <Input
+                    id="nombre_etages"
+                    type="number"
+                    value={formData.nombre_etages}
+                    onChange={(e) => handleInputChange('nombre_etages', e.target.value)}
+                    min="0"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="annee_construction">Année de construction</Label>
+                  <Input
+                    id="annee_construction"
+                    type="number"
+                    value={formData.annee_construction}
+                    onChange={(e) => handleInputChange('annee_construction', e.target.value)}
+                    min="1900"
+                    max={new Date().getFullYear()}
+                  />
+                </div>
+              </div>
+
+              {/* Équipements */}
+              <div>
+                <Label className="text-base font-medium">Équipements</Label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
+                  {[
+                    { key: 'meuble', label: 'Meublé' },
+                    { key: 'parking', label: 'Parking' },
+                    { key: 'jardin', label: 'Jardin' },
+                    { key: 'piscine', label: 'Piscine' },
+                    { key: 'ascenseur', label: 'Ascenseur' },
+                    { key: 'climatisation', label: 'Climatisation' },
+                    { key: 'chauffage', label: 'Chauffage' }
+                  ].map(({ key, label }) => (
+                    <div key={key} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={key}
+                        checked={formData[key as keyof typeof formData] as boolean}
+                        onCheckedChange={(checked) => handleInputChange(key, checked)}
+                      />
+                      <Label htmlFor={key}>{label}</Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
 
       {/* Prix */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Euro className="h-5 w-5" />
-            Prix
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <Label htmlFor="prix_vente">Prix de vente (MAD)</Label>
-              <Input
-                id="prix_vente"
-                type="number"
-                value={formData.prix_vente}
-                onChange={(e) => handleInputChange('prix_vente', e.target.value)}
-                min="0"
-                step="0.01"
-              />
-            </div>
+      <Collapsible open={openSections.price} onOpenChange={() => toggleSection('price')}>
+        <Card>
+          <CardHeader className="cursor-pointer" onClick={() => toggleSection('price')}>
+            <CollapsibleTrigger asChild>
+              <CardTitle className="flex items-center justify-between w-full">
+                <span className="flex items-center gap-2">
+                  <Euro className="h-5 w-5" />
+                  Prix
+                </span>
+                {openSections.price ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              </CardTitle>
+            </CollapsibleTrigger>
+          </CardHeader>
+          <CollapsibleContent>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="prix_vente">Prix de vente (MAD)</Label>
+                  <Input
+                    id="prix_vente"
+                    type="number"
+                    value={formData.prix_vente}
+                    onChange={(e) => handleInputChange('prix_vente', e.target.value)}
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
 
-            <div>
-              <Label htmlFor="prix_location">Prix de location/mois (MAD)</Label>
-              <Input
-                id="prix_location"
-                type="number"
-                value={formData.prix_location}
-                onChange={(e) => handleInputChange('prix_location', e.target.value)}
-                min="0"
-                step="0.01"
-              />
-            </div>
+                <div>
+                  <Label htmlFor="prix_location">Prix de location/mois (MAD)</Label>
+                  <Input
+                    id="prix_location"
+                    type="number"
+                    value={formData.prix_location}
+                    onChange={(e) => handleInputChange('prix_location', e.target.value)}
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
 
-            <div>
-              <Label htmlFor="charges_mensuelles">Charges mensuelles (MAD)</Label>
-              <Input
-                id="charges_mensuelles"
-                type="number"
-                value={formData.charges_mensuelles}
-                onChange={(e) => handleInputChange('charges_mensuelles', e.target.value)}
-                min="0"
-                step="0.01"
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+                <div>
+                  <Label htmlFor="charges_mensuelles">Charges mensuelles (MAD)</Label>
+                  <Input
+                    id="charges_mensuelles"
+                    type="number"
+                    value={formData.charges_mensuelles}
+                    onChange={(e) => handleInputChange('charges_mensuelles', e.target.value)}
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
 
       {/* Actions */}
       <div className="flex justify-end gap-4">
