@@ -99,7 +99,10 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
   };
 
   const handleGetGpsLocation = () => {
+    console.log('GPS button clicked');
+    
     if (!navigator.geolocation) {
+      console.log('Geolocation not supported');
       toast({
         title: "Erreur",
         description: "La géolocalisation n'est pas supportée par votre navigateur",
@@ -108,9 +111,25 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
       return;
     }
 
+    // Check if we're on HTTPS (required for geolocation on mobile)
+    if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+      console.log('Not on HTTPS');
+      toast({
+        title: "Attention",
+        description: "La géolocalisation nécessite une connexion sécurisée (HTTPS)",
+        variant: "destructive"
+      });
+    }
+
     setGpsLoading(true);
+    toast({
+      title: "Localisation",
+      description: "Recherche de votre position GPS..."
+    });
+
     navigator.geolocation.getCurrentPosition(
       async (position) => {
+        console.log('GPS position obtained:', position.coords);
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
         setCoordinates([lng, lat]);
@@ -118,9 +137,15 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
         // Reverse geocode to get address
         try {
           const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`,
+            {
+              headers: {
+                'Accept-Language': 'fr'
+              }
+            }
           );
           const data = await response.json();
+          console.log('Reverse geocode result:', data);
           
           if (data && data.address) {
             const address = data.address;
@@ -148,22 +173,37 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
         setGpsLoading(false);
         toast({
           title: "Localisation obtenue",
-          description: "Votre position a été détectée"
+          description: "Votre position a été détectée avec succès"
         });
       },
       (error) => {
+        console.error('GPS error:', error.code, error.message);
         setGpsLoading(false);
         let message = "Impossible d'obtenir votre position";
-        if (error.code === error.PERMISSION_DENIED) {
-          message = "Veuillez autoriser l'accès à votre position";
+        
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            message = "Veuillez autoriser l'accès à votre position dans les paramètres de votre navigateur";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            message = "Position non disponible. Vérifiez que le GPS est activé sur votre appareil";
+            break;
+          case error.TIMEOUT:
+            message = "Délai dépassé. Réessayez dans un endroit avec meilleure réception GPS";
+            break;
         }
+        
         toast({
-          title: "Erreur",
+          title: "Erreur GPS",
           description: message,
           variant: "destructive"
         });
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      { 
+        enableHighAccuracy: true, 
+        timeout: 30000,  // Increased timeout for mobile
+        maximumAge: 0    // Always get fresh position
+      }
     );
   };
 
