@@ -163,11 +163,11 @@ const Sidebar = ({
                   <div className={cn("flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors text-slate-700", item.color)}>
                     <item.icon className="h-4 w-4 shrink-0" />
                     <span className="flex-1 text-left text-slate-900">{item.title}</span>
-                    {item.isOpen ? <ChevronDown className="h-4 w-4 transition-transform duration-200 text-slate-500" /> : <ChevronRight className="h-4 w-4 transition-transform duration-200 text-slate-500" />}
+                    <ChevronDown className={cn("h-4 w-4 text-slate-500 transition-transform duration-300 ease-out", item.isOpen ? "rotate-0" : "-rotate-90")} />
                   </div>
                 </CollapsibleTrigger>
-                <CollapsibleContent className="ml-6 mt-1 space-y-1 bg-background">
-                  {item.subItems?.map((subItem, subIndex) => <Link key={subIndex} to={subItem.href} onClick={handleLinkClick} className={cn("flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors", location.pathname === subItem.href ? "bg-blue-50 text-blue-700 font-medium" : "text-slate-600")}>
+                <CollapsibleContent className="ml-6 mt-1 space-y-1 bg-background overflow-hidden data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
+                  {item.subItems?.map((subItem, subIndex) => <Link key={subIndex} to={subItem.href} onClick={handleLinkClick} className={cn("flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-200", location.pathname === subItem.href ? "bg-blue-50 text-blue-700 font-medium" : "text-slate-600")}>
                       <subItem.icon className="h-4 w-4 shrink-0" />
                       <span>{subItem.title}</span>
                     </Link>)}
