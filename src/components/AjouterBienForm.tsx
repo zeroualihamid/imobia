@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Building, MapPin, Euro, Home, ChevronDown, ChevronUp, ChevronsUpDown, ImageIcon, Navigation, Loader2, Search } from 'lucide-react';
+import { Building, MapPin, Euro, Home, ChevronDown, ChevronUp, ChevronsUpDown, ImageIcon, Navigation, Loader2, Search, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import FileUpload, { UploadedFile } from '@/components/ui/FileUpload';
@@ -18,14 +18,25 @@ import type { Database } from '@/integrations/supabase/types';
 type BienType = Database['public']['Enums']['bien_type'];
 type BienStatus = Database['public']['Enums']['bien_status'];
 
+interface Proprietaire {
+  id: string;
+  nom: string;
+  prenom: string | null;
+  telephone: string;
+}
+
 interface AjouterBienFormProps {
   proprietaireId?: string;
   onSuccess?: () => void;
   onCancel?: () => void;
 }
 
-const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFormProps) => {
+const AjouterBienForm = ({ proprietaireId: initialProprietaireId, onSuccess, onCancel }: AjouterBienFormProps) => {
   const { toast } = useToast();
+  
+  const [selectedProprietaireId, setSelectedProprietaireId] = useState<string>(initialProprietaireId || '');
+  const [proprietaires, setProprietaires] = useState<Proprietaire[]>([]);
+  const [loadingProprietaires, setLoadingProprietaires] = useState(false);
   
   const [formData, setFormData] = useState({
     titre: '',
@@ -74,10 +85,33 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
     images: true
   });
 
+  // Fetch proprietaires if no initial proprietaireId is provided
+  useEffect(() => {
+    if (!initialProprietaireId) {
+      fetchProprietaires();
+    }
+  }, [initialProprietaireId]);
+
+  const fetchProprietaires = async () => {
+    setLoadingProprietaires(true);
+    try {
+      const { data, error } = await supabase
+        .from('proprietaires')
+        .select('id, nom, prenom, telephone')
+        .order('nom');
+      
+      if (error) throw error;
+      setProprietaires(data || []);
+    } catch (error) {
+      console.error('Error fetching proprietaires:', error);
+    } finally {
+      setLoadingProprietaires(false);
+    }
+  };
+
   const toggleSection = (section: keyof typeof openSections) => {
     setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
-
   const allOpen = Object.values(openSections).every(v => v);
   
   const toggleAllSections = () => {
@@ -359,6 +393,8 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    const effectiveProprietaireId = initialProprietaireId || selectedProprietaireId;
+    
     if (!validateForm()) {
       toast({
         title: "Erreur",
@@ -368,10 +404,10 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
       return;
     }
 
-    if (!proprietaireId) {
+    if (!effectiveProprietaireId) {
       toast({
         title: "Erreur",
-        description: "Propriétaire non spécifié",
+        description: "Veuillez sélectionner un propriétaire",
         variant: "destructive"
       });
       return;
@@ -381,7 +417,7 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
     
     try {
       const bienData = {
-        proprietaire_id: proprietaireId,
+        proprietaire_id: effectiveProprietaireId,
         titre: formData.titre,
         description: formData.description || null,
         type: formData.type,
@@ -443,6 +479,44 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Proprietaire Selector - show only if no initial proprietaireId */}
+      {!initialProprietaireId && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <User className="h-5 w-5" />
+              Propriétaire
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-1">
+              <Label htmlFor="proprietaire" className="flex items-center gap-1">
+                Sélectionner un propriétaire <span className="text-destructive">*</span>
+              </Label>
+              <Select 
+                value={selectedProprietaireId} 
+                onValueChange={setSelectedProprietaireId}
+                disabled={loadingProprietaires}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={loadingProprietaires ? "Chargement..." : "Choisir un propriétaire"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {proprietaires.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.nom} {p.prenom || ''} - {p.telephone}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {proprietaires.length === 0 && !loadingProprietaires && (
+                <p className="text-sm text-muted-foreground">Aucun propriétaire trouvé. Veuillez d'abord créer un propriétaire.</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Toggle All Button */}
       <div className="flex justify-end">
         <Button 
