@@ -36,15 +36,19 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
     ville: '',
     quartier: '',
     code_postal: '',
+    description_localisation: '',
     surface_habitable: '',
     surface_terrain: '',
     nombre_chambres: '',
     nombre_salles_bain: '',
     nombre_etages: '',
     annee_construction: '',
+    description_caracteristiques: '',
     prix_vente: '',
     prix_location: '',
     charges_mensuelles: '',
+    description_prix: '',
+    description_photos: '',
     meuble: false,
     parking: false,
     jardin: false,
@@ -481,6 +485,18 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
                   onLocationUpdate={handleLocationUpdate}
                 />
               </div>
+
+              {/* Description */}
+              <div>
+                <Label htmlFor="description_localisation">Notes sur la localisation</Label>
+                <Textarea
+                  id="description_localisation"
+                  value={formData.description_localisation}
+                  onChange={(e) => handleInputChange('description_localisation', e.target.value)}
+                  placeholder="Informations complémentaires sur l'emplacement, accès, transports..."
+                  rows={2}
+                />
+              </div>
             </CardContent>
           </CollapsibleContent>
         </Card>
@@ -597,6 +613,18 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
                   ))}
                 </div>
               </div>
+
+              {/* Description */}
+              <div>
+                <Label htmlFor="description_caracteristiques">Notes sur les caractéristiques</Label>
+                <Textarea
+                  id="description_caracteristiques"
+                  value={formData.description_caracteristiques}
+                  onChange={(e) => handleInputChange('description_caracteristiques', e.target.value)}
+                  placeholder="Détails supplémentaires sur les caractéristiques du bien..."
+                  rows={2}
+                />
+              </div>
             </CardContent>
           </CollapsibleContent>
         </Card>
@@ -655,6 +683,18 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
                   />
                 </div>
               </div>
+
+              {/* Description */}
+              <div>
+                <Label htmlFor="description_prix">Notes sur le prix</Label>
+                <Textarea
+                  id="description_prix"
+                  value={formData.description_prix}
+                  onChange={(e) => handleInputChange('description_prix', e.target.value)}
+                  placeholder="Informations sur la négociation, conditions de paiement..."
+                  rows={2}
+                />
+              </div>
             </CardContent>
           </CollapsibleContent>
         </Card>
@@ -675,12 +715,24 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
             </CardHeader>
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <CardContent>
+            <CardContent className="space-y-4">
               <FileUpload 
                 onFilesChange={handleImagesChange}
                 maxFiles={10}
                 acceptedTypes={['image/*']}
               />
+
+              {/* Description */}
+              <div>
+                <Label htmlFor="description_photos">Notes sur les photos</Label>
+                <Textarea
+                  id="description_photos"
+                  value={formData.description_photos}
+                  onChange={(e) => handleInputChange('description_photos', e.target.value)}
+                  placeholder="Instructions pour les photos, pièces à mettre en avant..."
+                  rows={2}
+                />
+              </div>
             </CardContent>
           </CollapsibleContent>
         </Card>
