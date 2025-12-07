@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -24,8 +24,11 @@ interface AjouterBienFormProps {
   onCancel?: () => void;
 }
 
-const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFormProps) => {
+const AjouterBienForm = ({ proprietaireId: initialProprietaireId, onSuccess, onCancel }: AjouterBienFormProps) => {
   const { toast } = useToast();
+  
+  const [userProprietaireId, setUserProprietaireId] = useState<string | null>(initialProprietaireId || null);
+  const [loadingProprietaire, setLoadingProprietaire] = useState(!initialProprietaireId);
   
   const [formData, setFormData] = useState({
     titre: '',
@@ -74,10 +77,60 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
     images: true
   });
 
+  // Fetch proprietaire for the logged-in user
+  useEffect(() => {
+    if (!initialProprietaireId) {
+      fetchUserProprietaire();
+    }
+  }, [initialProprietaireId]);
+
+  const fetchUserProprietaire = async () => {
+    setLoadingProprietaire(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Erreur",
+          description: "Vous devez être connecté pour ajouter un bien",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('proprietaires')
+        .select('id')
+        .eq('created_by', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (error) throw error;
+      
+      if (data) {
+        setUserProprietaireId(data.id);
+      } else {
+        toast({
+          title: "Aucun propriétaire",
+          description: "Veuillez d'abord créer un propriétaire avant d'ajouter un bien",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching user proprietaire:', error);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la récupération du propriétaire",
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingProprietaire(false);
+    }
+  };
+
   const toggleSection = (section: keyof typeof openSections) => {
     setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
-
   const allOpen = Object.values(openSections).every(v => v);
   
   const toggleAllSections = () => {
@@ -320,8 +373,46 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
     return Object.keys(newErrors).length === 0;
   };
 
+  const uploadImagesToStorage = async (bienId: string): Promise<void> => {
+    for (const image of uploadedImages) {
+      if (!image.file) continue;
+      
+      const fileExt = image.file.name.split('.').pop();
+      const fileName = `${bienId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      
+      // Upload to storage
+      const { error: uploadError } = await supabase.storage
+        .from('bien-media')
+        .upload(fileName, image.file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+      
+      if (uploadError) {
+        console.error('Error uploading image:', uploadError);
+        continue;
+      }
+      
+      // Create bien_media record
+      const { error: mediaError } = await supabase.rpc('create_bien_media', {
+        p_bien_id: bienId,
+        p_file_name: image.file.name,
+        p_file_path: fileName,
+        p_file_type: image.file.type.startsWith('image/') ? 'image' : 'document',
+        p_file_size: image.file.size,
+        p_mime_type: image.file.type
+      });
+      
+      if (mediaError) {
+        console.error('Error creating media record:', mediaError);
+      }
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    const effectiveProprietaireId = userProprietaireId;
     
     if (!validateForm()) {
       toast({
@@ -332,10 +423,10 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
       return;
     }
 
-    if (!proprietaireId) {
+    if (!effectiveProprietaireId) {
       toast({
         title: "Erreur",
-        description: "Propriétaire non spécifié",
+        description: "Aucun propriétaire associé à votre compte. Veuillez d'abord créer un propriétaire.",
         variant: "destructive"
       });
       return;
@@ -345,7 +436,7 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
     
     try {
       const bienData = {
-        proprietaire_id: proprietaireId,
+        proprietaire_id: effectiveProprietaireId,
         titre: formData.titre,
         description: formData.description || null,
         type: formData.type,
@@ -372,11 +463,18 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
         chauffage: formData.chauffage
       };
 
-      const { error } = await supabase
+      const { data: bienResult, error } = await supabase
         .from('biens')
-        .insert([bienData]);
+        .insert([bienData])
+        .select('id')
+        .single();
 
       if (error) throw error;
+
+      // Upload images if any
+      if (uploadedImages.length > 0 && bienResult?.id) {
+        await uploadImagesToStorage(bienResult.id);
+      }
 
       toast({
         title: "Succès",
@@ -397,6 +495,15 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
       setLoading(false);
     }
   };
+
+  if (loadingProprietaire) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Chargement...</span>
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
