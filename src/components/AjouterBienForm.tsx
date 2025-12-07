@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Building, MapPin, Euro, Home, ChevronDown, ChevronUp, ChevronsUpDown, ImageIcon, Navigation, Loader2 } from 'lucide-react';
+import { Building, MapPin, Euro, Home, ChevronDown, ChevronUp, ChevronsUpDown, ImageIcon, Navigation, Loader2, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import FileUpload, { UploadedFile } from '@/components/ui/FileUpload';
@@ -64,6 +64,7 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
   const [loading, setLoading] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<UploadedFile[]>([]);
   const [gpsLoading, setGpsLoading] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [coordinates, setCoordinates] = useState<[number, number] | null>(null);
   const [openSections, setOpenSections] = useState({
     general: true,
@@ -205,6 +206,67 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
         maximumAge: 0    // Always get fresh position
       }
     );
+  };
+
+  const handleSearchAddress = async () => {
+    const fullAddress = [formData.adresse, formData.quartier, formData.ville, 'Maroc']
+      .filter(Boolean)
+      .join(', ');
+
+    if (!fullAddress.trim() || fullAddress === 'Maroc') {
+      toast({
+        title: "Adresse manquante",
+        description: "Veuillez saisir une adresse pour la rechercher sur la carte",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setSearchLoading(true);
+    toast({
+      title: "Recherche",
+      description: "Recherche de l'adresse en cours..."
+    });
+
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}&limit=1&countrycodes=ma&addressdetails=1`,
+        {
+          headers: {
+            'Accept-Language': 'fr'
+          }
+        }
+      );
+      const data = await response.json();
+      console.log('Geocode result:', data);
+
+      if (data && data.length > 0) {
+        const result = data[0];
+        const lat = parseFloat(result.lat);
+        const lng = parseFloat(result.lon);
+        setCoordinates([lng, lat]);
+        
+        toast({
+          title: "Adresse trouvée",
+          description: "La carte a été mise à jour avec la position"
+        });
+      } else {
+        toast({
+          title: "Adresse non trouvée",
+          description: "Impossible de localiser cette adresse. Essayez d'être plus précis ou cliquez sur la carte.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Geocoding error:', error);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la recherche de l'adresse",
+        variant: "destructive"
+      });
+    } finally {
+      setSearchLoading(false);
+    }
   };
 
   const validateField = (field: string, value: string) => {
@@ -468,13 +530,29 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
                   <Label htmlFor="adresse" className="flex items-center gap-1">
                     Adresse <span className="text-destructive">*</span>
                   </Label>
-                  <Input
-                    id="adresse"
-                    value={formData.adresse}
-                    onChange={(e) => handleInputChange('adresse', e.target.value)}
-                    onBlur={() => handleBlur('adresse')}
-                    className={errors.adresse && touched.adresse ? 'border-destructive focus-visible:ring-destructive' : ''}
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      id="adresse"
+                      value={formData.adresse}
+                      onChange={(e) => handleInputChange('adresse', e.target.value)}
+                      onBlur={() => handleBlur('adresse')}
+                      className={`flex-1 ${errors.adresse && touched.adresse ? 'border-destructive focus-visible:ring-destructive' : ''}`}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={handleSearchAddress}
+                      disabled={searchLoading}
+                      title="Rechercher sur la carte"
+                    >
+                      {searchLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Search className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
                   {errors.adresse && touched.adresse && (
                     <p className="text-sm text-destructive">{errors.adresse}</p>
                   )}
