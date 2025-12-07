@@ -4,6 +4,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { 
   ArrowLeft, 
@@ -17,15 +22,20 @@ import {
   ChevronsUpDown,
   Loader2,
   Check,
-  X
+  X,
+  Pencil,
+  Save
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import PropertyMap from '@/components/PropertyMap';
 import ImageLightbox from '@/components/ui/ImageLightbox';
 import type { Database } from '@/integrations/supabase/types';
 
 type Bien = Database['public']['Tables']['biens']['Row'];
 type BienMedia = Database['public']['Tables']['bien_media']['Row'];
+type BienType = Database['public']['Enums']['bien_type'];
+type BienStatus = Database['public']['Enums']['bien_status'];
 
 interface BienWithMedia extends Bien {
   bien_media?: BienMedia[];
@@ -34,12 +44,25 @@ interface BienWithMedia extends Bien {
 const DetailBien = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [bien, setBien] = useState<BienWithMedia | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [coordinates, setCoordinates] = useState<[number, number] | null>(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  
+  // Edit mode states for each section
+  const [editMode, setEditMode] = useState({
+    general: false,
+    location: false,
+    characteristics: false,
+    price: false
+  });
+  
+  // Form data for editing
+  const [formData, setFormData] = useState<Partial<Bien>>({});
+  const [saving, setSaving] = useState<string | null>(null);
   
   const [openSections, setOpenSections] = useState({
     general: true,
@@ -72,6 +95,12 @@ const DetailBien = () => {
     }
   }, [id]);
 
+  useEffect(() => {
+    if (bien) {
+      setFormData(bien);
+    }
+  }, [bien]);
+
   const fetchBien = async () => {
     setIsLoading(true);
     try {
@@ -85,7 +114,6 @@ const DetailBien = () => {
       
       if (data) {
         setBien(data);
-        // Try to geocode the address to get coordinates
         if (data.adresse && data.ville) {
           geocodeAddress(data.adresse, data.quartier, data.ville);
         }
@@ -114,6 +142,84 @@ const DetailBien = () => {
     } catch (err) {
       console.error('Geocoding error:', err);
     }
+  };
+
+  const handleEdit = (section: keyof typeof editMode) => {
+    setEditMode(prev => ({ ...prev, [section]: true }));
+  };
+
+  const handleCancel = (section: keyof typeof editMode) => {
+    setEditMode(prev => ({ ...prev, [section]: false }));
+    if (bien) {
+      setFormData(bien);
+    }
+  };
+
+  const handleSave = async (section: keyof typeof editMode) => {
+    if (!id) return;
+    
+    setSaving(section);
+    try {
+      const updateData: Partial<Bien> = {};
+      
+      if (section === 'general') {
+        updateData.titre = formData.titre;
+        updateData.description = formData.description;
+        updateData.type = formData.type;
+        updateData.status = formData.status;
+      } else if (section === 'location') {
+        updateData.adresse = formData.adresse;
+        updateData.ville = formData.ville;
+        updateData.quartier = formData.quartier;
+        updateData.code_postal = formData.code_postal;
+      } else if (section === 'characteristics') {
+        updateData.surface_habitable = formData.surface_habitable;
+        updateData.surface_terrain = formData.surface_terrain;
+        updateData.nombre_chambres = formData.nombre_chambres;
+        updateData.nombre_salles_bain = formData.nombre_salles_bain;
+        updateData.nombre_etages = formData.nombre_etages;
+        updateData.annee_construction = formData.annee_construction;
+        updateData.meuble = formData.meuble;
+        updateData.parking = formData.parking;
+        updateData.jardin = formData.jardin;
+        updateData.piscine = formData.piscine;
+        updateData.ascenseur = formData.ascenseur;
+        updateData.climatisation = formData.climatisation;
+        updateData.chauffage = formData.chauffage;
+      } else if (section === 'price') {
+        updateData.prix_vente = formData.prix_vente;
+        updateData.prix_location = formData.prix_location;
+        updateData.charges_mensuelles = formData.charges_mensuelles;
+      }
+
+      const { error } = await supabase
+        .from('biens')
+        .update(updateData)
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Les modifications ont été enregistrées"
+      });
+
+      setEditMode(prev => ({ ...prev, [section]: false }));
+      fetchBien();
+    } catch (err) {
+      console.error('Error saving:', err);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de l'enregistrement",
+        variant: "destructive"
+      });
+    } finally {
+      setSaving(null);
+    }
+  };
+
+  const handleInputChange = (field: keyof Bien, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const getStatusBadge = (status: string) => {
@@ -154,6 +260,42 @@ const DetailBien = () => {
         <X className="h-4 w-4 text-slate-400" />
       )}
       <span className={value ? 'text-foreground' : 'text-muted-foreground'}>{label}</span>
+    </div>
+  );
+
+  const EditButtons = ({ section, isEditing }: { section: keyof typeof editMode; isEditing: boolean }) => (
+    <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+      {isEditing ? (
+        <>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => handleCancel(section)}
+            disabled={saving === section}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => handleSave(section)}
+            disabled={saving === section}
+          >
+            {saving === section ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
+          </Button>
+        </>
+      ) : (
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => handleEdit(section)}
+        >
+          <Pencil className="h-4 w-4" />
+        </Button>
+      )}
     </div>
   );
 
@@ -228,31 +370,90 @@ const DetailBien = () => {
                   <Home className="h-5 w-5" />
                   Informations générales
                 </span>
-                {openSections.general ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                <div className="flex items-center gap-2">
+                  <EditButtons section="general" isEditing={editMode.general} />
+                  {openSections.general ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                </div>
               </CardTitle>
             </CardHeader>
           </CollapsibleTrigger>
           <CollapsibleContent>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <span className="text-sm text-muted-foreground">Titre</span>
-                  <p className="font-medium">{bien.titre}</p>
+              {editMode.general ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Titre</Label>
+                    <Input
+                      value={formData.titre || ''}
+                      onChange={(e) => handleInputChange('titre', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Type</Label>
+                    <Select
+                      value={formData.type}
+                      onValueChange={(value: BienType) => handleInputChange('type', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="VENTE">Vente</SelectItem>
+                        <SelectItem value="LOCATION">Location</SelectItem>
+                        <SelectItem value="VENTE_LOCATION">Vente/Location</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Statut</Label>
+                    <Select
+                      value={formData.status}
+                      onValueChange={(value: BienStatus) => handleInputChange('status', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="DISPONIBLE">Disponible</SelectItem>
+                        <SelectItem value="RESERVE">Réservé</SelectItem>
+                        <SelectItem value="VENDU">Vendu</SelectItem>
+                        <SelectItem value="LOUE">Loué</SelectItem>
+                        <SelectItem value="RETIRE">Retiré</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label>Description</Label>
+                    <Textarea
+                      value={formData.description || ''}
+                      onChange={(e) => handleInputChange('description', e.target.value)}
+                      rows={3}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <span className="text-sm text-muted-foreground">Type</span>
-                  <p className="font-medium">{getTypeBadge(bien.type)}</p>
-                </div>
-                <div>
-                  <span className="text-sm text-muted-foreground">Statut</span>
-                  <p className="font-medium">{getStatusBadge(bien.status)}</p>
-                </div>
-              </div>
-              {bien.description && (
-                <div>
-                  <span className="text-sm text-muted-foreground">Description</span>
-                  <p className="whitespace-pre-wrap">{bien.description}</p>
-                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-sm text-muted-foreground">Titre</span>
+                      <p className="font-medium">{bien.titre}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-muted-foreground">Type</span>
+                      <p className="font-medium">{getTypeBadge(bien.type)}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-muted-foreground">Statut</span>
+                      <p className="font-medium">{getStatusBadge(bien.status)}</p>
+                    </div>
+                  </div>
+                  {bien.description && (
+                    <div>
+                      <span className="text-sm text-muted-foreground">Description</span>
+                      <p className="whitespace-pre-wrap">{bien.description}</p>
+                    </div>
+                  )}
+                </>
               )}
             </CardContent>
           </CollapsibleContent>
@@ -269,34 +470,70 @@ const DetailBien = () => {
                   <MapPin className="h-5 w-5" />
                   Localisation
                 </span>
-                {openSections.location ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                <div className="flex items-center gap-2">
+                  <EditButtons section="location" isEditing={editMode.location} />
+                  {openSections.location ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                </div>
               </CardTitle>
             </CardHeader>
           </CollapsibleTrigger>
           <CollapsibleContent>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <span className="text-sm text-muted-foreground">Adresse</span>
-                  <p className="font-medium">{bien.adresse}</p>
-                </div>
-                <div>
-                  <span className="text-sm text-muted-foreground">Ville</span>
-                  <p className="font-medium">{bien.ville}</p>
-                </div>
-                {bien.quartier && (
-                  <div>
-                    <span className="text-sm text-muted-foreground">Quartier</span>
-                    <p className="font-medium">{bien.quartier}</p>
+              {editMode.location ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Adresse</Label>
+                    <Input
+                      value={formData.adresse || ''}
+                      onChange={(e) => handleInputChange('adresse', e.target.value)}
+                    />
                   </div>
-                )}
-                {bien.code_postal && (
-                  <div>
-                    <span className="text-sm text-muted-foreground">Code postal</span>
-                    <p className="font-medium">{bien.code_postal}</p>
+                  <div className="space-y-2">
+                    <Label>Ville</Label>
+                    <Input
+                      value={formData.ville || ''}
+                      onChange={(e) => handleInputChange('ville', e.target.value)}
+                    />
                   </div>
-                )}
-              </div>
+                  <div className="space-y-2">
+                    <Label>Quartier</Label>
+                    <Input
+                      value={formData.quartier || ''}
+                      onChange={(e) => handleInputChange('quartier', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Code postal</Label>
+                    <Input
+                      value={formData.code_postal || ''}
+                      onChange={(e) => handleInputChange('code_postal', e.target.value)}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-sm text-muted-foreground">Adresse</span>
+                    <p className="font-medium">{bien.adresse}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm text-muted-foreground">Ville</span>
+                    <p className="font-medium">{bien.ville}</p>
+                  </div>
+                  {bien.quartier && (
+                    <div>
+                      <span className="text-sm text-muted-foreground">Quartier</span>
+                      <p className="font-medium">{bien.quartier}</p>
+                    </div>
+                  )}
+                  {bien.code_postal && (
+                    <div>
+                      <span className="text-sm text-muted-foreground">Code postal</span>
+                      <p className="font-medium">{bien.code_postal}</p>
+                    </div>
+                  )}
+                </div>
+              )}
               
               {/* Map */}
               <div className="h-[300px] rounded-lg overflow-hidden border">
@@ -322,64 +559,145 @@ const DetailBien = () => {
                   <Building className="h-5 w-5" />
                   Caractéristiques
                 </span>
-                {openSections.characteristics ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                <div className="flex items-center gap-2">
+                  <EditButtons section="characteristics" isEditing={editMode.characteristics} />
+                  {openSections.characteristics ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                </div>
               </CardTitle>
             </CardHeader>
           </CollapsibleTrigger>
           <CollapsibleContent>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {bien.surface_habitable && (
-                  <div>
-                    <span className="text-sm text-muted-foreground">Surface habitable</span>
-                    <p className="font-medium">{bien.surface_habitable} m²</p>
+              {editMode.characteristics ? (
+                <>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="space-y-2">
+                      <Label>Surface habitable (m²)</Label>
+                      <Input
+                        type="number"
+                        value={formData.surface_habitable || ''}
+                        onChange={(e) => handleInputChange('surface_habitable', e.target.value ? parseFloat(e.target.value) : null)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Surface terrain (m²)</Label>
+                      <Input
+                        type="number"
+                        value={formData.surface_terrain || ''}
+                        onChange={(e) => handleInputChange('surface_terrain', e.target.value ? parseFloat(e.target.value) : null)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Chambres</Label>
+                      <Input
+                        type="number"
+                        value={formData.nombre_chambres || ''}
+                        onChange={(e) => handleInputChange('nombre_chambres', e.target.value ? parseInt(e.target.value) : null)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Salles de bain</Label>
+                      <Input
+                        type="number"
+                        value={formData.nombre_salles_bain || ''}
+                        onChange={(e) => handleInputChange('nombre_salles_bain', e.target.value ? parseInt(e.target.value) : null)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Étages</Label>
+                      <Input
+                        type="number"
+                        value={formData.nombre_etages || ''}
+                        onChange={(e) => handleInputChange('nombre_etages', e.target.value ? parseInt(e.target.value) : null)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Année de construction</Label>
+                      <Input
+                        type="number"
+                        value={formData.annee_construction || ''}
+                        onChange={(e) => handleInputChange('annee_construction', e.target.value ? parseInt(e.target.value) : null)}
+                      />
+                    </div>
                   </div>
-                )}
-                {bien.surface_terrain && (
                   <div>
-                    <span className="text-sm text-muted-foreground">Surface terrain</span>
-                    <p className="font-medium">{bien.surface_terrain} m²</p>
+                    <Label className="block mb-2">Équipements</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {[
+                        { key: 'meuble', label: 'Meublé' },
+                        { key: 'parking', label: 'Parking' },
+                        { key: 'jardin', label: 'Jardin' },
+                        { key: 'piscine', label: 'Piscine' },
+                        { key: 'ascenseur', label: 'Ascenseur' },
+                        { key: 'climatisation', label: 'Climatisation' },
+                        { key: 'chauffage', label: 'Chauffage' },
+                      ].map(({ key, label }) => (
+                        <div key={key} className="flex items-center gap-2">
+                          <Checkbox
+                            id={key}
+                            checked={formData[key as keyof Bien] as boolean || false}
+                            onCheckedChange={(checked) => handleInputChange(key as keyof Bien, checked)}
+                          />
+                          <Label htmlFor={key}>{label}</Label>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                )}
-                {bien.nombre_chambres && (
+                </>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {bien.surface_habitable && (
+                      <div>
+                        <span className="text-sm text-muted-foreground">Surface habitable</span>
+                        <p className="font-medium">{bien.surface_habitable} m²</p>
+                      </div>
+                    )}
+                    {bien.surface_terrain && (
+                      <div>
+                        <span className="text-sm text-muted-foreground">Surface terrain</span>
+                        <p className="font-medium">{bien.surface_terrain} m²</p>
+                      </div>
+                    )}
+                    {bien.nombre_chambres && (
+                      <div>
+                        <span className="text-sm text-muted-foreground">Chambres</span>
+                        <p className="font-medium">{bien.nombre_chambres}</p>
+                      </div>
+                    )}
+                    {bien.nombre_salles_bain && (
+                      <div>
+                        <span className="text-sm text-muted-foreground">Salles de bain</span>
+                        <p className="font-medium">{bien.nombre_salles_bain}</p>
+                      </div>
+                    )}
+                    {bien.nombre_etages && (
+                      <div>
+                        <span className="text-sm text-muted-foreground">Étages</span>
+                        <p className="font-medium">{bien.nombre_etages}</p>
+                      </div>
+                    )}
+                    {bien.annee_construction && (
+                      <div>
+                        <span className="text-sm text-muted-foreground">Année de construction</span>
+                        <p className="font-medium">{bien.annee_construction}</p>
+                      </div>
+                    )}
+                  </div>
                   <div>
-                    <span className="text-sm text-muted-foreground">Chambres</span>
-                    <p className="font-medium">{bien.nombre_chambres}</p>
+                    <span className="text-sm text-muted-foreground block mb-2">Équipements</span>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <BooleanDisplay value={bien.meuble} label="Meublé" />
+                      <BooleanDisplay value={bien.parking} label="Parking" />
+                      <BooleanDisplay value={bien.jardin} label="Jardin" />
+                      <BooleanDisplay value={bien.piscine} label="Piscine" />
+                      <BooleanDisplay value={bien.ascenseur} label="Ascenseur" />
+                      <BooleanDisplay value={bien.climatisation} label="Climatisation" />
+                      <BooleanDisplay value={bien.chauffage} label="Chauffage" />
+                    </div>
                   </div>
-                )}
-                {bien.nombre_salles_bain && (
-                  <div>
-                    <span className="text-sm text-muted-foreground">Salles de bain</span>
-                    <p className="font-medium">{bien.nombre_salles_bain}</p>
-                  </div>
-                )}
-                {bien.nombre_etages && (
-                  <div>
-                    <span className="text-sm text-muted-foreground">Étages</span>
-                    <p className="font-medium">{bien.nombre_etages}</p>
-                  </div>
-                )}
-                {bien.annee_construction && (
-                  <div>
-                    <span className="text-sm text-muted-foreground">Année de construction</span>
-                    <p className="font-medium">{bien.annee_construction}</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Équipements */}
-              <div>
-                <span className="text-sm text-muted-foreground block mb-2">Équipements</span>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <BooleanDisplay value={bien.meuble} label="Meublé" />
-                  <BooleanDisplay value={bien.parking} label="Parking" />
-                  <BooleanDisplay value={bien.jardin} label="Jardin" />
-                  <BooleanDisplay value={bien.piscine} label="Piscine" />
-                  <BooleanDisplay value={bien.ascenseur} label="Ascenseur" />
-                  <BooleanDisplay value={bien.climatisation} label="Climatisation" />
-                  <BooleanDisplay value={bien.chauffage} label="Chauffage" />
-                </div>
-              </div>
+                </>
+              )}
             </CardContent>
           </CollapsibleContent>
         </Card>
@@ -395,32 +713,64 @@ const DetailBien = () => {
                   <Euro className="h-5 w-5" />
                   Informations tarifaires
                 </span>
-                {openSections.price ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                <div className="flex items-center gap-2">
+                  <EditButtons section="price" isEditing={editMode.price} />
+                  {openSections.price ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                </div>
               </CardTitle>
             </CardHeader>
           </CollapsibleTrigger>
           <CollapsibleContent>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {bien.prix_vente && (
-                  <div>
-                    <span className="text-sm text-muted-foreground">Prix de vente</span>
-                    <p className="text-2xl font-bold text-primary">{bien.prix_vente.toLocaleString()} DH</p>
+              {editMode.price ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label>Prix de vente (DH)</Label>
+                    <Input
+                      type="number"
+                      value={formData.prix_vente || ''}
+                      onChange={(e) => handleInputChange('prix_vente', e.target.value ? parseFloat(e.target.value) : null)}
+                    />
                   </div>
-                )}
-                {bien.prix_location && (
-                  <div>
-                    <span className="text-sm text-muted-foreground">Loyer mensuel</span>
-                    <p className="text-2xl font-bold text-primary">{bien.prix_location.toLocaleString()} DH/mois</p>
+                  <div className="space-y-2">
+                    <Label>Loyer mensuel (DH)</Label>
+                    <Input
+                      type="number"
+                      value={formData.prix_location || ''}
+                      onChange={(e) => handleInputChange('prix_location', e.target.value ? parseFloat(e.target.value) : null)}
+                    />
                   </div>
-                )}
-                {bien.charges_mensuelles && (
-                  <div>
-                    <span className="text-sm text-muted-foreground">Charges mensuelles</span>
-                    <p className="font-medium">{bien.charges_mensuelles.toLocaleString()} DH/mois</p>
+                  <div className="space-y-2">
+                    <Label>Charges mensuelles (DH)</Label>
+                    <Input
+                      type="number"
+                      value={formData.charges_mensuelles || ''}
+                      onChange={(e) => handleInputChange('charges_mensuelles', e.target.value ? parseFloat(e.target.value) : null)}
+                    />
                   </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {bien.prix_vente && (
+                    <div>
+                      <span className="text-sm text-muted-foreground">Prix de vente</span>
+                      <p className="text-2xl font-bold text-primary">{bien.prix_vente.toLocaleString()} DH</p>
+                    </div>
+                  )}
+                  {bien.prix_location && (
+                    <div>
+                      <span className="text-sm text-muted-foreground">Loyer mensuel</span>
+                      <p className="text-2xl font-bold text-primary">{bien.prix_location.toLocaleString()} DH/mois</p>
+                    </div>
+                  )}
+                  {bien.charges_mensuelles && (
+                    <div>
+                      <span className="text-sm text-muted-foreground">Charges mensuelles</span>
+                      <p className="font-medium">{bien.charges_mensuelles.toLocaleString()} DH/mois</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </CollapsibleContent>
         </Card>
