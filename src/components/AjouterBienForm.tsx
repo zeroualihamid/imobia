@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Building, MapPin, Euro, Home, ChevronDown, ChevronUp } from 'lucide-react';
+import { Building, MapPin, Euro, Home, ChevronDown, ChevronUp, ChevronsUpDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { Database } from '@/integrations/supabase/types';
@@ -62,6 +62,18 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
 
   const toggleSection = (section: keyof typeof openSections) => {
     setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+
+  const allOpen = Object.values(openSections).every(v => v);
+  
+  const toggleAllSections = () => {
+    const newState = !allOpen;
+    setOpenSections({
+      general: newState,
+      location: newState,
+      characteristics: newState,
+      price: newState
+    });
   };
 
   const handleInputChange = (field: string, value: string | boolean) => {
@@ -151,6 +163,20 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Toggle All Button */}
+      <div className="flex justify-end">
+        <Button 
+          type="button" 
+          variant="outline" 
+          size="sm"
+          onClick={toggleAllSections}
+          className="flex items-center gap-2"
+        >
+          <ChevronsUpDown className="h-4 w-4" />
+          {allOpen ? 'Réduire tout' : 'Ouvrir tout'}
+        </Button>
+      </div>
+
       {/* Informations générales */}
       <Collapsible open={openSections.general} onOpenChange={() => toggleSection('general')}>
         <Card>
