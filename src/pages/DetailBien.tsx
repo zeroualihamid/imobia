@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import PropertyMap from '@/components/PropertyMap';
+import ImageLightbox from '@/components/ui/ImageLightbox';
 import type { Database } from '@/integrations/supabase/types';
 
 type Bien = Database['public']['Tables']['biens']['Row'];
@@ -37,6 +38,8 @@ const DetailBien = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [coordinates, setCoordinates] = useState<[number, number] | null>(null);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
   
   const [openSections, setOpenSections] = useState({
     general: true,
@@ -441,8 +444,15 @@ const DetailBien = () => {
             <CardContent>
               {images.length > 0 ? (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {images.map((media) => (
-                    <div key={media.id} className="aspect-square rounded-lg overflow-hidden border">
+                  {images.map((media, index) => (
+                    <div 
+                      key={media.id} 
+                      className="aspect-square rounded-lg overflow-hidden border cursor-pointer hover:opacity-90 transition-opacity hover:ring-2 hover:ring-primary"
+                      onClick={() => {
+                        setLightboxIndex(index);
+                        setLightboxOpen(true);
+                      }}
+                    >
                       <img
                         src={`https://erbjiehcvwqhxqdvmges.supabase.co/storage/v1/object/public/bien-media/${media.file_path}`}
                         alt={media.file_name}
@@ -465,6 +475,18 @@ const DetailBien = () => {
           </CollapsibleContent>
         </Card>
       </Collapsible>
+
+      {/* Image Lightbox */}
+      <ImageLightbox
+        images={images.map(media => ({
+          id: media.id,
+          url: `https://erbjiehcvwqhxqdvmges.supabase.co/storage/v1/object/public/bien-media/${media.file_path}`,
+          alt: media.file_name
+        }))}
+        initialIndex={lightboxIndex}
+        open={lightboxOpen}
+        onOpenChange={setLightboxOpen}
+      />
 
       {/* Dates */}
       <Card>
