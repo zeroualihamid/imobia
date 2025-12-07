@@ -7,13 +7,54 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
   }
   public: {
     Tables: {
+      bien_media: {
+        Row: {
+          bien_id: string
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id: string
+          mime_type: string
+        }
+        Insert: {
+          bien_id: string
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id?: string
+          mime_type: string
+        }
+        Update: {
+          bien_id?: string
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          mime_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bien_media_bien_id_fkey"
+            columns: ["bien_id"]
+            isOneToOne: false
+            referencedRelation: "biens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       biens: {
         Row: {
           adresse: string
@@ -354,6 +395,39 @@ export type Database = {
           },
         ]
       }
+      mubawab_scrapping: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: number
+          price: string | null
+          show_elements: string | null
+          thumbnail: string | null
+          title: string | null
+          url_link: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: number
+          price?: string | null
+          show_elements?: string | null
+          thumbnail?: string | null
+          title?: string | null
+          url_link?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: number
+          price?: string | null
+          show_elements?: string | null
+          thumbnail?: string | null
+          title?: string | null
+          url_link?: string | null
+        }
+        Relationships: []
+      }
       permissions: {
         Row: {
           command: Database["public"]["Enums"]["command_type"]
@@ -601,67 +675,78 @@ export type Database = {
       }
       scraping: {
         Row: {
-          id: string;
-          date: string;
-          user_id: string | null;
-          metadata: Json | null;
-          origin: string;
-          created_at: string;
-          updated_at: string;
-        };
+          created_at: string
+          date: string
+          id: string
+          metadata: Json | null
+          origin: string
+          updated_at: string
+          user_id: string | null
+        }
         Insert: {
-          id?: string;
-          date?: string;
-          user_id?: string | null;
-          metadata?: Json | null;
-          origin: string;
-          created_at?: string;
-          updated_at?: string;
-        };
+          created_at?: string
+          date?: string
+          id?: string
+          metadata?: Json | null
+          origin: string
+          updated_at?: string
+          user_id?: string | null
+        }
         Update: {
-          id?: string;
-          date?: string;
-          user_id?: string | null;
-          metadata?: Json | null;
-          origin?: string;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Relationships: [];
-      },
-      mubawab_scrapping: {
+          created_at?: string
+          date?: string
+          id?: string
+          metadata?: Json | null
+          origin?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      scraping_images: {
         Row: {
-          id: number;
-          title: string | null;
-          price: string | null;
-          thumbnail: string | null;
-          url_link: string | null;
-          description: string | null;
-          show_elements: string | null;
-          created_at: string | null;
-        };
+          created_at: string
+          file_name: string
+          file_size: number | null
+          id: string
+          image_path: string
+          image_url: string | null
+          metadata: Json | null
+          mime_type: string | null
+          scraping_id: string
+        }
         Insert: {
-          id?: number;
-          title?: string | null;
-          price?: string | null;
-          thumbnail?: string | null;
-          url_link?: string | null;
-          description?: string | null;
-          show_elements?: string | null;
-          created_at?: string | null;
-        };
+          created_at?: string
+          file_name: string
+          file_size?: number | null
+          id?: string
+          image_path: string
+          image_url?: string | null
+          metadata?: Json | null
+          mime_type?: string | null
+          scraping_id: string
+        }
         Update: {
-          id?: number;
-          title?: string | null;
-          price?: string | null;
-          thumbnail?: string | null;
-          url_link?: string | null;
-          description?: string | null;
-          show_elements?: string | null;
-          created_at?: string | null;
-        };
-        Relationships: [];
-      },
+          created_at?: string
+          file_name?: string
+          file_size?: number | null
+          id?: string
+          image_path?: string
+          image_url?: string | null
+          metadata?: Json | null
+          mime_type?: string | null
+          scraping_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scraping_images_scraping_id_fkey"
+            columns: ["scraping_id"]
+            isOneToOne: false
+            referencedRelation: "scraping"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       task_conseillers: {
         Row: {
           assigned_at: string
@@ -857,18 +942,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_bien_media: {
+        Args: {
+          p_bien_id: string
+          p_file_name: string
+          p_file_path: string
+          p_file_size: number
+          p_file_type: string
+          p_mime_type: string
+        }
+        Returns: string
+      }
       create_property: {
-        Args: { p_user_id: string; p_metadata: Json }
+        Args: { p_metadata: Json; p_user_id: string }
         Returns: string
       }
       create_property_media: {
         Args: {
-          p_property_id: string
           p_file_name: string
           p_file_path: string
-          p_file_type: string
           p_file_size: number
+          p_file_type: string
           p_mime_type: string
+          p_property_id: string
         }
         Returns: string
       }
@@ -884,13 +980,13 @@ export type Database = {
       }
       user_has_permission: {
         Args: {
-          user_uuid: string
           command_name: Database["public"]["Enums"]["command_type"]
+          user_uuid: string
         }
         Returns: boolean
       }
       user_has_role: {
-        Args: { user_uuid: string; role_name: string }
+        Args: { role_name: string; user_uuid: string }
         Returns: boolean
       }
     }

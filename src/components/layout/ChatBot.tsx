@@ -343,11 +343,11 @@ const ChatBot = ({ isOpen = true, onToggle, disableResize = false }: ChatBotProp
       {/* ChatBot Panel */}
       <div 
         className={cn(
-          "flex h-full flex-col bg-white",
+          "flex h-full flex-col bg-white w-full",
           // Desktop: Always visible with full width
-          "lg:w-full",
-          // Mobile: Fixed overlay
-          onToggle && "lg:hidden fixed inset-0 z-50 transition-transform duration-300",
+          "lg:w-full lg:max-w-none",
+          // Mobile: Fixed overlay with responsive width
+          onToggle && "lg:hidden fixed inset-0 z-50 transition-transform duration-300 sm:inset-x-4 sm:inset-y-4 sm:rounded-lg sm:shadow-xl",
           onToggle && (isOpen ? "translate-x-0" : "translate-x-full")
         )}
       >
@@ -412,7 +412,7 @@ const ChatBot = ({ isOpen = true, onToggle, disableResize = false }: ChatBotProp
         {/* Messages Area */}
         {!isMinimized && (
           <>
-            <ScrollArea className="flex-1 px-3 py-2 bg-white chatbot-scrollarea" ref={scrollAreaRef}>
+            <ScrollArea className="flex-1 px-3 py-2 sm:px-4 sm:py-3 bg-white chatbot-scrollarea" ref={scrollAreaRef}>
               <div className="space-y-3">
                 {messages.map((message) => (
                   <div
