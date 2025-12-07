@@ -160,20 +160,20 @@ const Sidebar = ({
         {menuItems.map((item, index) => <div key={index}>
             {item.isCollapsible ? <Collapsible open={item.isOpen} onOpenChange={item.setIsOpen}>
                 <CollapsibleTrigger className="w-full">
-                  <div className={cn("flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors text-slate-700 bg-white", item.color)}>
-                    <item.icon className="h-4 w-4 shrink-0" />
+                  <div className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium bg-white">
+                    <item.icon className={cn("h-4 w-4 shrink-0", item.color)} />
                     <span className="flex-1 text-left text-slate-900">{item.title}</span>
                     <ChevronDown className={cn("h-4 w-4 text-slate-500 transition-transform duration-300 ease-out", item.isOpen ? "rotate-0" : "-rotate-90")} />
                   </div>
                 </CollapsibleTrigger>
                 <CollapsibleContent className="ml-6 mt-1 space-y-1 bg-white overflow-hidden data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
-                  {item.subItems?.map((subItem, subIndex) => <Link key={subIndex} to={subItem.href} onClick={handleLinkClick} className={cn("flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-200 bg-white", location.pathname === subItem.href ? "bg-blue-50 text-blue-700 font-medium" : "text-slate-600")}>
+                  {item.subItems?.map((subItem, subIndex) => <Link key={subIndex} to={subItem.href} onClick={handleLinkClick} className={cn("flex items-center gap-3 rounded-lg px-3 py-2 text-sm bg-white", location.pathname === subItem.href ? "bg-blue-50 text-blue-700 font-medium" : "text-slate-600")}>
                       <subItem.icon className="h-4 w-4 shrink-0" />
                       <span>{subItem.title}</span>
                     </Link>)}
                 </CollapsibleContent>
-              </Collapsible> : <Link to={item.href} onClick={handleLinkClick} className={cn("flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors bg-white", location.pathname === item.href ? "bg-blue-50 text-blue-700" : "text-slate-700")}>
-                <item.icon className="h-4 w-4 shrink-0" />
+              </Collapsible> : <Link to={item.href} onClick={handleLinkClick} className={cn("flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium bg-white", location.pathname === item.href ? "bg-blue-50 text-blue-700" : "text-slate-700")}>
+                <item.icon className={cn("h-4 w-4 shrink-0", item.color)} />
                 <span>{item.title}</span>
               </Link>}
           </div>)}
