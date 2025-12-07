@@ -52,23 +52,19 @@ const Biens = () => {
     return parts.length > 0 ? parts.join(', ') : 'Localisation non définie';
   };
 
-  const getPropertyImage = (property: { id: string; property_media?: Array<{ file_path: string }> }) => {
-    // Pour les propriétés avec media
+  const getPropertyImage = (property: { id: string; property_media?: Array<{ file_path: string }>; bien_media?: Array<{ file_path: string }> }) => {
+    // Check for bien_media first (from biens table)
+    if (property.bien_media && property.bien_media.length > 0) {
+      return `https://erbjiehcvwqhxqdvmges.supabase.co/storage/v1/object/public/bien-media/${property.bien_media[0].file_path}`;
+    }
+    
+    // Check for property_media (from properties table)
     if (property.property_media && property.property_media.length > 0) {
       return `https://erbjiehcvwqhxqdvmges.supabase.co/storage/v1/object/public/property-media/${property.property_media[0].file_path}`;
     }
     
-    // Images placeholder par défaut
-    const placeholderImages = [
-      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=400&h=300&fit=crop',
-      'https://images.unsplash.com/photo-1500673922987-e212871fec22?w=400&h=300&fit=crop',
-      'https://images.unsplash.com/photo-1523712999610-f77fbcfc3843?w=400&h=300&fit=crop',
-      'https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=400&h=300&fit=crop',
-    ];
-    
-    // Utiliser l'ID pour sélectionner une image de manière déterministe
-    const index = property.id.charCodeAt(0) % placeholderImages.length;
-    return placeholderImages[index];
+    // Return null if no image available
+    return null;
   };
 
   const filteredProperties = properties.filter(property => {
@@ -126,18 +122,19 @@ const Biens = () => {
               }}
             >
               <div className="flex flex-col sm:flex-row">
-                {/* Property Image */}
-                <div className="w-full sm:w-48 h-32 flex-shrink-0">
-                  <img 
-                    src={getPropertyImage(property)}
-                    alt={metadata?.title || 'Bien immobilier'}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=400&h=300&fit=crop';
-                    }}
-                  />
-                </div>
+                {/* Property Image - only show if image exists */}
+                {(() => {
+                  const imageUrl = getPropertyImage(property);
+                  return imageUrl ? (
+                    <div className="w-full sm:w-48 h-32 flex-shrink-0">
+                      <img 
+                        src={imageUrl}
+                        alt={metadata?.title || 'Bien immobilier'}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : null;
+                })()}
 
                 {/* Property Details */}
                 <div className="flex-1 p-4">

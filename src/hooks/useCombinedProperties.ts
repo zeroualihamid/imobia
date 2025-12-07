@@ -12,6 +12,7 @@ interface CombinedProperty {
   created_at: string;
   updated_at: string;
   property_media?: any[];
+  bien_media?: any[];
   source: 'properties' | 'biens';
   original_data?: Bien;
 }
@@ -46,6 +47,7 @@ export const useCombinedProperties = () => {
         .from('biens')
         .select(`
           *,
+          bien_media (*),
           proprietaires!inner (
             id,
             nom,
@@ -95,6 +97,7 @@ export const useCombinedProperties = () => {
             ...(bien.meuble ? ['Meublé'] : []),
           ],
         },
+        bien_media: bien.bien_media || [],
         property_media: [],
       }));
 
