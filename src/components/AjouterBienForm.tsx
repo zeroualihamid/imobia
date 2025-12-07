@@ -8,10 +8,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Building, MapPin, Euro, Home, ChevronDown, ChevronUp, ChevronsUpDown, ImageIcon } from 'lucide-react';
+import { Building, MapPin, Euro, Home, ChevronDown, ChevronUp, ChevronsUpDown, ImageIcon, Navigation, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import FileUpload, { UploadedFile } from '@/components/ui/FileUpload';
+import PropertyMap from '@/components/PropertyMap';
 import type { Database } from '@/integrations/supabase/types';
 
 type BienType = Database['public']['Enums']['bien_type'];
@@ -58,6 +59,8 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
 
   const [loading, setLoading] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<UploadedFile[]>([]);
+  const [gpsLoading, setGpsLoading] = useState(false);
+  const [coordinates, setCoordinates] = useState<[number, number] | null>(null);
   const [openSections, setOpenSections] = useState({
     general: true,
     location: true,
@@ -85,6 +88,79 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
 
   const handleImagesChange = (files: UploadedFile[]) => {
     setUploadedImages(files);
+  };
+
+  const handleLocationUpdate = (coords: [number, number]) => {
+    setCoordinates(coords);
+  };
+
+  const handleGetGpsLocation = () => {
+    if (!navigator.geolocation) {
+      toast({
+        title: "Erreur",
+        description: "La géolocalisation n'est pas supportée par votre navigateur",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setGpsLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        setCoordinates([lng, lat]);
+
+        // Reverse geocode to get address
+        try {
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`
+          );
+          const data = await response.json();
+          
+          if (data && data.address) {
+            const address = data.address;
+            const streetNumber = address.house_number || '';
+            const street = address.road || address.street || '';
+            const fullAddress = streetNumber ? `${streetNumber} ${street}` : street;
+            
+            if (fullAddress) {
+              handleInputChange('adresse', fullAddress.trim());
+            }
+            if (address.city || address.town || address.village) {
+              handleInputChange('ville', address.city || address.town || address.village);
+            }
+            if (address.suburb || address.neighbourhood) {
+              handleInputChange('quartier', address.suburb || address.neighbourhood);
+            }
+            if (address.postcode) {
+              handleInputChange('code_postal', address.postcode);
+            }
+          }
+        } catch (error) {
+          console.error('Erreur de géocodage inverse:', error);
+        }
+        
+        setGpsLoading(false);
+        toast({
+          title: "Localisation obtenue",
+          description: "Votre position a été détectée"
+        });
+      },
+      (error) => {
+        setGpsLoading(false);
+        let message = "Impossible d'obtenir votre position";
+        if (error.code === error.PERMISSION_DENIED) {
+          message = "Veuillez autoriser l'accès à votre position";
+        }
+        toast({
+          title: "Erreur",
+          description: message,
+          variant: "destructive"
+        });
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
   };
 
   const validateField = (field: string, value: string) => {
@@ -321,6 +397,28 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
           </CollapsibleTrigger>
           <CollapsibleContent>
             <CardContent className="space-y-4">
+              {/* GPS Button for Mobile */}
+              <div className="md:hidden">
+                <Button
+                  type="button"
+                  onClick={handleGetGpsLocation}
+                  disabled={gpsLoading}
+                  className="w-full bg-primary text-primary-foreground"
+                >
+                  {gpsLoading ? (
+                    <>
+                      <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                      Localisation en cours...
+                    </>
+                  ) : (
+                    <>
+                      <Navigation className="h-5 w-5 mr-2" />
+                      Utiliser ma position GPS
+                    </>
+                  )}
+                </Button>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <Label htmlFor="adresse" className="flex items-center gap-1">
@@ -371,6 +469,17 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
                     onChange={(e) => handleInputChange('code_postal', e.target.value)}
                   />
                 </div>
+              </div>
+
+              {/* Map */}
+              <div className="mt-4">
+                <Label className="mb-2 block">Carte</Label>
+                <PropertyMap
+                  address={formData.adresse}
+                  city={formData.ville}
+                  region="Maroc"
+                  onLocationUpdate={handleLocationUpdate}
+                />
               </div>
             </CardContent>
           </CollapsibleContent>
