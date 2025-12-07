@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Building, MapPin, Euro, Home, ChevronDown, ChevronUp, ChevronsUpDown, ImageIcon, Navigation, Loader2, Search, User } from 'lucide-react';
+import { Building, MapPin, Euro, Home, ChevronDown, ChevronUp, ChevronsUpDown, ImageIcon, Navigation, Loader2, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import FileUpload, { UploadedFile } from '@/components/ui/FileUpload';
@@ -17,13 +17,6 @@ import type { Database } from '@/integrations/supabase/types';
 
 type BienType = Database['public']['Enums']['bien_type'];
 type BienStatus = Database['public']['Enums']['bien_status'];
-
-interface Proprietaire {
-  id: string;
-  nom: string;
-  prenom: string | null;
-  telephone: string;
-}
 
 interface AjouterBienFormProps {
   proprietaireId?: string;
@@ -34,9 +27,8 @@ interface AjouterBienFormProps {
 const AjouterBienForm = ({ proprietaireId: initialProprietaireId, onSuccess, onCancel }: AjouterBienFormProps) => {
   const { toast } = useToast();
   
-  const [selectedProprietaireId, setSelectedProprietaireId] = useState<string>(initialProprietaireId || '');
-  const [proprietaires, setProprietaires] = useState<Proprietaire[]>([]);
-  const [loadingProprietaires, setLoadingProprietaires] = useState(false);
+  const [userProprietaireId, setUserProprietaireId] = useState<string | null>(initialProprietaireId || null);
+  const [loadingProprietaire, setLoadingProprietaire] = useState(!initialProprietaireId);
   
   const [formData, setFormData] = useState({
     titre: '',
@@ -85,27 +77,54 @@ const AjouterBienForm = ({ proprietaireId: initialProprietaireId, onSuccess, onC
     images: true
   });
 
-  // Fetch proprietaires if no initial proprietaireId is provided
+  // Fetch proprietaire for the logged-in user
   useEffect(() => {
     if (!initialProprietaireId) {
-      fetchProprietaires();
+      fetchUserProprietaire();
     }
   }, [initialProprietaireId]);
 
-  const fetchProprietaires = async () => {
-    setLoadingProprietaires(true);
+  const fetchUserProprietaire = async () => {
+    setLoadingProprietaire(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Erreur",
+          description: "Vous devez être connecté pour ajouter un bien",
+          variant: "destructive"
+        });
+        return;
+      }
+
       const { data, error } = await supabase
         .from('proprietaires')
-        .select('id, nom, prenom, telephone')
-        .order('nom');
+        .select('id')
+        .eq('created_by', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
       
       if (error) throw error;
-      setProprietaires(data || []);
+      
+      if (data) {
+        setUserProprietaireId(data.id);
+      } else {
+        toast({
+          title: "Aucun propriétaire",
+          description: "Veuillez d'abord créer un propriétaire avant d'ajouter un bien",
+          variant: "destructive"
+        });
+      }
     } catch (error) {
-      console.error('Error fetching proprietaires:', error);
+      console.error('Error fetching user proprietaire:', error);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la récupération du propriétaire",
+        variant: "destructive"
+      });
     } finally {
-      setLoadingProprietaires(false);
+      setLoadingProprietaire(false);
     }
   };
 
@@ -393,7 +412,7 @@ const AjouterBienForm = ({ proprietaireId: initialProprietaireId, onSuccess, onC
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const effectiveProprietaireId = initialProprietaireId || selectedProprietaireId;
+    const effectiveProprietaireId = userProprietaireId;
     
     if (!validateForm()) {
       toast({
@@ -407,7 +426,7 @@ const AjouterBienForm = ({ proprietaireId: initialProprietaireId, onSuccess, onC
     if (!effectiveProprietaireId) {
       toast({
         title: "Erreur",
-        description: "Veuillez sélectionner un propriétaire",
+        description: "Aucun propriétaire associé à votre compte. Veuillez d'abord créer un propriétaire.",
         variant: "destructive"
       });
       return;
@@ -477,46 +496,17 @@ const AjouterBienForm = ({ proprietaireId: initialProprietaireId, onSuccess, onC
     }
   };
 
+  if (loadingProprietaire) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Chargement...</span>
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Proprietaire Selector - show only if no initial proprietaireId */}
-      {!initialProprietaireId && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              Propriétaire
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-1">
-              <Label htmlFor="proprietaire" className="flex items-center gap-1">
-                Sélectionner un propriétaire <span className="text-destructive">*</span>
-              </Label>
-              <Select 
-                value={selectedProprietaireId} 
-                onValueChange={setSelectedProprietaireId}
-                disabled={loadingProprietaires}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={loadingProprietaires ? "Chargement..." : "Choisir un propriétaire"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {proprietaires.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.nom} {p.prenom || ''} - {p.telephone}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {proprietaires.length === 0 && !loadingProprietaires && (
-                <p className="text-sm text-muted-foreground">Aucun propriétaire trouvé. Veuillez d'abord créer un propriétaire.</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Toggle All Button */}
       <div className="flex justify-end">
         <Button 
