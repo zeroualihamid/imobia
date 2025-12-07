@@ -52,6 +52,9 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
     chauffage: false
   });
 
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+
   const [loading, setLoading] = useState(false);
   const [openSections, setOpenSections] = useState({
     general: true,
@@ -76,20 +79,57 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
     });
   };
 
+  const validateField = (field: string, value: string) => {
+    const requiredFields = ['titre', 'adresse', 'ville'];
+    if (requiredFields.includes(field) && !value.trim()) {
+      return 'Ce champ est obligatoire';
+    }
+    return '';
+  };
+
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
+    
+    if (typeof value === 'string' && touched[field]) {
+      const error = validateField(field, value);
+      setErrors(prev => ({ ...prev, [field]: error }));
+    }
+  };
+
+  const handleBlur = (field: string) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+    const value = formData[field as keyof typeof formData];
+    if (typeof value === 'string') {
+      const error = validateField(field, value);
+      setErrors(prev => ({ ...prev, [field]: error }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    const requiredFields = ['titre', 'adresse', 'ville'];
+    
+    requiredFields.forEach(field => {
+      const value = formData[field as keyof typeof formData] as string;
+      const error = validateField(field, value);
+      if (error) newErrors[field] = error;
+    });
+    
+    setErrors(newErrors);
+    setTouched({ titre: true, adresse: true, ville: true });
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.titre || !formData.adresse || !formData.ville) {
+    if (!validateForm()) {
       toast({
         title: "Erreur",
-        description: "Titre, adresse et ville sont obligatoires",
+        description: "Veuillez remplir tous les champs obligatoires",
         variant: "destructive"
       });
       return;
@@ -194,15 +234,21 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
           <CollapsibleContent>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="titre">Titre du bien *</Label>
+                <div className="space-y-1">
+                  <Label htmlFor="titre" className="flex items-center gap-1">
+                    Titre du bien <span className="text-destructive">*</span>
+                  </Label>
                   <Input
                     id="titre"
                     value={formData.titre}
                     onChange={(e) => handleInputChange('titre', e.target.value)}
+                    onBlur={() => handleBlur('titre')}
                     placeholder="Ex: Appartement 3 pièces"
-                    required
+                    className={errors.titre && touched.titre ? 'border-destructive focus-visible:ring-destructive' : ''}
                   />
+                  {errors.titre && touched.titre && (
+                    <p className="text-sm text-destructive">{errors.titre}</p>
+                  )}
                 </div>
 
                 <div>
@@ -268,24 +314,36 @@ const AjouterBienForm = ({ proprietaireId, onSuccess, onCancel }: AjouterBienFor
           <CollapsibleContent>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="adresse">Adresse *</Label>
+                <div className="space-y-1">
+                  <Label htmlFor="adresse" className="flex items-center gap-1">
+                    Adresse <span className="text-destructive">*</span>
+                  </Label>
                   <Input
                     id="adresse"
                     value={formData.adresse}
                     onChange={(e) => handleInputChange('adresse', e.target.value)}
-                    required
+                    onBlur={() => handleBlur('adresse')}
+                    className={errors.adresse && touched.adresse ? 'border-destructive focus-visible:ring-destructive' : ''}
                   />
+                  {errors.adresse && touched.adresse && (
+                    <p className="text-sm text-destructive">{errors.adresse}</p>
+                  )}
                 </div>
 
-                <div>
-                  <Label htmlFor="ville">Ville *</Label>
+                <div className="space-y-1">
+                  <Label htmlFor="ville" className="flex items-center gap-1">
+                    Ville <span className="text-destructive">*</span>
+                  </Label>
                   <Input
                     id="ville"
                     value={formData.ville}
                     onChange={(e) => handleInputChange('ville', e.target.value)}
-                    required
+                    onBlur={() => handleBlur('ville')}
+                    className={errors.ville && touched.ville ? 'border-destructive focus-visible:ring-destructive' : ''}
                   />
+                  {errors.ville && touched.ville && (
+                    <p className="text-sm text-destructive">{errors.ville}</p>
+                  )}
                 </div>
 
                 <div>
