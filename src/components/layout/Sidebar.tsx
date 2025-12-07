@@ -156,7 +156,7 @@ const Sidebar = ({
           </div>
         </div>
       
-      <nav className="flex-1 space-y-1 p-4 bg-slate-200 text-black border-0 shadow-md">
+      <nav className="flex-1 space-y-1 p-4">
         {menuItems.map((item, index) => <div key={index}>
             {item.isCollapsible ? <Collapsible open={item.isOpen} onOpenChange={item.setIsOpen}>
                 <CollapsibleTrigger className="w-full">
