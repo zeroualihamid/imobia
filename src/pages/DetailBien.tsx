@@ -1,45 +1,178 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, MapPin, Square, Bed, Bath, Calendar, Euro, User, Phone, Mail } from 'lucide-react';
-import { useCombinedProperties } from '@/hooks/useCombinedProperties';
-import { PropertyMetadata } from '@/types/property';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { 
+  ArrowLeft, 
+  MapPin, 
+  Home, 
+  Building, 
+  Euro, 
+  ImageIcon,
+  ChevronDown, 
+  ChevronUp, 
+  ChevronsUpDown,
+  Loader2,
+  Check,
+  X
+} from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import PropertyMap from '@/components/PropertyMap';
+import type { Database } from '@/integrations/supabase/types';
+
+type Bien = Database['public']['Tables']['biens']['Row'];
+type BienMedia = Database['public']['Tables']['bien_media']['Row'];
+
+interface BienWithMedia extends Bien {
+  bien_media?: BienMedia[];
+}
 
 const DetailBien = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { properties, isLoading, error } = useCombinedProperties();
+  const [bien, setBien] = useState<BienWithMedia | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [coordinates, setCoordinates] = useState<[number, number] | null>(null);
+  
+  const [openSections, setOpenSections] = useState({
+    general: true,
+    location: true,
+    characteristics: true,
+    price: true,
+    images: true
+  });
+
+  const toggleSection = (section: keyof typeof openSections) => {
+    setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+
+  const allOpen = Object.values(openSections).every(v => v);
+  
+  const toggleAllSections = () => {
+    const newState = !allOpen;
+    setOpenSections({
+      general: newState,
+      location: newState,
+      characteristics: newState,
+      price: newState,
+      images: newState
+    });
+  };
+
+  useEffect(() => {
+    if (id) {
+      fetchBien();
+    }
+  }, [id]);
+
+  const fetchBien = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('biens')
+        .select('*, bien_media(*)')
+        .eq('id', id)
+        .maybeSingle();
+
+      if (error) throw error;
+      
+      if (data) {
+        setBien(data);
+        // Try to geocode the address to get coordinates
+        if (data.adresse && data.ville) {
+          geocodeAddress(data.adresse, data.quartier, data.ville);
+        }
+      } else {
+        setError('Bien non trouvé');
+      }
+    } catch (err) {
+      console.error('Error fetching bien:', err);
+      setError('Erreur lors du chargement du bien');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const geocodeAddress = async (adresse: string, quartier: string | null, ville: string) => {
+    const fullAddress = [adresse, quartier, ville, 'Maroc'].filter(Boolean).join(', ');
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fullAddress)}&limit=1`,
+        { headers: { 'Accept-Language': 'fr' } }
+      );
+      const data = await response.json();
+      if (data && data.length > 0) {
+        setCoordinates([parseFloat(data[0].lon), parseFloat(data[0].lat)]);
+      }
+    } catch (err) {
+      console.error('Geocoding error:', err);
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'DISPONIBLE':
+        return <Badge className="bg-emerald-100 text-emerald-800">Disponible</Badge>;
+      case 'RESERVE':
+        return <Badge className="bg-amber-100 text-amber-800">Réservé</Badge>;
+      case 'VENDU':
+        return <Badge className="bg-slate-100 text-slate-800">Vendu</Badge>;
+      case 'LOUE':
+        return <Badge className="bg-blue-100 text-blue-800">Loué</Badge>;
+      case 'RETIRE':
+        return <Badge className="bg-red-100 text-red-800">Retiré</Badge>;
+      default:
+        return <Badge variant="secondary">{status}</Badge>;
+    }
+  };
+
+  const getTypeBadge = (type: string) => {
+    switch (type) {
+      case 'VENTE':
+        return <Badge className="bg-primary/10 text-primary">Vente</Badge>;
+      case 'LOCATION':
+        return <Badge className="bg-blue-100 text-blue-800">Location</Badge>;
+      case 'VENTE_LOCATION':
+        return <Badge className="bg-purple-100 text-purple-800">Vente/Location</Badge>;
+      default:
+        return <Badge variant="secondary">{type}</Badge>;
+    }
+  };
+
+  const BooleanDisplay = ({ value, label }: { value: boolean | null; label: string }) => (
+    <div className="flex items-center gap-2">
+      {value ? (
+        <Check className="h-4 w-4 text-emerald-600" />
+      ) : (
+        <X className="h-4 w-4 text-slate-400" />
+      )}
+      <span className={value ? 'text-foreground' : 'text-muted-foreground'}>{label}</span>
+    </div>
+  );
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Chargement...</span>
       </div>
     );
   }
 
-  if (error) {
+  if (error || !bien) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-red-600 mb-2">Erreur</h2>
-          <p className="text-gray-600">Impossible de charger les informations du bien</p>
-        </div>
-      </div>
-    );
-  }
-
-  const property = properties.find(p => p.id === id);
-
-  if (!property) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">Bien non trouvé</h2>
-          <p className="text-gray-600 mb-4">Le bien demandé n'existe pas ou n'est plus disponible</p>
+          <h2 className="text-xl font-semibold text-destructive mb-2">
+            {error || 'Bien non trouvé'}
+          </h2>
+          <p className="text-muted-foreground mb-4">
+            Le bien demandé n'existe pas ou n'est plus disponible
+          </p>
           <Button onClick={() => navigate('/biens')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Retour à la liste
@@ -49,152 +182,296 @@ const DetailBien = () => {
     );
   }
 
-  const metadata = property.metadata as PropertyMetadata;
-
-  const formatLocation = (location: PropertyMetadata['location']): string => {
-    if (!location) return 'Non spécifiée';
-    
-    if (typeof location === 'string') {
-      return location;
-    }
-    
-    const parts = [];
-    if (location.address) parts.push(location.address);
-    if (location.neighborhood) parts.push(location.neighborhood);
-    if (location.district) parts.push(location.district);
-    if (location.city) parts.push(location.city);
-    if (location.region) parts.push(location.region);
-    
-    return parts.length > 0 ? parts.join(', ') : 'Non spécifiée';
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'available':
-        return <Badge className="bg-emerald-100 text-emerald-800">Disponible</Badge>;
-      case 'pending':
-        return <Badge className="bg-blue-100 text-blue-800">En cours</Badge>;
-      case 'sold':
-        return <Badge className="bg-slate-100 text-slate-800">Vendu</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
-    }
-  };
+  const images = bien.bien_media || [];
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <Button
-          variant="outline"
-          onClick={() => navigate('/biens')}
-          className="flex items-center gap-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Retour à la liste
-        </Button>
-        {getStatusBadge(metadata?.status || 'available')}
+        <div className="flex items-center gap-4">
+          <Button variant="outline" size="sm" onClick={() => navigate('/biens')}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Retour
+          </Button>
+          <h1 className="text-2xl font-bold">{bien.titre}</h1>
+        </div>
+        <div className="flex items-center gap-2">
+          {getTypeBadge(bien.type)}
+          {getStatusBadge(bien.status)}
+        </div>
       </div>
 
+      {/* Toggle All Button */}
+      <div className="flex justify-end">
+        <Button 
+          type="button" 
+          variant="outline" 
+          size="sm"
+          onClick={toggleAllSections}
+          className="flex items-center gap-2"
+        >
+          <ChevronsUpDown className="h-4 w-4" />
+          {allOpen ? 'Réduire tout' : 'Ouvrir tout'}
+        </Button>
+      </div>
+
+      {/* Informations générales */}
+      <Collapsible open={openSections.general} onOpenChange={() => toggleSection('general')}>
+        <Card>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="cursor-pointer">
+              <CardTitle className="flex items-center justify-between w-full">
+                <span className="flex items-center gap-2">
+                  <Home className="h-5 w-5" />
+                  Informations générales
+                </span>
+                {openSections.general ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              </CardTitle>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <span className="text-sm text-muted-foreground">Titre</span>
+                  <p className="font-medium">{bien.titre}</p>
+                </div>
+                <div>
+                  <span className="text-sm text-muted-foreground">Type</span>
+                  <p className="font-medium">{getTypeBadge(bien.type)}</p>
+                </div>
+                <div>
+                  <span className="text-sm text-muted-foreground">Statut</span>
+                  <p className="font-medium">{getStatusBadge(bien.status)}</p>
+                </div>
+              </div>
+              {bien.description && (
+                <div>
+                  <span className="text-sm text-muted-foreground">Description</span>
+                  <p className="whitespace-pre-wrap">{bien.description}</p>
+                </div>
+              )}
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+
+      {/* Localisation */}
+      <Collapsible open={openSections.location} onOpenChange={() => toggleSection('location')}>
+        <Card>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="cursor-pointer">
+              <CardTitle className="flex items-center justify-between w-full">
+                <span className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  Localisation
+                </span>
+                {openSections.location ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              </CardTitle>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <span className="text-sm text-muted-foreground">Adresse</span>
+                  <p className="font-medium">{bien.adresse}</p>
+                </div>
+                <div>
+                  <span className="text-sm text-muted-foreground">Ville</span>
+                  <p className="font-medium">{bien.ville}</p>
+                </div>
+                {bien.quartier && (
+                  <div>
+                    <span className="text-sm text-muted-foreground">Quartier</span>
+                    <p className="font-medium">{bien.quartier}</p>
+                  </div>
+                )}
+                {bien.code_postal && (
+                  <div>
+                    <span className="text-sm text-muted-foreground">Code postal</span>
+                    <p className="font-medium">{bien.code_postal}</p>
+                  </div>
+                )}
+              </div>
+              
+              {/* Map */}
+              <div className="h-[300px] rounded-lg overflow-hidden border">
+                <PropertyMap 
+                  address={bien.adresse}
+                  city={bien.ville}
+                  region={bien.quartier || ''}
+                  initialCoordinates={coordinates || undefined}
+                />
+              </div>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+
+      {/* Caractéristiques */}
+      <Collapsible open={openSections.characteristics} onOpenChange={() => toggleSection('characteristics')}>
+        <Card>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="cursor-pointer">
+              <CardTitle className="flex items-center justify-between w-full">
+                <span className="flex items-center gap-2">
+                  <Building className="h-5 w-5" />
+                  Caractéristiques
+                </span>
+                {openSections.characteristics ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              </CardTitle>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {bien.surface_habitable && (
+                  <div>
+                    <span className="text-sm text-muted-foreground">Surface habitable</span>
+                    <p className="font-medium">{bien.surface_habitable} m²</p>
+                  </div>
+                )}
+                {bien.surface_terrain && (
+                  <div>
+                    <span className="text-sm text-muted-foreground">Surface terrain</span>
+                    <p className="font-medium">{bien.surface_terrain} m²</p>
+                  </div>
+                )}
+                {bien.nombre_chambres && (
+                  <div>
+                    <span className="text-sm text-muted-foreground">Chambres</span>
+                    <p className="font-medium">{bien.nombre_chambres}</p>
+                  </div>
+                )}
+                {bien.nombre_salles_bain && (
+                  <div>
+                    <span className="text-sm text-muted-foreground">Salles de bain</span>
+                    <p className="font-medium">{bien.nombre_salles_bain}</p>
+                  </div>
+                )}
+                {bien.nombre_etages && (
+                  <div>
+                    <span className="text-sm text-muted-foreground">Étages</span>
+                    <p className="font-medium">{bien.nombre_etages}</p>
+                  </div>
+                )}
+                {bien.annee_construction && (
+                  <div>
+                    <span className="text-sm text-muted-foreground">Année de construction</span>
+                    <p className="font-medium">{bien.annee_construction}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Équipements */}
+              <div>
+                <span className="text-sm text-muted-foreground block mb-2">Équipements</span>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <BooleanDisplay value={bien.meuble} label="Meublé" />
+                  <BooleanDisplay value={bien.parking} label="Parking" />
+                  <BooleanDisplay value={bien.jardin} label="Jardin" />
+                  <BooleanDisplay value={bien.piscine} label="Piscine" />
+                  <BooleanDisplay value={bien.ascenseur} label="Ascenseur" />
+                  <BooleanDisplay value={bien.climatisation} label="Climatisation" />
+                  <BooleanDisplay value={bien.chauffage} label="Chauffage" />
+                </div>
+              </div>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+
+      {/* Prix */}
+      <Collapsible open={openSections.price} onOpenChange={() => toggleSection('price')}>
+        <Card>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="cursor-pointer">
+              <CardTitle className="flex items-center justify-between w-full">
+                <span className="flex items-center gap-2">
+                  <Euro className="h-5 w-5" />
+                  Informations tarifaires
+                </span>
+                {openSections.price ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              </CardTitle>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {bien.prix_vente && (
+                  <div>
+                    <span className="text-sm text-muted-foreground">Prix de vente</span>
+                    <p className="text-2xl font-bold text-primary">{bien.prix_vente.toLocaleString()} DH</p>
+                  </div>
+                )}
+                {bien.prix_location && (
+                  <div>
+                    <span className="text-sm text-muted-foreground">Loyer mensuel</span>
+                    <p className="text-2xl font-bold text-primary">{bien.prix_location.toLocaleString()} DH/mois</p>
+                  </div>
+                )}
+                {bien.charges_mensuelles && (
+                  <div>
+                    <span className="text-sm text-muted-foreground">Charges mensuelles</span>
+                    <p className="font-medium">{bien.charges_mensuelles.toLocaleString()} DH/mois</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+
+      {/* Photos */}
+      <Collapsible open={openSections.images} onOpenChange={() => toggleSection('images')}>
+        <Card>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="cursor-pointer">
+              <CardTitle className="flex items-center justify-between w-full">
+                <span className="flex items-center gap-2">
+                  <ImageIcon className="h-5 w-5" />
+                  Photos ({images.length})
+                </span>
+                {openSections.images ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              </CardTitle>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent>
+              {images.length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {images.map((media) => (
+                    <div key={media.id} className="aspect-square rounded-lg overflow-hidden border">
+                      <img
+                        src={`https://erbjiehcvwqhxqdvmges.supabase.co/storage/v1/object/public/bien-media/${media.file_path}`}
+                        alt={media.file_name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = '/placeholder.svg';
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <ImageIcon className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p>Aucune photo disponible</p>
+                </div>
+              )}
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
+
+      {/* Dates */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">{metadata?.title || 'Bien sans titre'}</CardTitle>
-          <div className="flex items-center text-slate-600">
-            <MapPin className="h-4 w-4 mr-2" />
-            {formatLocation(metadata?.location)}
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Prix */}
-          <div className="text-3xl font-bold text-primary">
-            {metadata?.price ? `${metadata.price.toLocaleString()} €` : 'Prix non défini'}
-          </div>
-
-          {/* Caractéristiques */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-center space-x-2">
-              <Square className="h-5 w-5 text-slate-500" />
-              <span className="text-sm text-slate-600">Surface:</span>
-              <span className="font-medium">
-                {metadata?.surface ? 
-                  (typeof metadata.surface === 'number' ? `${metadata.surface} m²` : 
-                   metadata.surface.builtArea ? `${metadata.surface.builtArea} m²` : 'Non spécifiée') 
-                  : 'Non spécifiée'}
-              </span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Bed className="h-5 w-5 text-slate-500" />
-              <span className="text-sm text-slate-600">Chambres:</span>
-              <span className="font-medium">{metadata?.bedrooms || 'Non spécifié'}</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Bath className="h-5 w-5 text-slate-500" />
-              <span className="text-sm text-slate-600">Salles de bain:</span>
-              <span className="font-medium">{metadata?.bathrooms || 'Non spécifié'}</span>
-            </div>
-          </div>
-
-          {/* Description */}
-          {metadata?.description && (
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Description</h3>
-              <p className="text-slate-700 whitespace-pre-wrap">{metadata.description}</p>
-            </div>
-          )}
-
-          {/* Caractéristiques supplémentaires */}
-          {metadata?.features && metadata.features.length > 0 && (
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Équipements</h3>
-              <div className="flex flex-wrap gap-2">
-                {metadata.features.map((feature, index) => (
-                  <Badge key={index} variant="outline">{feature}</Badge>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Informations supplémentaires */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Informations générales</h3>
-              <div className="space-y-2 text-sm">
-                {metadata?.propertyType && (
-                  <div className="flex justify-between">
-                    <span className="text-slate-600">Type:</span>
-                    <span className="font-medium capitalize">{metadata.propertyType}</span>
-                  </div>
-                )}
-                {metadata?.category && (
-                  <div className="flex justify-between">
-                    <span className="text-slate-600">Catégorie:</span>
-                    <span className="font-medium">{metadata.category}</span>
-                  </div>
-                )}
-                {metadata?.condition && (
-                  <div className="flex justify-between">
-                    <span className="text-slate-600">État:</span>
-                    <span className="font-medium">{metadata.condition}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Dates</h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-slate-600">Créé le:</span>
-                  <span className="font-medium">
-                    {new Date(property.created_at).toLocaleDateString('fr-FR')}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-600">Modifié le:</span>
-                  <span className="font-medium">
-                    {new Date(property.updated_at).toLocaleDateString('fr-FR')}
-                  </span>
-                </div>
-              </div>
-            </div>
+        <CardContent className="pt-6">
+          <div className="flex justify-between text-sm text-muted-foreground">
+            <span>Créé le: {new Date(bien.created_at).toLocaleDateString('fr-FR')}</span>
+            <span>Modifié le: {new Date(bien.updated_at).toLocaleDateString('fr-FR')}</span>
           </div>
         </CardContent>
       </Card>
