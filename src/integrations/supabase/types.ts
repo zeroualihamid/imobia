@@ -115,6 +115,7 @@ export type Database = {
           surface_terrain: number | null
           titre: string
           type: Database["public"]["Enums"]["bien_type"]
+          type_bien: string | null
           updated_at: string
           ville: string
         }
@@ -145,6 +146,7 @@ export type Database = {
           surface_terrain?: number | null
           titre: string
           type: Database["public"]["Enums"]["bien_type"]
+          type_bien?: string | null
           updated_at?: string
           ville: string
         }
@@ -175,6 +177,7 @@ export type Database = {
           surface_terrain?: number | null
           titre?: string
           type?: Database["public"]["Enums"]["bien_type"]
+          type_bien?: string | null
           updated_at?: string
           ville?: string
         }
