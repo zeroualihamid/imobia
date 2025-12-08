@@ -505,6 +505,32 @@ const AjouterBienForm = ({ proprietaireId: initialProprietaireId, onSuccess, onC
     );
   }
 
+  if (!userProprietaireId && !loadingProprietaire) {
+    return (
+      <Card className="max-w-md mx-auto">
+        <CardContent className="pt-6">
+          <div className="text-center space-y-4">
+            <Building className="h-12 w-12 mx-auto text-muted-foreground" />
+            <h3 className="text-lg font-semibold">Aucun propriétaire associé</h3>
+            <p className="text-muted-foreground">
+              Pour ajouter un bien, vous devez d'abord créer un propriétaire associé à votre compte.
+            </p>
+            <div className="flex flex-col gap-2">
+              <Button onClick={() => window.location.href = '/proprietaires/ajouter'}>
+                Créer un propriétaire
+              </Button>
+              {onCancel && (
+                <Button variant="outline" onClick={onCancel}>
+                  Retour
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Toggle All Button */}
