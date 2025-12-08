@@ -50,12 +50,25 @@ export const useProprietaires = () => {
   const addProprietaire = async (proprietaireData: Omit<Proprietaire, 'id' | 'created_at' | 'updated_at' | 'created_by'>) => {
     if (!user) throw new Error('User not authenticated');
 
+    // Convert empty strings to null for nullable fields
+    const cleanedData = {
+      ...proprietaireData,
+      created_by: user.id,
+      date_naissance: proprietaireData.date_naissance || null,
+      prenom: proprietaireData.prenom || null,
+      email: proprietaireData.email || null,
+      adresse: proprietaireData.adresse || null,
+      ville: proprietaireData.ville || null,
+      code_postal: proprietaireData.code_postal || null,
+      raison_sociale: proprietaireData.raison_sociale || null,
+      cin: proprietaireData.cin || null,
+      ice: proprietaireData.ice || null,
+      notes: proprietaireData.notes || null,
+    };
+
     const { data, error } = await supabase
       .from('proprietaires')
-      .insert([{
-        ...proprietaireData,
-        created_by: user.id
-      }])
+      .insert([cleanedData])
       .select()
       .single();
 

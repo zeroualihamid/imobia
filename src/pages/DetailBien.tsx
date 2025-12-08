@@ -23,8 +23,20 @@ import {
   Check,
   X,
   Pencil,
-  Save
+  Save,
+  Trash2
 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import PropertyMap from '@/components/PropertyMap';
@@ -41,6 +53,15 @@ interface BienWithMedia extends Bien {
   bien_media?: BienMedia[];
 }
 
+interface Proprietaire {
+  id: string;
+  nom: string;
+  prenom: string | null;
+  telephone: string;
+  email: string | null;
+  type: string;
+}
+
 const DetailBien = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -49,8 +70,10 @@ const DetailBien = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [coordinates, setCoordinates] = useState<[number, number] | null>(null);
+  const [proprietaire, setProprietaire] = useState<Proprietaire | null>(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // Edit mode states for each section
   const [editMode, setEditMode] = useState({
@@ -65,6 +88,7 @@ const DetailBien = () => {
   const [saving, setSaving] = useState<string | null>(null);
   
   const [openSections, setOpenSections] = useState({
+    proprietaire: true,
     general: true,
     location: true,
     characteristics: true,
@@ -81,6 +105,7 @@ const DetailBien = () => {
   const toggleAllSections = () => {
     const newState = !allOpen;
     setOpenSections({
+      proprietaire: newState,
       general: newState,
       location: newState,
       characteristics: newState,
@@ -117,6 +142,8 @@ const DetailBien = () => {
         if (data.adresse && data.ville) {
           geocodeAddress(data.adresse, data.quartier, data.ville);
         }
+        // Fetch proprietaire info
+        fetchProprietaire(data.proprietaire_id);
       } else {
         setError('Bien non trouvé');
       }
@@ -125,6 +152,23 @@ const DetailBien = () => {
       setError('Erreur lors du chargement du bien');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchProprietaire = async (proprietaireId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('proprietaires')
+        .select('id, nom, prenom, telephone, email, type')
+        .eq('id', proprietaireId)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (data) {
+        setProprietaire(data);
+      }
+    } catch (err) {
+      console.error('Error fetching proprietaire:', err);
     }
   };
 
@@ -220,6 +264,53 @@ const DetailBien = () => {
 
   const handleInputChange = (field: keyof Bien, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleDelete = async () => {
+    if (!id) return;
+    
+    setIsDeleting(true);
+    try {
+      // First delete associated media
+      const { error: mediaError } = await supabase
+        .from('bien_media')
+        .delete()
+        .eq('bien_id', id);
+
+      if (mediaError) throw mediaError;
+
+      // Delete associated shares
+      const { error: sharesError } = await supabase
+        .from('bien_shares')
+        .delete()
+        .eq('bien_id', id);
+
+      if (sharesError) throw sharesError;
+
+      // Then delete the bien
+      const { error } = await supabase
+        .from('biens')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Le bien a été supprimé"
+      });
+
+      navigate('/biens');
+    } catch (err) {
+      console.error('Error deleting bien:', err);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la suppression du bien",
+        variant: "destructive"
+      });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -344,6 +435,37 @@ const DetailBien = () => {
           <ShareBienDialog bienId={bien.id} bienTitle={bien.titre} />
           {getTypeBadge(bien.type)}
           {getStatusBadge(bien.status)}
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="sm">
+                <Trash2 className="h-4 w-4 mr-2" />
+                Supprimer
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Supprimer ce bien ?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Cette action est irréversible. Le bien "{bien.titre}" et toutes ses images seront définitivement supprimés.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  {isDeleting ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    <Trash2 className="h-4 w-4 mr-2" />
+                  )}
+                  Supprimer
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
 
@@ -360,6 +482,54 @@ const DetailBien = () => {
           {allOpen ? 'Réduire tout' : 'Ouvrir tout'}
         </Button>
       </div>
+
+      {/* Propriétaire */}
+      <Collapsible open={openSections.proprietaire} onOpenChange={() => toggleSection('proprietaire')}>
+        <Card>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="cursor-pointer">
+              <CardTitle className="flex items-center justify-between w-full">
+                <span className="flex items-center gap-2">
+                  <Building className="h-5 w-5" />
+                  Propriétaire
+                </span>
+                {openSections.proprietaire ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              </CardTitle>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent>
+              {proprietaire ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-sm text-muted-foreground">Nom complet</span>
+                    <p className="font-medium">{proprietaire.nom} {proprietaire.prenom || ''}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm text-muted-foreground">Téléphone</span>
+                    <p className="font-medium">{proprietaire.telephone}</p>
+                  </div>
+                  {proprietaire.email && (
+                    <div>
+                      <span className="text-sm text-muted-foreground">Email</span>
+                      <p className="font-medium">{proprietaire.email}</p>
+                    </div>
+                  )}
+                  <div>
+                    <span className="text-sm text-muted-foreground">Type</span>
+                    <p className="font-medium">{proprietaire.type}</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-4 text-muted-foreground">
+                  <Building className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p>Aucun propriétaire associé</p>
+                </div>
+              )}
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
 
       {/* Informations générales */}
       <Collapsible open={openSections.general} onOpenChange={() => toggleSection('general')}>

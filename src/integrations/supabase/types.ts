@@ -108,7 +108,7 @@ export type Database = {
           piscine: boolean | null
           prix_location: number | null
           prix_vente: number | null
-          proprietaire_id: string
+          proprietaire_id: string | null
           quartier: string | null
           status: Database["public"]["Enums"]["bien_status"]
           surface_habitable: number | null
@@ -138,7 +138,7 @@ export type Database = {
           piscine?: boolean | null
           prix_location?: number | null
           prix_vente?: number | null
-          proprietaire_id: string
+          proprietaire_id?: string | null
           quartier?: string | null
           status?: Database["public"]["Enums"]["bien_status"]
           surface_habitable?: number | null
@@ -168,7 +168,7 @@ export type Database = {
           piscine?: boolean | null
           prix_location?: number | null
           prix_vente?: number | null
-          proprietaire_id?: string
+          proprietaire_id?: string | null
           quartier?: string | null
           status?: Database["public"]["Enums"]["bien_status"]
           surface_habitable?: number | null
