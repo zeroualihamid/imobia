@@ -106,11 +106,11 @@ const ShareBienDialog: React.FC<ShareBienDialogProps> = ({ bienId, bienTitle }) 
 
     setSearching(true);
     try {
-      // Find user by email
+      // Find user by email (case-insensitive)
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('id, email, full_name')
-        .eq('email', email)
+        .ilike('email', email)
         .maybeSingle();
 
       if (profileError) throw profileError;
