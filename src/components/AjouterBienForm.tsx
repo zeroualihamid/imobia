@@ -45,6 +45,7 @@ const AjouterBienForm = ({ proprietaireId: initialProprietaireId, onSuccess, onC
     titre: '',
     description: '',
     type: 'VENTE' as BienType,
+    type_bien: '',
     status: 'DISPONIBLE' as BienStatus,
     adresse: '',
     ville: '',
@@ -71,6 +72,20 @@ const AjouterBienForm = ({ proprietaireId: initialProprietaireId, onSuccess, onC
     climatisation: false,
     chauffage: false
   });
+
+  const typesBien = [
+    'Appartement',
+    'Bureau',
+    'Duplex',
+    'Ferme',
+    'Local commercial',
+    'Maison',
+    'Riad',
+    'Studio',
+    'Terrain',
+    'Triplex',
+    'Villa ou maison de luxe'
+  ];
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
@@ -441,6 +456,7 @@ const AjouterBienForm = ({ proprietaireId: initialProprietaireId, onSuccess, onC
         titre: formData.titre,
         description: formData.description || null,
         type: formData.type,
+        type_bien: formData.type_bien || null,
         status: formData.status,
         adresse: formData.adresse,
         ville: formData.ville,
@@ -639,7 +655,21 @@ const AjouterBienForm = ({ proprietaireId: initialProprietaireId, onSuccess, onC
                 </div>
 
                 <div>
-                  <Label htmlFor="type">Type *</Label>
+                  <Label htmlFor="type_bien">Type de bien</Label>
+                  <Select value={formData.type_bien} onValueChange={(value) => handleInputChange('type_bien', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner un type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {typesBien.map((type) => (
+                        <SelectItem key={type} value={type}>{type}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="type">Catégorie *</Label>
                   <Select value={formData.type} onValueChange={(value: BienType) => handleInputChange('type', value)}>
                     <SelectTrigger>
                       <SelectValue />
@@ -647,7 +677,6 @@ const AjouterBienForm = ({ proprietaireId: initialProprietaireId, onSuccess, onC
                     <SelectContent>
                       <SelectItem value="VENTE">Vente</SelectItem>
                       <SelectItem value="LOCATION">Location</SelectItem>
-                      <SelectItem value="VENTE_LOCATION">Vente/Location</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
