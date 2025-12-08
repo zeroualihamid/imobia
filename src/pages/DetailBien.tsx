@@ -41,6 +41,15 @@ interface BienWithMedia extends Bien {
   bien_media?: BienMedia[];
 }
 
+interface Proprietaire {
+  id: string;
+  nom: string;
+  prenom: string | null;
+  telephone: string;
+  email: string | null;
+  type: string;
+}
+
 const DetailBien = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -49,6 +58,7 @@ const DetailBien = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [coordinates, setCoordinates] = useState<[number, number] | null>(null);
+  const [proprietaire, setProprietaire] = useState<Proprietaire | null>(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   
@@ -65,6 +75,7 @@ const DetailBien = () => {
   const [saving, setSaving] = useState<string | null>(null);
   
   const [openSections, setOpenSections] = useState({
+    proprietaire: true,
     general: true,
     location: true,
     characteristics: true,
@@ -81,6 +92,7 @@ const DetailBien = () => {
   const toggleAllSections = () => {
     const newState = !allOpen;
     setOpenSections({
+      proprietaire: newState,
       general: newState,
       location: newState,
       characteristics: newState,
@@ -117,6 +129,8 @@ const DetailBien = () => {
         if (data.adresse && data.ville) {
           geocodeAddress(data.adresse, data.quartier, data.ville);
         }
+        // Fetch proprietaire info
+        fetchProprietaire(data.proprietaire_id);
       } else {
         setError('Bien non trouvé');
       }
@@ -125,6 +139,23 @@ const DetailBien = () => {
       setError('Erreur lors du chargement du bien');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchProprietaire = async (proprietaireId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('proprietaires')
+        .select('id, nom, prenom, telephone, email, type')
+        .eq('id', proprietaireId)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (data) {
+        setProprietaire(data);
+      }
+    } catch (err) {
+      console.error('Error fetching proprietaire:', err);
     }
   };
 
@@ -360,6 +391,54 @@ const DetailBien = () => {
           {allOpen ? 'Réduire tout' : 'Ouvrir tout'}
         </Button>
       </div>
+
+      {/* Propriétaire */}
+      <Collapsible open={openSections.proprietaire} onOpenChange={() => toggleSection('proprietaire')}>
+        <Card>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="cursor-pointer">
+              <CardTitle className="flex items-center justify-between w-full">
+                <span className="flex items-center gap-2">
+                  <Building className="h-5 w-5" />
+                  Propriétaire
+                </span>
+                {openSections.proprietaire ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              </CardTitle>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent>
+              {proprietaire ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-sm text-muted-foreground">Nom complet</span>
+                    <p className="font-medium">{proprietaire.nom} {proprietaire.prenom || ''}</p>
+                  </div>
+                  <div>
+                    <span className="text-sm text-muted-foreground">Téléphone</span>
+                    <p className="font-medium">{proprietaire.telephone}</p>
+                  </div>
+                  {proprietaire.email && (
+                    <div>
+                      <span className="text-sm text-muted-foreground">Email</span>
+                      <p className="font-medium">{proprietaire.email}</p>
+                    </div>
+                  )}
+                  <div>
+                    <span className="text-sm text-muted-foreground">Type</span>
+                    <p className="font-medium">{proprietaire.type}</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-4 text-muted-foreground">
+                  <Building className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p>Aucun propriétaire associé</p>
+                </div>
+              )}
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
 
       {/* Informations générales */}
       <Collapsible open={openSections.general} onOpenChange={() => toggleSection('general')}>
