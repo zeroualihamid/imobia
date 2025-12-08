@@ -419,8 +419,6 @@ const AjouterBienForm = ({ proprietaireId: initialProprietaireId, onSuccess, onC
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const effectiveProprietaireId = userProprietaireId;
-    
     if (!validateForm()) {
       toast({
         title: "Erreur",
@@ -430,20 +428,11 @@ const AjouterBienForm = ({ proprietaireId: initialProprietaireId, onSuccess, onC
       return;
     }
 
-    if (!effectiveProprietaireId) {
-      toast({
-        title: "Erreur",
-        description: "Aucun propriétaire associé à votre compte. Veuillez d'abord créer un propriétaire.",
-        variant: "destructive"
-      });
-      return;
-    }
-
     setLoading(true);
     
     try {
       const bienData = {
-        proprietaire_id: effectiveProprietaireId,
+        proprietaire_id: userProprietaireId || null,
         titre: formData.titre,
         description: formData.description || null,
         type: formData.type,
