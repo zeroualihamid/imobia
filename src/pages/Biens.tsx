@@ -10,7 +10,8 @@ import {
   Bed, 
   Bath, 
   CheckSquare,
-  Send
+  Send,
+  Share2
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCombinedProperties } from '@/hooks/useCombinedProperties';
@@ -139,9 +140,17 @@ const Biens = () => {
                 {/* Property Details */}
                 <div className="flex-1 p-4">
                   <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-lg font-semibold text-slate-900">
-                      {metadata?.title || 'Sans titre'}
-                    </h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-lg font-semibold text-slate-900">
+                        {metadata?.title || 'Sans titre'}
+                      </h3>
+                      {property.isShared && (
+                        <Badge variant="outline" className="text-blue-600 border-blue-300">
+                          <Share2 className="h-3 w-3 mr-1" />
+                          Partagé
+                        </Badge>
+                      )}
+                    </div>
                     {getStatusBadge(metadata?.status || 'available')}
                   </div>
                   

@@ -15,6 +15,7 @@ interface CombinedProperty {
   bien_media?: any[];
   source: 'properties' | 'biens';
   original_data?: Bien;
+  isShared?: boolean;
 }
 
 export const useCombinedProperties = () => {
@@ -61,7 +62,21 @@ export const useCombinedProperties = () => {
 
       if (biensError) throw biensError;
 
-      // Convert biens to properties format
+      // Fetch shared biens (properties shared with this user)
+      const { data: sharedBiensData, error: sharedBiensError } = await supabase
+        .from('bien_shares')
+        .select(`
+          bien_id,
+          biens!inner (
+            *,
+            bien_media (*)
+          )
+        `)
+        .eq('shared_with_user_id', user.id);
+
+      if (sharedBiensError) throw sharedBiensError;
+
+      // Convert owned biens to properties format
       const convertedBiens: CombinedProperty[] = (biensData || []).map((bien: any) => ({
         id: bien.id,
         user_id: user.id,
@@ -69,6 +84,7 @@ export const useCombinedProperties = () => {
         original_data: bien,
         created_at: bien.created_at,
         updated_at: bien.updated_at,
+        isShared: false,
         metadata: {
           title: bien.titre,
           description: bien.description,
@@ -101,6 +117,50 @@ export const useCombinedProperties = () => {
         property_media: [],
       }));
 
+      // Convert shared biens to properties format
+      const convertedSharedBiens: CombinedProperty[] = (sharedBiensData || []).map((share: any) => {
+        const bien = share.biens;
+        return {
+          id: bien.id,
+          user_id: user.id,
+          source: 'biens' as const,
+          original_data: bien,
+          created_at: bien.created_at,
+          updated_at: bien.updated_at,
+          isShared: true,
+          metadata: {
+            title: bien.titre,
+            description: bien.description,
+            location: {
+              address: bien.adresse,
+              city: bien.ville,
+              neighborhood: bien.quartier,
+            },
+            status: bien.status?.toLowerCase() === 'disponible' ? 'available' : 
+                   bien.status?.toLowerCase() === 'vendu' ? 'sold' : 'pending',
+            price: bien.prix_vente || bien.prix_location,
+            surface: {
+              builtArea: bien.surface_habitable,
+              livingArea: bien.surface_habitable,
+            },
+            bedrooms: bien.nombre_chambres,
+            bathrooms: bien.nombre_salles_bain,
+            propertyType: bien.type?.toLowerCase(),
+            features: [
+              ...(bien.parking ? ['Parking'] : []),
+              ...(bien.jardin ? ['Jardin'] : []),
+              ...(bien.piscine ? ['Piscine'] : []),
+              ...(bien.ascenseur ? ['Ascenseur'] : []),
+              ...(bien.climatisation ? ['Climatisation'] : []),
+              ...(bien.chauffage ? ['Chauffage'] : []),
+              ...(bien.meuble ? ['Meublé'] : []),
+            ],
+          },
+          bien_media: bien.bien_media || [],
+          property_media: [],
+        };
+      });
+
       // Convert properties to same format - fix the TypeScript error
       const convertedProperties: CombinedProperty[] = (propertiesData || []).map((property: any) => ({
         id: property.id,
@@ -112,8 +172,11 @@ export const useCombinedProperties = () => {
         source: 'properties' as const,
       }));
 
-      // Combine and sort by creation date
-      const combined = [...convertedProperties, ...convertedBiens].sort(
+      // Combine and sort by creation date (excluding duplicates)
+      const ownedIds = new Set([...convertedProperties, ...convertedBiens].map(p => p.id));
+      const uniqueSharedBiens = convertedSharedBiens.filter(p => !ownedIds.has(p.id));
+      
+      const combined = [...convertedProperties, ...convertedBiens, ...uniqueSharedBiens].sort(
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
 
