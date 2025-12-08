@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,6 +29,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import PropertyMap from '@/components/PropertyMap';
 import ImageLightbox from '@/components/ui/ImageLightbox';
+import ShareBienDialog from '@/components/biens/ShareBienDialog';
 import type { Database } from '@/integrations/supabase/types';
 
 type Bien = Database['public']['Tables']['biens']['Row'];
@@ -341,6 +341,7 @@ const DetailBien = () => {
           <h1 className="text-2xl font-bold">{bien.titre}</h1>
         </div>
         <div className="flex items-center gap-2">
+          <ShareBienDialog bienId={bien.id} bienTitle={bien.titre} />
           {getTypeBadge(bien.type)}
           {getStatusBadge(bien.status)}
         </div>
