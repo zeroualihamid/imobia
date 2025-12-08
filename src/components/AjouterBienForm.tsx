@@ -144,6 +144,11 @@ const AjouterBienForm = ({ proprietaireId: initialProprietaireId, onSuccess, onC
   };
 
   const handleProprietaireChange = (proprietaireId: string) => {
+    if (proprietaireId === 'none') {
+      setSelectedProprietaire(null);
+      setUserProprietaireId(null);
+      return;
+    }
     const prop = proprietaires.find(p => p.id === proprietaireId);
     if (prop) {
       setSelectedProprietaire(prop);
@@ -538,13 +543,14 @@ const AjouterBienForm = ({ proprietaireId: initialProprietaireId, onSuccess, onC
                   <div className="space-y-2">
                     <Label>Sélectionner un propriétaire</Label>
                     <Select
-                      value={userProprietaireId || ''}
+                      value={userProprietaireId || 'none'}
                       onValueChange={handleProprietaireChange}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Choisir un propriétaire" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="none">Aucun (à définir plus tard)</SelectItem>
                         {proprietaires.map((prop) => (
                           <SelectItem key={prop.id} value={prop.id}>
                             {prop.nom} {prop.prenom || ''} - {prop.telephone}
