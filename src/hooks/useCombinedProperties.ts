@@ -44,7 +44,7 @@ export const useCombinedProperties = () => {
       if (propertiesError) throw propertiesError;
 
       // Fetch from biens table (via proprietaires created by user)
-      const { data: biensData, error: biensError } = await supabase
+      const { data: biensWithOwnerData, error: biensWithOwnerError } = await supabase
         .from('biens')
         .select(`
           *,
@@ -60,7 +60,22 @@ export const useCombinedProperties = () => {
         .eq('proprietaires.created_by', user.id)
         .order('created_at', { ascending: false });
 
-      if (biensError) throw biensError;
+      if (biensWithOwnerError) throw biensWithOwnerError;
+
+      // Fetch biens without proprietaire (proprietaire_id is null)
+      const { data: biensWithoutOwnerData, error: biensWithoutOwnerError } = await supabase
+        .from('biens')
+        .select(`
+          *,
+          bien_media (*)
+        `)
+        .is('proprietaire_id', null)
+        .order('created_at', { ascending: false });
+
+      if (biensWithoutOwnerError) throw biensWithoutOwnerError;
+
+      // Combine both biens queries
+      const biensData = [...(biensWithOwnerData || []), ...(biensWithoutOwnerData || [])];
 
       // Fetch shared biens (properties shared with this user)
       const { data: sharedBiensData, error: sharedBiensError } = await supabase
