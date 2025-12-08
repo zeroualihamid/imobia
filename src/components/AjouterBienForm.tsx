@@ -563,10 +563,10 @@ const AjouterBienForm = ({ proprietaireId: initialProprietaireId, onSuccess, onC
                       onValueChange={handleProprietaireChange}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Choisir un propriétaire" />
+                        <SelectValue placeholder="Aucun" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="none">Aucun (à définir plus tard)</SelectItem>
+                        <SelectItem value="none">Aucun</SelectItem>
                         {proprietaires.map((prop) => (
                           <SelectItem key={prop.id} value={prop.id}>
                             {prop.nom} {prop.prenom || ''} - {prop.telephone}
@@ -681,21 +681,6 @@ const AjouterBienForm = ({ proprietaireId: initialProprietaireId, onSuccess, onC
                   </Select>
                 </div>
 
-                <div>
-                  <Label htmlFor="status">Statut</Label>
-                  <Select value={formData.status} onValueChange={(value: BienStatus) => handleInputChange('status', value)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="DISPONIBLE">Disponible</SelectItem>
-                      <SelectItem value="RESERVE">Réservé</SelectItem>
-                      <SelectItem value="VENDU">Vendu</SelectItem>
-                      <SelectItem value="LOUE">Loué</SelectItem>
-                      <SelectItem value="RETIRE">Retiré</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
 
               <div>
@@ -865,24 +850,12 @@ const AjouterBienForm = ({ proprietaireId: initialProprietaireId, onSuccess, onC
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
-                  <Label htmlFor="surface_habitable">Surface habitable (m²)</Label>
+                  <Label htmlFor="surface_habitable">Surface (m²)</Label>
                   <Input
                     id="surface_habitable"
                     type="number"
                     value={formData.surface_habitable}
                     onChange={(e) => handleInputChange('surface_habitable', e.target.value)}
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="surface_terrain">Surface terrain (m²)</Label>
-                  <Input
-                    id="surface_terrain"
-                    type="number"
-                    value={formData.surface_terrain}
-                    onChange={(e) => handleInputChange('surface_terrain', e.target.value)}
                     min="0"
                     step="0.01"
                   />
