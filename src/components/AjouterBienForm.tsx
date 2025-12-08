@@ -24,11 +24,22 @@ interface AjouterBienFormProps {
   onCancel?: () => void;
 }
 
+interface Proprietaire {
+  id: string;
+  nom: string;
+  prenom: string | null;
+  telephone: string;
+  email: string | null;
+  type: string;
+}
+
 const AjouterBienForm = ({ proprietaireId: initialProprietaireId, onSuccess, onCancel }: AjouterBienFormProps) => {
   const { toast } = useToast();
   
   const [userProprietaireId, setUserProprietaireId] = useState<string | null>(initialProprietaireId || null);
   const [loadingProprietaire, setLoadingProprietaire] = useState(!initialProprietaireId);
+  const [proprietaires, setProprietaires] = useState<Proprietaire[]>([]);
+  const [selectedProprietaire, setSelectedProprietaire] = useState<Proprietaire | null>(null);
   
   const [formData, setFormData] = useState({
     titre: '',
@@ -70,6 +81,7 @@ const AjouterBienForm = ({ proprietaireId: initialProprietaireId, onSuccess, onC
   const [searchLoading, setSearchLoading] = useState(false);
   const [coordinates, setCoordinates] = useState<[number, number] | null>(null);
   const [openSections, setOpenSections] = useState({
+    proprietaire: true,
     general: true,
     location: true,
     characteristics: true,
@@ -77,52 +89,38 @@ const AjouterBienForm = ({ proprietaireId: initialProprietaireId, onSuccess, onC
     images: true
   });
 
-  // Fetch proprietaire for the logged-in user
+  // Fetch proprietaires for the logged-in user
   useEffect(() => {
     if (!initialProprietaireId) {
-      fetchUserProprietaire();
+      fetchUserProprietaires();
     }
   }, [initialProprietaireId]);
 
-  const fetchUserProprietaire = async () => {
+  const fetchUserProprietaires = async () => {
     setLoadingProprietaire(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        toast({
-          title: "Erreur",
-          description: "Vous devez être connecté pour ajouter un bien",
-          variant: "destructive"
-        });
+        setLoadingProprietaire(false);
         return;
       }
 
       const { data, error } = await supabase
         .from('proprietaires')
-        .select('id')
+        .select('id, nom, prenom, telephone, email, type')
         .eq('created_by', user.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .order('created_at', { ascending: false });
       
       if (error) throw error;
       
-      if (data) {
-        setUserProprietaireId(data.id);
-      } else {
-        toast({
-          title: "Aucun propriétaire",
-          description: "Veuillez d'abord créer un propriétaire avant d'ajouter un bien",
-          variant: "destructive"
-        });
+      if (data && data.length > 0) {
+        setProprietaires(data);
+        // Auto-select the first proprietaire
+        setSelectedProprietaire(data[0]);
+        setUserProprietaireId(data[0].id);
       }
     } catch (error) {
-      console.error('Error fetching user proprietaire:', error);
-      toast({
-        title: "Erreur",
-        description: "Erreur lors de la récupération du propriétaire",
-        variant: "destructive"
-      });
+      console.error('Error fetching user proprietaires:', error);
     } finally {
       setLoadingProprietaire(false);
     }
@@ -136,12 +134,21 @@ const AjouterBienForm = ({ proprietaireId: initialProprietaireId, onSuccess, onC
   const toggleAllSections = () => {
     const newState = !allOpen;
     setOpenSections({
+      proprietaire: newState,
       general: newState,
       location: newState,
       characteristics: newState,
       price: newState,
       images: newState
     });
+  };
+
+  const handleProprietaireChange = (proprietaireId: string) => {
+    const prop = proprietaires.find(p => p.id === proprietaireId);
+    if (prop) {
+      setSelectedProprietaire(prop);
+      setUserProprietaireId(prop.id);
+    }
   };
 
   const handleImagesChange = (files: UploadedFile[]) => {
@@ -505,32 +512,6 @@ const AjouterBienForm = ({ proprietaireId: initialProprietaireId, onSuccess, onC
     );
   }
 
-  if (!userProprietaireId && !loadingProprietaire) {
-    return (
-      <Card className="max-w-md mx-auto">
-        <CardContent className="pt-6">
-          <div className="text-center space-y-4">
-            <Building className="h-12 w-12 mx-auto text-muted-foreground" />
-            <h3 className="text-lg font-semibold">Aucun propriétaire associé</h3>
-            <p className="text-muted-foreground">
-              Pour ajouter un bien, vous devez d'abord créer un propriétaire associé à votre compte.
-            </p>
-            <div className="flex flex-col gap-2">
-              <Button onClick={() => window.location.href = '/proprietaires/ajouter'}>
-                Créer un propriétaire
-              </Button>
-              {onCancel && (
-                <Button variant="outline" onClick={onCancel}>
-                  Retour
-                </Button>
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Toggle All Button */}
@@ -546,6 +527,87 @@ const AjouterBienForm = ({ proprietaireId: initialProprietaireId, onSuccess, onC
           {allOpen ? 'Réduire tout' : 'Ouvrir tout'}
         </Button>
       </div>
+
+      {/* Propriétaire */}
+      <Collapsible open={openSections.proprietaire} onOpenChange={() => toggleSection('proprietaire')}>
+        <Card>
+          <CollapsibleTrigger asChild>
+            <CardHeader className="cursor-pointer">
+              <CardTitle className="flex items-center justify-between w-full">
+                <span className="flex items-center gap-2">
+                  <Building className="h-5 w-5" />
+                  Propriétaire
+                </span>
+                {openSections.proprietaire ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              </CardTitle>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="space-y-4">
+              {proprietaires.length > 0 ? (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Sélectionner un propriétaire</Label>
+                    <Select
+                      value={userProprietaireId || ''}
+                      onValueChange={handleProprietaireChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choisir un propriétaire" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {proprietaires.map((prop) => (
+                          <SelectItem key={prop.id} value={prop.id}>
+                            {prop.nom} {prop.prenom || ''} - {prop.telephone}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {selectedProprietaire && (
+                    <div className="bg-muted/50 p-4 rounded-lg">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="text-muted-foreground">Nom complet</span>
+                          <p className="font-medium">{selectedProprietaire.nom} {selectedProprietaire.prenom || ''}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Téléphone</span>
+                          <p className="font-medium">{selectedProprietaire.telephone}</p>
+                        </div>
+                        {selectedProprietaire.email && (
+                          <div>
+                            <span className="text-muted-foreground">Email</span>
+                            <p className="font-medium">{selectedProprietaire.email}</p>
+                          </div>
+                        )}
+                        <div>
+                          <span className="text-muted-foreground">Type</span>
+                          <p className="font-medium">{selectedProprietaire.type}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <Building className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+                  <p className="text-muted-foreground mb-4">
+                    Aucun propriétaire trouvé. Créez-en un pour associer ce bien.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => window.location.href = '/proprietaires/ajouter'}
+                  >
+                    Créer un propriétaire
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>
 
       {/* Informations générales */}
       <Collapsible open={openSections.general} onOpenChange={() => toggleSection('general')}>
