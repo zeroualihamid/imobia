@@ -41,7 +41,7 @@ const AjouterProprietaire = () => {
     try {
       await addProprietaire(formData);
       toast.success('Propriétaire ajouté avec succès');
-      navigate('/proprietaires');
+      navigate('/proprietaire');
     } catch (error) {
       console.error('Error adding proprietaire:', error);
       toast.error('Erreur lors de l\'ajout du propriétaire');
@@ -57,7 +57,7 @@ const AjouterProprietaire = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="outline" size="sm" onClick={() => navigate('/proprietaires')}>
+        <Button variant="outline" size="sm" onClick={() => navigate('/proprietaire')}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Retour
         </Button>
@@ -213,7 +213,7 @@ const AjouterProprietaire = () => {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => navigate('/proprietaires')}
+                onClick={() => navigate('/proprietaire')}
               >
                 Annuler
               </Button>

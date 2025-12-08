@@ -598,7 +598,7 @@ const AjouterBienForm = ({ proprietaireId: initialProprietaireId, onSuccess, onC
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => window.location.href = '/proprietaires/ajouter'}
+                    onClick={() => window.location.href = '/proprietaire/ajouter'}
                   >
                     Créer un propriétaire
                   </Button>
