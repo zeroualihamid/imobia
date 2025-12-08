@@ -23,8 +23,20 @@ import {
   Check,
   X,
   Pencil,
-  Save
+  Save,
+  Trash2
 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import PropertyMap from '@/components/PropertyMap';
@@ -61,6 +73,7 @@ const DetailBien = () => {
   const [proprietaire, setProprietaire] = useState<Proprietaire | null>(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // Edit mode states for each section
   const [editMode, setEditMode] = useState({
@@ -253,6 +266,53 @@ const DetailBien = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleDelete = async () => {
+    if (!id) return;
+    
+    setIsDeleting(true);
+    try {
+      // First delete associated media
+      const { error: mediaError } = await supabase
+        .from('bien_media')
+        .delete()
+        .eq('bien_id', id);
+
+      if (mediaError) throw mediaError;
+
+      // Delete associated shares
+      const { error: sharesError } = await supabase
+        .from('bien_shares')
+        .delete()
+        .eq('bien_id', id);
+
+      if (sharesError) throw sharesError;
+
+      // Then delete the bien
+      const { error } = await supabase
+        .from('biens')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Succès",
+        description: "Le bien a été supprimé"
+      });
+
+      navigate('/biens');
+    } catch (err) {
+      console.error('Error deleting bien:', err);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la suppression du bien",
+        variant: "destructive"
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'DISPONIBLE':
@@ -375,6 +435,37 @@ const DetailBien = () => {
           <ShareBienDialog bienId={bien.id} bienTitle={bien.titre} />
           {getTypeBadge(bien.type)}
           {getStatusBadge(bien.status)}
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="sm">
+                <Trash2 className="h-4 w-4 mr-2" />
+                Supprimer
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Supprimer ce bien ?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Cette action est irréversible. Le bien "{bien.titre}" et toutes ses images seront définitivement supprimés.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  {isDeleting ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    <Trash2 className="h-4 w-4 mr-2" />
+                  )}
+                  Supprimer
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
 
