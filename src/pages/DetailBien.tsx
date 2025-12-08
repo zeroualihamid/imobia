@@ -423,15 +423,15 @@ const DetailBien = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-4">
           <Button variant="outline" size="sm" onClick={() => navigate('/biens')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Retour
           </Button>
-          <h1 className="text-2xl font-bold">{bien.titre}</h1>
+          <h1 className="text-xl sm:text-2xl font-bold truncate">{bien.titre}</h1>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <ShareBienDialog bienId={bien.id} bienTitle={bien.titre} />
           {getTypeBadge(bien.type)}
           {getStatusBadge(bien.status)}
