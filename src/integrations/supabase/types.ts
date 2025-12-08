@@ -55,6 +55,38 @@ export type Database = {
           },
         ]
       }
+      bien_shares: {
+        Row: {
+          bien_id: string
+          created_at: string
+          id: string
+          shared_by_user_id: string
+          shared_with_user_id: string
+        }
+        Insert: {
+          bien_id: string
+          created_at?: string
+          id?: string
+          shared_by_user_id: string
+          shared_with_user_id: string
+        }
+        Update: {
+          bien_id?: string
+          created_at?: string
+          id?: string
+          shared_by_user_id?: string
+          shared_with_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bien_shares_bien_id_fkey"
+            columns: ["bien_id"]
+            isOneToOne: false
+            referencedRelation: "biens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       biens: {
         Row: {
           adresse: string
