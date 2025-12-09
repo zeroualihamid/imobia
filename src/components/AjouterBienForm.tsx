@@ -58,6 +58,8 @@ const AjouterBienForm = ({ proprietaireId: initialProprietaireId, onSuccess, onC
     nombre_salles_bain: '',
     nombre_etages: '',
     annee_construction: '',
+    nombre_rideaux: '',
+    surface_mezzanine: '',
     description_caracteristiques: '',
     prix_vente: '',
     prix_location: '',
@@ -794,14 +796,6 @@ const AjouterBienForm = ({ proprietaireId: initialProprietaireId, onSuccess, onC
                   />
                 </div>
 
-                <div>
-                  <Label htmlFor="code_postal">Code postal</Label>
-                  <Input
-                    id="code_postal"
-                    value={formData.code_postal}
-                    onChange={(e) => handleInputChange('code_postal', e.target.value)}
-                  />
-                </div>
               </div>
 
               {/* Map */}
@@ -903,6 +897,29 @@ const AjouterBienForm = ({ proprietaireId: initialProprietaireId, onSuccess, onC
                     onChange={(e) => handleInputChange('annee_construction', e.target.value)}
                     min="1900"
                     max={new Date().getFullYear()}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="nombre_rideaux">Nombre de rideaux</Label>
+                  <Input
+                    id="nombre_rideaux"
+                    type="number"
+                    value={formData.nombre_rideaux}
+                    onChange={(e) => handleInputChange('nombre_rideaux', e.target.value)}
+                    min="0"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="surface_mezzanine">Surface mezzanine (m²)</Label>
+                  <Input
+                    id="surface_mezzanine"
+                    type="number"
+                    value={formData.surface_mezzanine}
+                    onChange={(e) => handleInputChange('surface_mezzanine', e.target.value)}
+                    min="0"
+                    step="0.01"
                   />
                 </div>
               </div>
