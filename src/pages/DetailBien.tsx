@@ -71,12 +71,14 @@ const DetailBien = () => {
   const [error, setError] = useState<string | null>(null);
   const [coordinates, setCoordinates] = useState<[number, number] | null>(null);
   const [proprietaire, setProprietaire] = useState<Proprietaire | null>(null);
+  const [proprietairesList, setProprietairesList] = useState<Proprietaire[]>([]);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
   
   // Edit mode states for each section
   const [editMode, setEditMode] = useState({
+    proprietaire: false,
     general: false,
     location: false,
     characteristics: false,
@@ -117,6 +119,7 @@ const DetailBien = () => {
   useEffect(() => {
     if (id) {
       fetchBien();
+      fetchProprietairesList();
     }
   }, [id]);
 
@@ -155,7 +158,11 @@ const DetailBien = () => {
     }
   };
 
-  const fetchProprietaire = async (proprietaireId: string) => {
+  const fetchProprietaire = async (proprietaireId: string | null) => {
+    if (!proprietaireId) {
+      setProprietaire(null);
+      return;
+    }
     try {
       const { data, error } = await supabase
         .from('proprietaires')
@@ -169,6 +176,22 @@ const DetailBien = () => {
       }
     } catch (err) {
       console.error('Error fetching proprietaire:', err);
+    }
+  };
+
+  const fetchProprietairesList = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('proprietaires')
+        .select('id, nom, prenom, telephone, email, type')
+        .order('nom');
+
+      if (error) throw error;
+      if (data) {
+        setProprietairesList(data);
+      }
+    } catch (err) {
+      console.error('Error fetching proprietaires list:', err);
     }
   };
 
@@ -206,7 +229,9 @@ const DetailBien = () => {
     try {
       const updateData: Partial<Bien> = {};
       
-      if (section === 'general') {
+      if (section === 'proprietaire') {
+        updateData.proprietaire_id = formData.proprietaire_id;
+      } else if (section === 'general') {
         updateData.titre = formData.titre;
         updateData.description = formData.description;
         updateData.type = formData.type;
@@ -493,13 +518,38 @@ const DetailBien = () => {
                   <Building className="h-5 w-5" />
                   Propriétaire
                 </span>
-                {openSections.proprietaire ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                <div className="flex items-center gap-2">
+                  <EditButtons section="proprietaire" isEditing={editMode.proprietaire} />
+                  {openSections.proprietaire ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                </div>
               </CardTitle>
             </CardHeader>
           </CollapsibleTrigger>
           <CollapsibleContent>
             <CardContent>
-              {proprietaire ? (
+              {editMode.proprietaire ? (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Sélectionner un propriétaire</Label>
+                    <Select
+                      value={formData.proprietaire_id || 'none'}
+                      onValueChange={(value) => handleInputChange('proprietaire_id', value === 'none' ? null : value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Aucun" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Aucun</SelectItem>
+                        {proprietairesList.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.nom} {p.prenom || ''} - {p.telephone}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              ) : proprietaire ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <span className="text-sm text-muted-foreground">Nom complet</span>
