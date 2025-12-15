@@ -8,7 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Building, MapPin, Euro, Home, ChevronDown, ChevronUp, ChevronsUpDown, ImageIcon, Navigation, Loader2, Search } from 'lucide-react';
+import { Building, MapPin, Euro, Home, ChevronDown, ChevronUp, ChevronsUpDown, ImageIcon, Navigation, Loader2, Search, Plus } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import FileUpload, { UploadedFile } from '@/components/ui/FileUpload';
@@ -40,6 +41,15 @@ const AjouterBienForm = ({ proprietaireId: initialProprietaireId, onSuccess, onC
   const [loadingProprietaire, setLoadingProprietaire] = useState(!initialProprietaireId);
   const [proprietaires, setProprietaires] = useState<Proprietaire[]>([]);
   const [selectedProprietaire, setSelectedProprietaire] = useState<Proprietaire | null>(null);
+  const [showAddProprietaire, setShowAddProprietaire] = useState(false);
+  const [addingProprietaire, setAddingProprietaire] = useState(false);
+  const [newProprietaire, setNewProprietaire] = useState({
+    nom: '',
+    prenom: '',
+    telephone: '',
+    email: '',
+    type: 'PARTICULIER' as 'PARTICULIER' | 'PROMOTEUR' | 'FONCIERE'
+  });
   
   const [formData, setFormData] = useState({
     titre: '',
@@ -170,6 +180,59 @@ const AjouterBienForm = ({ proprietaireId: initialProprietaireId, onSuccess, onC
     if (prop) {
       setSelectedProprietaire(prop);
       setUserProprietaireId(prop.id);
+    }
+  };
+
+  const handleAddProprietaire = async () => {
+    if (!newProprietaire.nom || !newProprietaire.telephone) {
+      toast({
+        title: "Erreur",
+        description: "Le nom et le téléphone sont obligatoires",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setAddingProprietaire(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Non authentifié');
+
+      const { data, error } = await supabase
+        .from('proprietaires')
+        .insert({
+          nom: newProprietaire.nom,
+          prenom: newProprietaire.prenom || null,
+          telephone: newProprietaire.telephone,
+          email: newProprietaire.email || null,
+          type: newProprietaire.type,
+          created_by: user.id
+        })
+        .select('id, nom, prenom, telephone, email, type')
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setProprietaires(prev => [data, ...prev]);
+        setSelectedProprietaire(data);
+        setUserProprietaireId(data.id);
+        setShowAddProprietaire(false);
+        setNewProprietaire({ nom: '', prenom: '', telephone: '', email: '', type: 'PARTICULIER' });
+        toast({
+          title: "Succès",
+          description: "Propriétaire créé et associé au bien"
+        });
+      }
+    } catch (error) {
+      console.error('Error creating proprietaire:', error);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la création du propriétaire",
+        variant: "destructive"
+      });
+    } finally {
+      setAddingProprietaire(false);
     }
   };
 
@@ -556,15 +619,15 @@ const AjouterBienForm = ({ proprietaireId: initialProprietaireId, onSuccess, onC
           </CollapsibleTrigger>
           <CollapsibleContent>
             <CardContent className="space-y-4">
-              {proprietaires.length > 0 ? (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Sélectionner un propriétaire</Label>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Sélectionner un propriétaire</Label>
+                  <div className="flex gap-2">
                     <Select
                       value={userProprietaireId || 'none'}
                       onValueChange={handleProprietaireChange}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="flex-1">
                         <SelectValue placeholder="Aucun" />
                       </SelectTrigger>
                       <SelectContent>
@@ -576,47 +639,112 @@ const AjouterBienForm = ({ proprietaireId: initialProprietaireId, onSuccess, onC
                         ))}
                       </SelectContent>
                     </Select>
-                  </div>
-                  {selectedProprietaire && (
-                    <div className="bg-muted/50 p-4 rounded-lg">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <span className="text-muted-foreground">Nom complet</span>
-                          <p className="font-medium">{selectedProprietaire.nom} {selectedProprietaire.prenom || ''}</p>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Téléphone</span>
-                          <p className="font-medium">{selectedProprietaire.telephone}</p>
-                        </div>
-                        {selectedProprietaire.email && (
-                          <div>
-                            <span className="text-muted-foreground">Email</span>
-                            <p className="font-medium">{selectedProprietaire.email}</p>
+                    <Dialog open={showAddProprietaire} onOpenChange={setShowAddProprietaire}>
+                      <DialogTrigger asChild>
+                        <Button type="button" variant="outline" size="icon" title="Ajouter un propriétaire">
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Ajouter un propriétaire</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4 pt-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label>Nom *</Label>
+                              <Input
+                                value={newProprietaire.nom}
+                                onChange={(e) => setNewProprietaire(prev => ({ ...prev, nom: e.target.value }))}
+                                placeholder="Nom"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label>Prénom</Label>
+                              <Input
+                                value={newProprietaire.prenom}
+                                onChange={(e) => setNewProprietaire(prev => ({ ...prev, prenom: e.target.value }))}
+                                placeholder="Prénom"
+                              />
+                            </div>
                           </div>
-                        )}
-                        <div>
-                          <span className="text-muted-foreground">Type</span>
-                          <p className="font-medium">{selectedProprietaire.type}</p>
+                          <div className="space-y-2">
+                            <Label>Téléphone *</Label>
+                            <Input
+                              value={newProprietaire.telephone}
+                              onChange={(e) => setNewProprietaire(prev => ({ ...prev, telephone: e.target.value }))}
+                              placeholder="Téléphone"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Email</Label>
+                            <Input
+                              type="email"
+                              value={newProprietaire.email}
+                              onChange={(e) => setNewProprietaire(prev => ({ ...prev, email: e.target.value }))}
+                              placeholder="Email"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Type</Label>
+                            <Select
+                              value={newProprietaire.type}
+                              onValueChange={(value: 'PARTICULIER' | 'PROMOTEUR' | 'FONCIERE') => 
+                                setNewProprietaire(prev => ({ ...prev, type: value }))
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="PARTICULIER">Particulier</SelectItem>
+                                <SelectItem value="PROMOTEUR">Promoteur</SelectItem>
+                                <SelectItem value="FONCIERE">Foncière</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <Button 
+                            type="button" 
+                            onClick={handleAddProprietaire} 
+                            disabled={addingProprietaire}
+                            className="w-full"
+                          >
+                            {addingProprietaire ? (
+                              <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Création...</>
+                            ) : (
+                              'Créer et associer'
+                            )}
+                          </Button>
                         </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                </div>
+                {selectedProprietaire && (
+                  <div className="bg-muted/50 p-4 rounded-lg">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Nom complet</span>
+                        <p className="font-medium">{selectedProprietaire.nom} {selectedProprietaire.prenom || ''}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Téléphone</span>
+                        <p className="font-medium">{selectedProprietaire.telephone}</p>
+                      </div>
+                      {selectedProprietaire.email && (
+                        <div>
+                          <span className="text-muted-foreground">Email</span>
+                          <p className="font-medium">{selectedProprietaire.email}</p>
+                        </div>
+                      )}
+                      <div>
+                        <span className="text-muted-foreground">Type</span>
+                        <p className="font-medium">{selectedProprietaire.type}</p>
                       </div>
                     </div>
-                  )}
-                </div>
-              ) : (
-                <div className="text-center py-6">
-                  <Building className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-                  <p className="text-muted-foreground mb-4">
-                    Aucun propriétaire trouvé. Créez-en un pour associer ce bien.
-                  </p>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => window.location.href = '/proprietaire/ajouter'}
-                  >
-                    Créer un propriétaire
-                  </Button>
-                </div>
-              )}
+                  </div>
+                )}
+              </div>
             </CardContent>
           </CollapsibleContent>
         </Card>
