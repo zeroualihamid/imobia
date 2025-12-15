@@ -9,6 +9,13 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { 
   ArrowLeft, 
   MapPin, 
@@ -24,7 +31,10 @@ import {
   X,
   Pencil,
   Save,
-  Trash2
+  Trash2,
+  Plus,
+  Navigation,
+  ExternalLink
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -75,6 +85,16 @@ const DetailBien = () => {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showAddProprietaire, setShowAddProprietaire] = useState(false);
+  const [addingProprietaire, setAddingProprietaire] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [newProprietaire, setNewProprietaire] = useState({
+    nom: '',
+    prenom: '',
+    telephone: '',
+    email: '',
+    type: 'PARTICULIER' as 'PARTICULIER' | 'PROMOTEUR' | 'FONCIERE'
+  });
   
   // Edit mode states for each section
   const [editMode, setEditMode] = useState({
@@ -211,6 +231,28 @@ const DetailBien = () => {
     }
   };
 
+  const openGoogleMapsDirections = () => {
+    if (!bien) return;
+    
+    // Build full address
+    const addressParts = [
+      bien.adresse,
+      bien.quartier,
+      bien.ville,
+      bien.code_postal,
+      'Maroc'
+    ].filter(Boolean);
+    
+    const fullAddress = addressParts.join(', ');
+    const encodedAddress = encodeURIComponent(fullAddress);
+    
+    // Google Maps directions URL
+    const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`;
+    
+    // Open in new tab
+    window.open(googleMapsUrl, '_blank', 'noopener,noreferrer');
+  };
+
   const handleEdit = (section: keyof typeof editMode) => {
     setEditMode(prev => ({ ...prev, [section]: true }));
   };
@@ -289,6 +331,147 @@ const DetailBien = () => {
 
   const handleInputChange = (field: keyof Bien, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleImageUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0 || !id) return;
+
+    setUploadingImages(true);
+    const uploadPromises: Promise<void>[] = [];
+
+    try {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        
+        // Only process image files
+        if (!file.type.startsWith('image/')) {
+          toast({
+            title: "Erreur",
+            description: `${file.name} n'est pas une image valide`,
+            variant: "destructive"
+          });
+          continue;
+        }
+
+        const uploadPromise = (async () => {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+          
+          // Upload to storage
+          const { error: uploadError } = await supabase.storage
+            .from('bien-media')
+            .upload(fileName, file, {
+              cacheControl: '3600',
+              upsert: false
+            });
+          
+          if (uploadError) {
+            console.error('Error uploading image:', uploadError);
+            throw uploadError;
+          }
+          
+          // Create bien_media record
+          const { error: mediaError } = await supabase
+            .from('bien_media')
+            .insert({
+              bien_id: id,
+              file_name: file.name,
+              file_path: fileName,
+              file_type: 'image',
+              file_size: file.size,
+              mime_type: file.type
+            });
+          
+          if (mediaError) {
+            console.error('Error creating media record:', mediaError);
+            throw mediaError;
+          }
+        })();
+
+        uploadPromises.push(uploadPromise);
+      }
+
+      await Promise.all(uploadPromises);
+
+      toast({
+        title: "Succès",
+        description: `${files.length} image(s) ajoutée(s) avec succès`
+      });
+
+      // Reset file inputs
+      const uploadInput = document.getElementById('image-upload') as HTMLInputElement;
+      const uploadInputEmpty = document.getElementById('image-upload-empty') as HTMLInputElement;
+      if (uploadInput) uploadInput.value = '';
+      if (uploadInputEmpty) uploadInputEmpty.value = '';
+
+      // Refresh the bien data to show new images
+      fetchBien();
+    } catch (err) {
+      console.error('Error uploading images:', err);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de l'upload des images",
+        variant: "destructive"
+      });
+    } finally {
+      setUploadingImages(false);
+    }
+  };
+
+  const handleAddProprietaire = async () => {
+    if (!newProprietaire.nom || !newProprietaire.telephone) {
+      toast({
+        title: "Erreur",
+        description: "Le nom et le téléphone sont requis",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setAddingProprietaire(true);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) throw new Error('User not authenticated');
+
+      const { data, error } = await supabase
+        .from('proprietaires')
+        .insert({
+          nom: newProprietaire.nom,
+          prenom: newProprietaire.prenom || null,
+          telephone: newProprietaire.telephone,
+          email: newProprietaire.email || null,
+          type: newProprietaire.type,
+          created_by: userData.user.id
+        })
+        .select('id, nom, prenom, telephone, email, type')
+        .single();
+
+      if (error) throw error;
+
+      // Refresh the proprietaires list
+      await fetchProprietairesList();
+      
+      // Auto-select the newly created propriétaire
+      setFormData(prev => ({ ...prev, proprietaire_id: data.id }));
+      
+      // Reset form and close dialog
+      setNewProprietaire({ nom: '', prenom: '', telephone: '', email: '', type: 'PARTICULIER' });
+      setShowAddProprietaire(false);
+
+      toast({
+        title: "Succès",
+        description: "Propriétaire créé et associé au bien"
+      });
+    } catch (err) {
+      console.error('Error creating proprietaire:', err);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la création du propriétaire",
+        variant: "destructive"
+      });
+    } finally {
+      setAddingProprietaire(false);
+    }
   };
 
   const handleDelete = async () => {
@@ -531,22 +714,104 @@ const DetailBien = () => {
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label>Sélectionner un propriétaire</Label>
-                    <Select
-                      value={formData.proprietaire_id || 'none'}
-                      onValueChange={(value) => handleInputChange('proprietaire_id', value === 'none' ? null : value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Aucun" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Aucun</SelectItem>
-                        {proprietairesList.map((p) => (
-                          <SelectItem key={p.id} value={p.id}>
-                            {p.nom} {p.prenom || ''} - {p.telephone}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="flex gap-2">
+                      <Select
+                        value={formData.proprietaire_id || 'none'}
+                        onValueChange={(value) => handleInputChange('proprietaire_id', value === 'none' ? null : value)}
+                        className="flex-1"
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Aucun" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Aucun</SelectItem>
+                          {proprietairesList.map((p) => (
+                            <SelectItem key={p.id} value={p.id}>
+                              {p.nom} {p.prenom || ''} - {p.telephone}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Dialog open={showAddProprietaire} onOpenChange={setShowAddProprietaire}>
+                        <DialogTrigger asChild>
+                          <Button type="button" variant="outline" size="icon" title="Ajouter un propriétaire">
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Ajouter un propriétaire</DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-4 pt-4">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label>Nom *</Label>
+                                <Input
+                                  value={newProprietaire.nom}
+                                  onChange={(e) => setNewProprietaire(prev => ({ ...prev, nom: e.target.value }))}
+                                  placeholder="Nom"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label>Prénom</Label>
+                                <Input
+                                  value={newProprietaire.prenom}
+                                  onChange={(e) => setNewProprietaire(prev => ({ ...prev, prenom: e.target.value }))}
+                                  placeholder="Prénom"
+                                />
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <Label>Téléphone *</Label>
+                              <Input
+                                value={newProprietaire.telephone}
+                                onChange={(e) => setNewProprietaire(prev => ({ ...prev, telephone: e.target.value }))}
+                                placeholder="Téléphone"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label>Email</Label>
+                              <Input
+                                type="email"
+                                value={newProprietaire.email}
+                                onChange={(e) => setNewProprietaire(prev => ({ ...prev, email: e.target.value }))}
+                                placeholder="Email"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label>Type</Label>
+                              <Select
+                                value={newProprietaire.type}
+                                onValueChange={(value: 'PARTICULIER' | 'PROMOTEUR' | 'FONCIERE') => 
+                                  setNewProprietaire(prev => ({ ...prev, type: value }))
+                                }
+                              >
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="PARTICULIER">Particulier</SelectItem>
+                                  <SelectItem value="PROMOTEUR">Promoteur</SelectItem>
+                                  <SelectItem value="FONCIERE">Foncière</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <Button 
+                              type="button" 
+                              onClick={handleAddProprietaire} 
+                              disabled={addingProprietaire}
+                              className="w-full"
+                            >
+                              {addingProprietaire ? (
+                                <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Création...</>
+                              ) : (
+                                'Créer et associer'
+                              )}
+                            </Button>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
                   </div>
                 </div>
               ) : proprietaire ? (
@@ -732,28 +997,44 @@ const DetailBien = () => {
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <span className="text-sm text-muted-foreground">Adresse</span>
-                    <p className="font-medium">{bien.adresse}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm text-muted-foreground">Ville</span>
-                    <p className="font-medium">{bien.ville}</p>
-                  </div>
-                  {bien.quartier && (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <span className="text-sm text-muted-foreground">Quartier</span>
-                      <p className="font-medium">{bien.quartier}</p>
+                      <span className="text-sm text-muted-foreground">Adresse</span>
+                      <p className="font-medium">{bien.adresse}</p>
                     </div>
-                  )}
-                  {bien.code_postal && (
                     <div>
-                      <span className="text-sm text-muted-foreground">Code postal</span>
-                      <p className="font-medium">{bien.code_postal}</p>
+                      <span className="text-sm text-muted-foreground">Ville</span>
+                      <p className="font-medium">{bien.ville}</p>
                     </div>
-                  )}
-                </div>
+                    {bien.quartier && (
+                      <div>
+                        <span className="text-sm text-muted-foreground">Quartier</span>
+                        <p className="font-medium">{bien.quartier}</p>
+                      </div>
+                    )}
+                    {bien.code_postal && (
+                      <div>
+                        <span className="text-sm text-muted-foreground">Code postal</span>
+                        <p className="font-medium">{bien.code_postal}</p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Google Maps Directions Button */}
+                  <div className="flex justify-start">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={openGoogleMapsDirections}
+                      className="flex items-center gap-2"
+                    >
+                      <Navigation className="h-4 w-4" />
+                      <span>Ouvrir dans Google Maps</span>
+                      <ExternalLink className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </>
               )}
               
               {/* Map */}
@@ -1007,7 +1288,42 @@ const DetailBien = () => {
                   <ImageIcon className="h-5 w-5" />
                   Photos ({images.length})
                 </span>
-                {openSections.images ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                  <label htmlFor="image-upload" className="cursor-pointer">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={uploadingImages}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        document.getElementById('image-upload')?.click();
+                      }}
+                    >
+                      {uploadingImages ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Upload...
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Ajouter des photos
+                        </>
+                      )}
+                    </Button>
+                    <input
+                      id="image-upload"
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => handleImageUpload(e.target.files)}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </label>
+                  {openSections.images ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                </div>
               </CardTitle>
             </CardHeader>
           </CollapsibleTrigger>
@@ -1018,7 +1334,7 @@ const DetailBien = () => {
                   {images.map((media, index) => (
                     <div 
                       key={media.id} 
-                      className="aspect-square rounded-lg overflow-hidden border cursor-pointer hover:opacity-90 transition-opacity hover:ring-2 hover:ring-primary"
+                      className="aspect-square rounded-lg overflow-hidden border cursor-pointer hover:opacity-90 transition-opacity hover:ring-2 hover:ring-primary relative group"
                       onClick={() => {
                         setLightboxIndex(index);
                         setLightboxOpen(true);
@@ -1039,7 +1355,38 @@ const DetailBien = () => {
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   <ImageIcon className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                  <p>Aucune photo disponible</p>
+                  <p className="mb-4">Aucune photo disponible</p>
+                  <label htmlFor="image-upload-empty">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={uploadingImages}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        document.getElementById('image-upload-empty')?.click();
+                      }}
+                    >
+                      {uploadingImages ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Upload...
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Ajouter des photos
+                        </>
+                      )}
+                    </Button>
+                    <input
+                      id="image-upload-empty"
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => handleImageUpload(e.target.files)}
+                    />
+                  </label>
                 </div>
               )}
             </CardContent>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,17 +11,25 @@ import {
   Bath, 
   CheckSquare,
   Send,
-  Share2
+  Share2,
+  Search,
+  X
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCombinedProperties } from '@/hooks/useCombinedProperties';
 import { PropertyMetadata } from '@/types/property';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Biens = () => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isSearchMode, setIsSearchMode] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
   const navigate = useNavigate();
-  const { properties, isLoading, error } = useCombinedProperties();
+  const { properties, isLoading, error, refetch } = useCombinedProperties();
+  const { user } = useAuth();
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -68,13 +76,169 @@ const Biens = () => {
     return null;
   };
 
-  const filteredProperties = properties.filter(property => {
-    const metadata = property.metadata as PropertyMetadata;
-    const title = metadata?.title || '';
-    const locationStr = formatLocation(metadata?.location);
-    return title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           locationStr.toLowerCase().includes(searchTerm.toLowerCase());
-  });
+  const performSearch = async (query: string) => {
+    if (!query.trim() || !user?.id) {
+      setIsSearchMode(false);
+      setSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    setIsSearchMode(true);
+    
+    try {
+      const searchLower = query.toLowerCase().trim();
+      
+      // Search in biens table (with user permissions)
+      // First, get biens with proprietaires created by user
+      const { data: biensWithOwnerData, error: biensWithOwnerError } = await supabase
+        .from('biens')
+        .select(`
+          *,
+          bien_media (*),
+          proprietaires!inner (
+            id,
+            nom,
+            prenom,
+            raison_sociale,
+            created_by
+          )
+        `)
+        .eq('proprietaires.created_by', user.id)
+        .or(`titre.ilike.%${searchLower}%,description.ilike.%${searchLower}%,adresse.ilike.%${searchLower}%,ville.ilike.%${searchLower}%,quartier.ilike.%${searchLower}%`)
+        .order('created_at', { ascending: false });
+
+      if (biensWithOwnerError) throw biensWithOwnerError;
+
+      // Get biens without proprietaire
+      const { data: biensWithoutOwnerData, error: biensWithoutOwnerError } = await supabase
+        .from('biens')
+        .select(`
+          *,
+          bien_media (*)
+        `)
+        .is('proprietaire_id', null)
+        .or(`titre.ilike.%${searchLower}%,description.ilike.%${searchLower}%,adresse.ilike.%${searchLower}%,ville.ilike.%${searchLower}%,quartier.ilike.%${searchLower}%`)
+        .order('created_at', { ascending: false });
+
+      if (biensWithoutOwnerError) throw biensWithoutOwnerError;
+
+      // Combine both biens queries
+      const biensData = [...(biensWithOwnerData || []), ...(biensWithoutOwnerData || [])];
+
+      // Search in properties table (fetch all and filter client-side for JSONB)
+      const { data: allPropertiesData, error: propertiesError } = await supabase
+        .from('properties')
+        .select(`
+          *,
+          property_media (*)
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (propertiesError) throw propertiesError;
+
+      // Filter properties client-side by searching in metadata JSONB
+      const filteredProperties = (allPropertiesData || []).filter((property: any) => {
+        const metadata = property.metadata || {};
+        const title = (metadata.title || '').toLowerCase();
+        const description = (metadata.description || '').toLowerCase();
+        const address = (metadata.location?.address || '').toLowerCase();
+        const city = (metadata.location?.city || '').toLowerCase();
+        const neighborhood = (metadata.location?.neighborhood || '').toLowerCase();
+        
+        return title.includes(searchLower) ||
+               description.includes(searchLower) ||
+               address.includes(searchLower) ||
+               city.includes(searchLower) ||
+               neighborhood.includes(searchLower);
+      });
+
+      // Convert biens to the same format as useCombinedProperties
+      const convertedBiens = (biensData || []).map((bien: any) => ({
+        id: bien.id,
+        user_id: user.id,
+        source: 'biens' as const,
+        original_data: bien,
+        created_at: bien.created_at,
+        updated_at: bien.updated_at,
+        isShared: false,
+        metadata: {
+          title: bien.titre,
+          description: bien.description,
+          location: {
+            address: bien.adresse,
+            city: bien.ville,
+            neighborhood: bien.quartier,
+          },
+          status: bien.status?.toLowerCase() === 'disponible' ? 'available' : 
+                 bien.status?.toLowerCase() === 'vendu' ? 'sold' : 'pending',
+          price: bien.prix_vente || bien.prix_location,
+          surface: {
+            builtArea: bien.surface_habitable,
+            livingArea: bien.surface_habitable,
+          },
+          bedrooms: bien.nombre_chambres,
+          bathrooms: bien.nombre_salles_bain,
+          propertyType: bien.type?.toLowerCase(),
+          features: [
+            ...(bien.parking ? ['Parking'] : []),
+            ...(bien.jardin ? ['Jardin'] : []),
+            ...(bien.piscine ? ['Piscine'] : []),
+            ...(bien.ascenseur ? ['Ascenseur'] : []),
+            ...(bien.climatisation ? ['Climatisation'] : []),
+            ...(bien.chauffage ? ['Chauffage'] : []),
+            ...(bien.meuble ? ['Meublé'] : []),
+          ],
+        },
+        bien_media: bien.bien_media || [],
+        property_media: [],
+      }));
+
+      // Convert properties to same format
+      const convertedProperties = filteredProperties.map((property: any) => ({
+        id: property.id,
+        user_id: property.user_id,
+        metadata: property.metadata as PropertyMetadata,
+        created_at: property.created_at,
+        updated_at: property.updated_at,
+        property_media: property.property_media || [],
+        source: 'properties' as const,
+      }));
+
+      // Combine results
+      const combined = [...convertedProperties, ...convertedBiens].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      setSearchResults(combined);
+    } catch (err) {
+      console.error('Error searching properties:', err);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleSearch = () => {
+    performSearch(searchQuery);
+  };
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    setIsSearchMode(false);
+    setSearchResults([]);
+    refetch();
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  // Use search results if in search mode, otherwise show all properties
+  const displayProperties = isSearchMode ? searchResults : properties;
 
   const handleSendMessage = () => {
     if (chatMessage.trim()) {
@@ -108,9 +272,61 @@ const Biens = () => {
 
   return (
     <div className="space-y-4">
+      {/* Search Bar */}
+      <Card className="bg-white border border-slate-200">
+        <CardContent className="pt-6">
+          <div className="flex gap-2">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Input
+                type="text"
+                placeholder="Rechercher un bien (titre, adresse, ville, quartier...)"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={handleKeyPress}
+                className="pl-10 pr-10"
+              />
+              {searchQuery && (
+                <button
+                  onClick={handleClearSearch}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+            <Button 
+              onClick={handleSearch} 
+              disabled={isSearching || !searchQuery.trim()}
+            >
+              {isSearching ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Recherche...
+                </>
+              ) : (
+                <>
+                  <Search className="h-4 w-4 mr-2" />
+                  Rechercher
+                </>
+              )}
+            </Button>
+          </div>
+          {isSearchMode && (
+            <div className="mt-2 text-sm text-slate-600">
+              {searchResults.length > 0 ? (
+                <span>{searchResults.length} résultat(s) trouvé(s)</span>
+              ) : (
+                <span>Aucun résultat trouvé</span>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Property Cards */}
       <div className="space-y-4">
-        {filteredProperties.map((property) => {
+        {displayProperties.map((property) => {
           const metadata = property.metadata as PropertyMetadata;
           const locationStr = formatLocation(metadata?.location);
           
@@ -183,22 +399,26 @@ const Biens = () => {
         })}
       </div>
 
-      {filteredProperties.length === 0 && !isLoading && (
+      {displayProperties.length === 0 && !isLoading && !isSearching && (
         <div className="text-center py-12">
           <Building2 className="h-12 w-12 text-slate-400 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-slate-900 mb-2">Aucun bien trouvé</h3>
           <p className="text-slate-600 mb-4">
-            {properties.length === 0 
-              ? "Vous n'avez pas encore ajouté de bien." 
-              : "Aucun bien ne correspond à votre recherche."
+            {isSearchMode 
+              ? "Aucun bien ne correspond à votre recherche."
+              : properties.length === 0 
+                ? "Vous n'avez pas encore ajouté de bien." 
+                : "Aucun bien ne correspond à votre recherche."
             }
           </p>
-          <Link to="/biens/ajouter">
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              {properties.length === 0 ? "Ajouter votre premier bien" : "Ajouter un bien"}
-            </Button>
-          </Link>
+          {!isSearchMode && (
+            <Link to="/biens/ajouter">
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                {properties.length === 0 ? "Ajouter votre premier bien" : "Ajouter un bien"}
+              </Button>
+            </Link>
+          )}
         </div>
       )}
     </div>
