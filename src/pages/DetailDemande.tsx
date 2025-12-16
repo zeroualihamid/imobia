@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import Layout from '@/components/layout/Layout';
@@ -14,6 +14,16 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import PropertyMap from '@/components/PropertyMap';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+// Fix for Leaflet default icons
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+});
 
 interface Demande {
   id: string;
@@ -46,6 +56,8 @@ const DetailDemande = () => {
   const [formData, setFormData] = useState<Partial<Demande>>({});
   const [coordinates, setCoordinates] = useState<[number, number] | null>(null);
   const [saving, setSaving] = useState(false);
+  const viewMapContainer = useRef<HTMLDivElement>(null);
+  const viewMapRef = useRef<L.Map | null>(null);
 
   useEffect(() => {
     const fetchDemande = async () => {
@@ -75,6 +87,45 @@ const DetailDemande = () => {
 
     fetchDemande();
   }, [id, navigate]);
+
+  // Initialize read-only map when not editing
+  useEffect(() => {
+    if (editingSection === 'localisation' || !demande?.latitude || !demande?.longitude || !viewMapContainer.current) {
+      return;
+    }
+
+    // Clean up existing map
+    if (viewMapRef.current) {
+      viewMapRef.current.remove();
+      viewMapRef.current = null;
+    }
+
+    viewMapRef.current = L.map(viewMapContainer.current).setView([demande.latitude, demande.longitude], 15);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(viewMapRef.current);
+
+    const blueIcon = new L.Icon({
+      iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41],
+      popupAnchor: [1, -34],
+      shadowSize: [41, 41]
+    });
+
+    L.marker([demande.latitude, demande.longitude], { icon: blueIcon })
+      .addTo(viewMapRef.current)
+      .bindPopup('Position de la demande');
+
+    return () => {
+      if (viewMapRef.current) {
+        viewMapRef.current.remove();
+        viewMapRef.current = null;
+      }
+    };
+  }, [demande?.latitude, demande?.longitude, editingSection]);
 
   const handleChange = (field: keyof Demande, value: string | number | null) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -394,6 +445,13 @@ const DetailDemande = () => {
                     <p className="font-mono text-sm">{demande.latitude.toFixed(6)}, {demande.longitude.toFixed(6)}</p>
                   </div>
                 )}
+                <div className="space-y-2">
+                  <Label className="text-base font-medium">Localisation sur la carte</Label>
+                  <div 
+                    ref={viewMapContainer}
+                    className="h-80 rounded-lg overflow-hidden border border-border"
+                  />
+                </div>
               </>
             )}
           </CardContent>
