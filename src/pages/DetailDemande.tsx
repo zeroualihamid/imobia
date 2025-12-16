@@ -90,7 +90,8 @@ const DetailDemande = () => {
 
   // Initialize read-only map when not editing
   useEffect(() => {
-    if (editingSection === 'localisation' || !demande?.latitude || !demande?.longitude || !viewMapContainer.current) {
+    // Don't initialize if editing or loading, or if container not ready
+    if (editingSection === 'localisation' || loading || !viewMapContainer.current || !demande) {
       return;
     }
 
@@ -100,24 +101,31 @@ const DetailDemande = () => {
       viewMapRef.current = null;
     }
 
-    viewMapRef.current = L.map(viewMapContainer.current).setView([demande.latitude, demande.longitude], 15);
+    // Use stored coordinates or default to Casablanca
+    const lat = demande.latitude || 33.5731;
+    const lng = demande.longitude || -7.5898;
+
+    viewMapRef.current = L.map(viewMapContainer.current).setView([lat, lng], demande.latitude ? 15 : 10);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(viewMapRef.current);
 
-    const blueIcon = new L.Icon({
-      iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
-      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-      iconSize: [25, 41],
-      iconAnchor: [12, 41],
-      popupAnchor: [1, -34],
-      shadowSize: [41, 41]
-    });
+    // Only add marker if we have actual coordinates
+    if (demande.latitude && demande.longitude) {
+      const blueIcon = new L.Icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+      });
 
-    L.marker([demande.latitude, demande.longitude], { icon: blueIcon })
-      .addTo(viewMapRef.current)
-      .bindPopup('Position de la demande');
+      L.marker([demande.latitude, demande.longitude], { icon: blueIcon })
+        .addTo(viewMapRef.current)
+        .bindPopup('Position de la demande');
+    }
 
     return () => {
       if (viewMapRef.current) {
@@ -125,7 +133,7 @@ const DetailDemande = () => {
         viewMapRef.current = null;
       }
     };
-  }, [demande?.latitude, demande?.longitude, editingSection]);
+  }, [demande, loading, editingSection]);
 
   const handleChange = (field: keyof Demande, value: string | number | null) => {
     setFormData(prev => ({ ...prev, [field]: value }));
