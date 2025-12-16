@@ -1,24 +1,19 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import Layout from '@/components/layout/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, User, Phone, Mail, MapPin, Home, DollarSign, FileText, Calendar } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ArrowLeft, ClipboardList, Home, MapPin, FileText, Pencil, Save, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-
-// Fix for Leaflet default icons
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-});
+import PropertyMap from '@/components/PropertyMap';
 
 interface Demande {
   id: string;
@@ -37,13 +32,20 @@ interface Demande {
   updated_at: string;
 }
 
+const typesBien = [
+  'Appartement', 'Villa', 'Bureau', 'Commerce', 'Terrain',
+  'Maison', 'Duplex', 'Studio', 'Triplex', 'Local commercial', 'Ferme', 'Riad'
+];
+
 const DetailDemande = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [demande, setDemande] = useState<Demande | null>(null);
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<L.Map | null>(null);
   const [loading, setLoading] = useState(true);
+  const [editingSection, setEditingSection] = useState<string | null>(null);
+  const [formData, setFormData] = useState<Partial<Demande>>({});
+  const [coordinates, setCoordinates] = useState<[number, number] | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const fetchDemande = async () => {
@@ -63,6 +65,10 @@ const DetailDemande = () => {
         navigate('/demandes');
       } else {
         setDemande(data);
+        setFormData(data);
+        if (data.longitude && data.latitude) {
+          setCoordinates([data.longitude, data.latitude]);
+        }
       }
       setLoading(false);
     };
@@ -70,25 +76,66 @@ const DetailDemande = () => {
     fetchDemande();
   }, [id, navigate]);
 
-  // Initialize map when demande is loaded
-  useEffect(() => {
-    if (!demande?.latitude || !demande?.longitude || !mapContainer.current || mapRef.current) return;
+  const handleChange = (field: keyof Demande, value: string | number | null) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
 
-    mapRef.current = L.map(mapContainer.current).setView([demande.latitude, demande.longitude], 15);
+  const startEditing = (section: string) => {
+    setEditingSection(section);
+    setFormData({ ...demande });
+    if (demande?.longitude && demande?.latitude) {
+      setCoordinates([demande.longitude, demande.latitude]);
+    }
+  };
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
-    }).addTo(mapRef.current);
+  const cancelEditing = () => {
+    setEditingSection(null);
+    setFormData({ ...demande });
+    if (demande?.longitude && demande?.latitude) {
+      setCoordinates([demande.longitude, demande.latitude]);
+    }
+  };
 
-    L.marker([demande.latitude, demande.longitude]).addTo(mapRef.current);
+  const saveSection = async () => {
+    if (!id) return;
+    setSaving(true);
 
-    return () => {
-      if (mapRef.current) {
-        mapRef.current.remove();
-        mapRef.current = null;
+    try {
+      const updateData: Partial<Demande> = {};
+      
+      if (editingSection === 'client') {
+        updateData.client_nom_complet = formData.client_nom_complet || '';
+        updateData.telephone = formData.telephone || null;
+        updateData.email = formData.email || '';
+        updateData.budget = formData.budget || null;
+      } else if (editingSection === 'caracteristiques') {
+        updateData.type_bien = formData.type_bien || null;
+        updateData.superficie = formData.superficie || null;
+      } else if (editingSection === 'localisation') {
+        updateData.adresse_complete = formData.adresse_complete || null;
+        updateData.latitude = coordinates ? coordinates[1] : null;
+        updateData.longitude = coordinates ? coordinates[0] : null;
+      } else if (editingSection === 'description') {
+        updateData.description = formData.description || null;
       }
-    };
-  }, [demande]);
+
+      const { error } = await supabase
+        .from('demandes')
+        .update(updateData)
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setDemande(prev => prev ? { ...prev, ...updateData } : null);
+      setEditingSection(null);
+      toast.success('Modifications enregistrées');
+    } catch (error) {
+      console.error('Error updating demande:', error);
+      toast.error('Erreur lors de la sauvegarde');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const getStatusBadge = (status: string | null) => {
     switch (status) {
@@ -112,6 +159,23 @@ const DetailDemande = () => {
     }).format(amount);
   };
 
+  const EditButton = ({ section }: { section: string }) => (
+    <Button variant="ghost" size="sm" onClick={() => startEditing(section)}>
+      <Pencil className="h-4 w-4" />
+    </Button>
+  );
+
+  const SaveCancelButtons = () => (
+    <div className="flex gap-2">
+      <Button variant="ghost" size="sm" onClick={cancelEditing} disabled={saving}>
+        <X className="h-4 w-4" />
+      </Button>
+      <Button variant="ghost" size="sm" onClick={saveSection} disabled={saving}>
+        <Save className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+
   if (loading) {
     return (
       <Layout>
@@ -122,9 +186,7 @@ const DetailDemande = () => {
     );
   }
 
-  if (!demande) {
-    return null;
-  }
+  if (!demande) return null;
 
   return (
     <Layout>
@@ -132,12 +194,13 @@ const DetailDemande = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/demandes')}>
-              <ArrowLeft className="h-5 w-5" />
+            <Button variant="outline" size="sm" onClick={() => navigate('/demandes')}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Retour
             </Button>
             <div>
-              <h1 className="text-2xl font-bold">Demande de {demande.client_nom_complet}</h1>
-              <p className="text-muted-foreground">
+              <h1 className="text-3xl font-bold text-foreground">Demande de {demande.client_nom_complet}</h1>
+              <p className="text-muted-foreground mt-1">
                 Créée le {format(new Date(demande.created_at), 'dd MMMM yyyy à HH:mm', { locale: fr })}
               </p>
             </div>
@@ -145,128 +208,223 @@ const DetailDemande = () => {
           {getStatusBadge(demande.status)}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Client Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Informations Client
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center gap-3">
-                <User className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium">{demande.client_nom_complet}</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <Mail className="h-4 w-4 text-muted-foreground" />
-                <a href={`mailto:${demande.email}`} className="text-primary hover:underline">
-                  {demande.email}
-                </a>
-              </div>
-              {demande.telephone && (
-                <div className="flex items-center gap-3">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <a href={`tel:${demande.telephone}`} className="text-primary hover:underline">
-                    {demande.telephone}
-                  </a>
+        {/* Client Information Card */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <ClipboardList className="h-5 w-5" />
+              Informations du client
+            </CardTitle>
+            {editingSection === 'client' ? <SaveCancelButtons /> : <EditButton section="client" />}
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {editingSection === 'client' ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="client_nom_complet">Client (Nom complet) *</Label>
+                  <Input
+                    id="client_nom_complet"
+                    value={formData.client_nom_complet || ''}
+                    onChange={(e) => handleChange('client_nom_complet', e.target.value)}
+                    placeholder="Nom et prénom du client"
+                  />
                 </div>
-              )}
-            </CardContent>
-          </Card>
+                <div className="space-y-2">
+                  <Label htmlFor="telephone">Téléphone</Label>
+                  <Input
+                    id="telephone"
+                    type="tel"
+                    value={formData.telephone || ''}
+                    onChange={(e) => handleChange('telephone', e.target.value)}
+                    placeholder="+212 6XX XXX XXX"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email *</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email || ''}
+                    onChange={(e) => handleChange('email', e.target.value)}
+                    placeholder="client@example.com"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="budget">Budget (MAD)</Label>
+                  <Input
+                    id="budget"
+                    type="number"
+                    value={formData.budget || ''}
+                    onChange={(e) => handleChange('budget', e.target.value ? parseFloat(e.target.value) : null)}
+                    placeholder="250000"
+                    min="0"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Client (Nom complet)</p>
+                  <p className="font-medium">{demande.client_nom_complet}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Téléphone</p>
+                  <p className="font-medium">{demande.telephone || 'Non spécifié'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Email</p>
+                  <p className="font-medium">{demande.email}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Budget</p>
+                  <p className="font-medium">{formatCurrency(demande.budget)}</p>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-          {/* Property Requirements */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Home className="h-5 w-5" />
-                Critères de Recherche
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+        {/* Caracteristiques Card */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Home className="h-5 w-5" />
+              Caractéristiques du bien recherché
+            </CardTitle>
+            {editingSection === 'caracteristiques' ? <SaveCancelButtons /> : <EditButton section="caracteristiques" />}
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {editingSection === 'caracteristiques' ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="type_bien">Type de bien</Label>
+                  <Select
+                    value={formData.type_bien || 'all'}
+                    onValueChange={(value) => handleChange('type_bien', value === 'all' ? null : value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sélectionner le type de bien" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Sélectionner...</SelectItem>
+                      {typesBien.map((type) => (
+                        <SelectItem key={type} value={type}>{type}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="superficie">Superficie (m²)</Label>
+                  <Input
+                    id="superficie"
+                    type="number"
+                    value={formData.superficie || ''}
+                    onChange={(e) => handleChange('superficie', e.target.value ? parseFloat(e.target.value) : null)}
+                    placeholder="100"
+                    min="0"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Type de bien</p>
                   <p className="font-medium">{demande.type_bien || 'Non spécifié'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Superficie</p>
-                  <p className="font-medium">
-                    {demande.superficie ? `${demande.superficie} m²` : 'Non spécifiée'}
-                  </p>
+                  <p className="font-medium">{demande.superficie ? `${demande.superficie} m²` : 'Non spécifiée'}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Localisation Card */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <MapPin className="h-5 w-5" />
+              Localisation
+            </CardTitle>
+            {editingSection === 'localisation' ? <SaveCancelButtons /> : <EditButton section="localisation" />}
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {editingSection === 'localisation' ? (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="adresse_complete">Adresse complète</Label>
+                  <Textarea
+                    id="adresse_complete"
+                    value={formData.adresse_complete || ''}
+                    onChange={(e) => handleChange('adresse_complete', e.target.value)}
+                    placeholder="Rue, quartier, ville, code postal..."
+                    rows={3}
+                  />
+                </div>
+                <div className="space-y-4">
+                  <Label className="text-base font-medium">Localisation sur la carte</Label>
+                  <PropertyMap
+                    address={formData.adresse_complete || ''}
+                    city=""
+                    region="Maroc"
+                    onLocationUpdate={(coords) => setCoordinates(coords)}
+                    onAddressUpdate={(addressData) => {
+                      const addressParts = [];
+                      if (addressData.adresse) addressParts.push(addressData.adresse);
+                      if (addressData.quartier) addressParts.push(addressData.quartier);
+                      if (addressData.ville) addressParts.push(addressData.ville);
+                      if (addressData.code_postal) addressParts.push(addressData.code_postal);
+                      const fullAddress = addressParts.join(', ');
+                      if (fullAddress) handleChange('adresse_complete', fullAddress);
+                    }}
+                    initialCoordinates={coordinates || undefined}
+                  />
+                </div>
+              </>
+            ) : (
+              <>
                 <div>
-                  <p className="text-sm text-muted-foreground">Budget</p>
-                  <p className="font-medium">{formatCurrency(demande.budget)}</p>
+                  <p className="text-sm text-muted-foreground">Adresse complète</p>
+                  <p className="font-medium">{demande.adresse_complete || 'Non spécifiée'}</p>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+                {demande.latitude && demande.longitude && (
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">Coordonnées GPS</p>
+                    <p className="font-mono text-sm">{demande.latitude.toFixed(6)}, {demande.longitude.toFixed(6)}</p>
+                  </div>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
 
-          {/* Location */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5" />
-                Localisation
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-foreground">
-                {demande.adresse_complete || 'Adresse non spécifiée'}
-              </p>
-              {demande.latitude && demande.longitude && (
-                <div 
-                  ref={mapContainer}
-                  className="h-64 rounded-lg overflow-hidden border border-border"
+        {/* Description Card */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Description
+            </CardTitle>
+            {editingSection === 'description' ? <SaveCancelButtons /> : <EditButton section="description" />}
+          </CardHeader>
+          <CardContent>
+            {editingSection === 'description' ? (
+              <div className="space-y-2">
+                <Label htmlFor="description">Description de la demande</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description || ''}
+                  onChange={(e) => handleChange('description', e.target.value)}
+                  placeholder="Décrivez les besoins et préférences du client..."
+                  rows={6}
                 />
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Description */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Description
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+              </div>
+            ) : (
               <p className="text-foreground whitespace-pre-wrap">
                 {demande.description || 'Aucune description fournie'}
               </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Metadata */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Informations Système
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="text-muted-foreground">Date de création</p>
-                <p className="font-medium">
-                  {format(new Date(demande.created_at), 'dd/MM/yyyy HH:mm', { locale: fr })}
-                </p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Dernière mise à jour</p>
-                <p className="font-medium">
-                  {format(new Date(demande.updated_at), 'dd/MM/yyyy HH:mm', { locale: fr })}
-                </p>
-              </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>
