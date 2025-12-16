@@ -29,6 +29,7 @@ import MubawabScraper from '@/pages/MubawabScraper';
 import RoleManagement from '@/pages/RoleManagement';
 import ListeDemandes from '@/pages/ListeDemandes';
 import AjouterDemande from '@/pages/AjouterDemande';
+import DetailDemande from '@/pages/DetailDemande';
 import NotFound from '@/pages/NotFound';
 
 const queryClient = new QueryClient();
@@ -246,6 +247,14 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <AjouterDemande />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/demandes/:id"
+                  element={
+                    <ProtectedRoute>
+                      <DetailDemande />
                     </ProtectedRoute>
                   }
                 />
