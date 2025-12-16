@@ -323,6 +323,60 @@ export type Database = {
         }
         Relationships: []
       }
+      demandes: {
+        Row: {
+          adresse_complete: string | null
+          budget: number | null
+          client_nom_complet: string
+          created_at: string
+          description: string | null
+          email: string
+          id: string
+          latitude: number | null
+          longitude: number | null
+          status: string | null
+          superficie: number | null
+          telephone: string | null
+          type_bien: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          adresse_complete?: string | null
+          budget?: number | null
+          client_nom_complet: string
+          created_at?: string
+          description?: string | null
+          email: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          status?: string | null
+          superficie?: number | null
+          telephone?: string | null
+          type_bien?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          adresse_complete?: string | null
+          budget?: number | null
+          client_nom_complet?: string
+          created_at?: string
+          description?: string | null
+          email?: string
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          status?: string | null
+          superficie?: number | null
+          telephone?: string | null
+          type_bien?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       interactions_proprietaire: {
         Row: {
           conseiller_id: string
