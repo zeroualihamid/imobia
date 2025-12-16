@@ -248,11 +248,21 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
     };
   }, []);
 
+  // Build full address from available parts
+  const buildFullAddress = () => {
+    const parts = [];
+    if (address) parts.push(address);
+    if (city) parts.push(city);
+    if (region) parts.push(region);
+    else parts.push('Maroc');
+    return parts.join(', ');
+  };
+
   // Géocoder l'adresse quand elle change (avec debounce)
   useEffect(() => {
-    if (address && city) {
+    if (address) {
       const timer = setTimeout(() => {
-        const fullAddress = `${address}, ${city}, ${region || 'Maroc'}`;
+        const fullAddress = buildFullAddress();
         console.log('Adresse changée, géocodage automatique:', fullAddress);
         geocodeAddress(fullAddress);
       }, 1000); // Debounce de 1 seconde
@@ -262,8 +272,8 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
   }, [address, city, region]);
 
   const handleSearchLocation = () => {
-    if (address && city) {
-      const fullAddress = `${address}, ${city}, ${region || 'Maroc'}`;
+    if (address) {
+      const fullAddress = buildFullAddress();
       console.log('Recherche manuelle de l\'adresse:', fullAddress);
       geocodeAddress(fullAddress);
     }
@@ -313,7 +323,7 @@ const PropertyMap: React.FC<PropertyMapProps> = ({
         <Button
           type="button"
           onClick={handleSearchLocation}
-          disabled={!address || !city || isGeocoding}
+          disabled={!address || isGeocoding}
           size="sm"
           className="bg-primary text-primary-foreground"
         >
