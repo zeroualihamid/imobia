@@ -267,8 +267,8 @@ const Demandes = () => {
             <div className="space-y-4">
               <Label className="text-base font-medium">Localisation sur la carte</Label>
               <PropertyMap
-                address={formData.adresse_complete.split(',')[0]?.trim() || ''}
-                city={formData.adresse_complete.split(',')[1]?.trim() || ''}
+                address={formData.adresse_complete}
+                city=""
                 region="Maroc"
                 onLocationUpdate={(coords) => {
                   setCoordinates(coords);
