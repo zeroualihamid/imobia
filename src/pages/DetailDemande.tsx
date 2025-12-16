@@ -28,6 +28,7 @@ L.Icon.Default.mergeOptions({
 
 interface Demande {
   id: string;
+  user_id: string;
   client_nom_complet: string;
   telephone: string | null;
   email: string;
@@ -57,8 +58,18 @@ const DetailDemande = () => {
   const [formData, setFormData] = useState<Partial<Demande>>({});
   const [coordinates, setCoordinates] = useState<[number, number] | null>(null);
   const [saving, setSaving] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const viewMapContainer = useRef<HTMLDivElement>(null);
   const viewMapRef = useRef<L.Map | null>(null);
+
+  // Get current user
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUserId(user?.id || null);
+    };
+    getCurrentUser();
+  }, []);
 
   useEffect(() => {
     const fetchDemande = async () => {
@@ -248,6 +259,8 @@ const DetailDemande = () => {
 
   if (!demande) return null;
 
+  const isOwner = currentUserId === demande.user_id;
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -266,12 +279,13 @@ const DetailDemande = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <ShareDemandeDialog demandeId={demande.id} clientName={demande.client_nom_complet} />
+            {isOwner && <ShareDemandeDialog demandeId={demande.id} clientName={demande.client_nom_complet} />}
             {getStatusBadge(demande.status)}
           </div>
         </div>
 
-        {/* Client Information Card */}
+        {/* Client Information Card - Only visible to owner */}
+        {isOwner && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2">
@@ -346,6 +360,7 @@ const DetailDemande = () => {
             )}
           </CardContent>
         </Card>
+        )}
 
         {/* Caracteristiques Card */}
         <Card>
