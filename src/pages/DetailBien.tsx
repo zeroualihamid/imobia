@@ -714,11 +714,10 @@ const DetailBien = () => {
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label>Sélectionner un propriétaire</Label>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-1">
                       <Select
                         value={formData.proprietaire_id || 'none'}
                         onValueChange={(value) => handleInputChange('proprietaire_id', value === 'none' ? null : value)}
-                        className="flex-1"
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Aucun" />
