@@ -264,37 +264,33 @@ const Demandes = () => {
               />
             </div>
 
-            {formData.adresse_complete && (
-              <div className="space-y-4">
-                <Label className="text-base font-medium">Localisation sur la carte</Label>
-                <PropertyMap
-                  address={formData.adresse_complete.split(',')[0]?.trim() || formData.adresse_complete}
-                  city={formData.adresse_complete.split(',')[1]?.trim() || formData.adresse_complete.split(',')[0]?.trim() || ''}
-                  region="Maroc"
-                  onLocationUpdate={(coords) => {
-                    setCoordinates(coords);
-                    console.log('Coordonnées GPS mises à jour:', coords);
-                    // Address will be updated automatically via useEffect
-                  }}
-                  onAddressUpdate={(addressData) => {
-                    // Update the address textbox when pin is moved (via button in PropertyMap)
-                    const addressParts = [];
-                    if (addressData.adresse) addressParts.push(addressData.adresse);
-                    if (addressData.quartier) addressParts.push(addressData.quartier);
-                    if (addressData.ville) addressParts.push(addressData.ville);
-                    if (addressData.code_postal) addressParts.push(addressData.code_postal);
-                    
-                    const fullAddress = addressParts.join(', ');
-                    if (fullAddress) {
-                      setIsUpdatingFromMap(true);
-                      handleChange('adresse_complete', fullAddress);
-                      setTimeout(() => setIsUpdatingFromMap(false), 100);
-                    }
-                  }}
-                  initialCoordinates={coordinates || undefined}
-                />
-              </div>
-            )}
+            <div className="space-y-4">
+              <Label className="text-base font-medium">Localisation sur la carte</Label>
+              <PropertyMap
+                address={formData.adresse_complete.split(',')[0]?.trim() || ''}
+                city={formData.adresse_complete.split(',')[1]?.trim() || ''}
+                region="Maroc"
+                onLocationUpdate={(coords) => {
+                  setCoordinates(coords);
+                  console.log('Coordonnées GPS mises à jour:', coords);
+                }}
+                onAddressUpdate={(addressData) => {
+                  const addressParts = [];
+                  if (addressData.adresse) addressParts.push(addressData.adresse);
+                  if (addressData.quartier) addressParts.push(addressData.quartier);
+                  if (addressData.ville) addressParts.push(addressData.ville);
+                  if (addressData.code_postal) addressParts.push(addressData.code_postal);
+                  
+                  const fullAddress = addressParts.join(', ');
+                  if (fullAddress) {
+                    setIsUpdatingFromMap(true);
+                    handleChange('adresse_complete', fullAddress);
+                    setTimeout(() => setIsUpdatingFromMap(false), 100);
+                  }
+                }}
+                initialCoordinates={coordinates || undefined}
+              />
+            </div>
           </CardContent>
         </Card>
 
