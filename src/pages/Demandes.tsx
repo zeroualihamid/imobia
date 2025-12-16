@@ -9,9 +9,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Save, ClipboardList } from 'lucide-react';
 import PropertyMap from '@/components/PropertyMap';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Demandes = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [coordinates, setCoordinates] = useState<[number, number] | null>(null);
 
@@ -117,17 +120,31 @@ const Demandes = () => {
         return;
       }
 
-      // TODO: Intégrer avec Supabase pour sauvegarder la demande
-      const demandeData = {
-        ...formData,
-        coordinates: coordinates,
-        created_at: new Date().toISOString()
-      };
+      if (!user) {
+        toast.error('Vous devez être connecté pour créer une demande');
+        setLoading(false);
+        return;
+      }
 
-      console.log('Données de la demande:', demandeData);
+      const { error } = await supabase
+        .from('demandes')
+        .insert({
+          user_id: user.id,
+          client_nom_complet: formData.client_nom_complet,
+          telephone: formData.telephone || null,
+          email: formData.email,
+          budget: formData.budget ? parseFloat(formData.budget) : null,
+          type_bien: formData.type_bien || null,
+          superficie: formData.superficie ? parseFloat(formData.superficie) : null,
+          adresse_complete: formData.adresse_complete || null,
+          latitude: coordinates ? coordinates[1] : null,
+          longitude: coordinates ? coordinates[0] : null,
+          description: formData.description || null
+        });
+
+      if (error) throw error;
       
       toast.success('Demande créée avec succès');
-      // Navigate to demandes list or reset form
       navigate('/demandes');
     } catch (error) {
       console.error('Error creating demande:', error);
