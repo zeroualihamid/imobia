@@ -323,6 +323,38 @@ export type Database = {
         }
         Relationships: []
       }
+      demande_shares: {
+        Row: {
+          created_at: string
+          demande_id: string
+          id: string
+          shared_by_user_id: string
+          shared_with_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          demande_id: string
+          id?: string
+          shared_by_user_id: string
+          shared_with_user_id: string
+        }
+        Update: {
+          created_at?: string
+          demande_id?: string
+          id?: string
+          shared_by_user_id?: string
+          shared_with_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demande_shares_demande_id_fkey"
+            columns: ["demande_id"]
+            isOneToOne: false
+            referencedRelation: "demandes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       demandes: {
         Row: {
           adresse_complete: string | null
