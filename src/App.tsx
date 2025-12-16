@@ -27,7 +27,8 @@ import CreationVocale from '@/pages/CreationVocale';
 import PropertyDetail from '@/pages/PropertyDetail';
 import MubawabScraper from '@/pages/MubawabScraper';
 import RoleManagement from '@/pages/RoleManagement';
-import Demandes from '@/pages/Demandes';
+import ListeDemandes from '@/pages/ListeDemandes';
+import AjouterDemande from '@/pages/AjouterDemande';
 import NotFound from '@/pages/NotFound';
 
 const queryClient = new QueryClient();
@@ -236,9 +237,7 @@ function App() {
                   path="/demandes"
                   element={
                     <ProtectedRoute>
-                      <Layout>
-                        <Demandes />
-                      </Layout>
+                      <ListeDemandes />
                     </ProtectedRoute>
                   }
                 />
@@ -246,9 +245,7 @@ function App() {
                   path="/demandes/ajouter"
                   element={
                     <ProtectedRoute>
-                      <Layout>
-                        <Demandes />
-                      </Layout>
+                      <AjouterDemande />
                     </ProtectedRoute>
                   }
                 />
