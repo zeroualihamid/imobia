@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Eye, MapPin, Phone, Mail, Calendar } from 'lucide-react';
+import { Plus, Eye, MapPin, Phone, Mail, Calendar, Share2, Lock } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -146,27 +146,43 @@ const ListeDemandes = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {demandes.map((demande) => (
-                    <TableRow key={demande.id}>
-                      <TableCell className="font-medium">
-                        {demande.client_nom_complet}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col gap-1">
-                          {demande.email && (
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                              <Mail className="h-3 w-3" />
-                              <span className="truncate max-w-[150px]">{demande.email}</span>
+                  {demandes.map((demande) => {
+                    const isOwner = user?.id === demande.user_id;
+                    return (
+                      <TableRow key={demande.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            {demande.client_nom_complet}
+                            {!isOwner && (
+                              <span title="Partagée avec vous">
+                                <Share2 className="h-3 w-3 text-muted-foreground" />
+                              </span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {isOwner ? (
+                            <div className="flex flex-col gap-1">
+                              {demande.email && (
+                                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                  <Mail className="h-3 w-3" />
+                                  <span className="truncate max-w-[150px]">{demande.email}</span>
+                                </div>
+                              )}
+                              {demande.telephone && (
+                                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                  <Phone className="h-3 w-3" />
+                                  <span>{demande.telephone}</span>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1 text-sm text-muted-foreground bg-muted/50 rounded px-2 py-1">
+                              <Lock className="h-3 w-3" />
+                              <span className="italic">Masqué</span>
                             </div>
                           )}
-                          {demande.telephone && (
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                              <Phone className="h-3 w-3" />
-                              <span>{demande.telephone}</span>
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
+                        </TableCell>
                       <TableCell>{demande.type_bien || '-'}</TableCell>
                       <TableCell>{formatBudget(demande.budget)}</TableCell>
                       <TableCell>
@@ -193,8 +209,9 @@ const ListeDemandes = () => {
                           <Eye className="h-4 w-4" />
                         </Button>
                       </TableCell>
-                    </TableRow>
-                  ))}
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             ) : (
