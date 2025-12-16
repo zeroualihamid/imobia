@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import PropertyMap from '@/components/PropertyMap';
+import ShareDemandeDialog from '@/components/demandes/ShareDemandeDialog';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -264,7 +265,10 @@ const DetailDemande = () => {
               </p>
             </div>
           </div>
-          {getStatusBadge(demande.status)}
+          <div className="flex items-center gap-2">
+            <ShareDemandeDialog demandeId={demande.id} clientName={demande.client_nom_complet} />
+            {getStatusBadge(demande.status)}
+          </div>
         </div>
 
         {/* Client Information Card */}
