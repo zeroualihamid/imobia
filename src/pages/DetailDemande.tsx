@@ -178,9 +178,9 @@ const DetailDemande = () => {
         updateData.client_nom_complet = formData.client_nom_complet || '';
         updateData.telephone = formData.telephone || null;
         updateData.email = formData.email || '';
-        updateData.budget = formData.budget || null;
       } else if (editingSection === 'caracteristiques') {
         updateData.type_bien = formData.type_bien || null;
+        updateData.budget = formData.budget || null;
         updateData.superficie = formData.superficie || null;
       } else if (editingSection === 'localisation') {
         updateData.adresse_complete = formData.adresse_complete || null;
@@ -379,7 +379,7 @@ const DetailDemande = () => {
           </CardHeader>
           <CardContent className="space-y-6">
             {editingSection === 'caracteristiques' ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="type_bien">Type de bien</Label>
                   <Select
@@ -408,9 +408,20 @@ const DetailDemande = () => {
                     min="0"
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="budget">Budget (MAD)</Label>
+                  <Input
+                    id="budget"
+                    type="number"
+                    value={formData.budget || ''}
+                    onChange={(e) => handleChange('budget', e.target.value ? parseFloat(e.target.value) : null)}
+                    placeholder="250000"
+                    min="0"
+                  />
+                </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Type de bien</p>
                   <p className="font-medium">{demande.type_bien || 'Non spécifié'}</p>
@@ -418,6 +429,10 @@ const DetailDemande = () => {
                 <div>
                   <p className="text-sm text-muted-foreground">Superficie</p>
                   <p className="font-medium">{demande.superficie ? `${demande.superficie} m²` : 'Non spécifiée'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Budget (MAD)</p>
+                  <p className="font-medium">{formatCurrency(demande.budget)}</p>
                 </div>
               </div>
             )}
