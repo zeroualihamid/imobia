@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, ClipboardList, Home, MapPin, FileText, Pencil, Save, X } from 'lucide-react';
+import { ArrowLeft, ClipboardList, Home, MapPin, FileText, Pencil, Save, X, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -279,6 +279,12 @@ const DetailDemande = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {!isOwner && (
+              <Badge variant="outline" className="flex items-center gap-1 text-muted-foreground">
+                <Share2 className="h-3 w-3" />
+                Partagée avec vous
+              </Badge>
+            )}
             {isOwner && <ShareDemandeDialog demandeId={demande.id} clientName={demande.client_nom_complet} />}
             {getStatusBadge(demande.status)}
           </div>
@@ -369,7 +375,7 @@ const DetailDemande = () => {
               <Home className="h-5 w-5" />
               Caractéristiques du bien recherché
             </CardTitle>
-            {editingSection === 'caracteristiques' ? <SaveCancelButtons /> : <EditButton section="caracteristiques" />}
+            {isOwner && (editingSection === 'caracteristiques' ? <SaveCancelButtons /> : <EditButton section="caracteristiques" />)}
           </CardHeader>
           <CardContent className="space-y-6">
             {editingSection === 'caracteristiques' ? (
@@ -425,7 +431,7 @@ const DetailDemande = () => {
               <MapPin className="h-5 w-5" />
               Localisation
             </CardTitle>
-            {editingSection === 'localisation' ? <SaveCancelButtons /> : <EditButton section="localisation" />}
+            {isOwner && (editingSection === 'localisation' ? <SaveCancelButtons /> : <EditButton section="localisation" />)}
           </CardHeader>
           <CardContent className="space-y-6">
             {editingSection === 'localisation' ? (
@@ -491,7 +497,7 @@ const DetailDemande = () => {
               <FileText className="h-5 w-5" />
               Description
             </CardTitle>
-            {editingSection === 'description' ? <SaveCancelButtons /> : <EditButton section="description" />}
+            {isOwner && (editingSection === 'description' ? <SaveCancelButtons /> : <EditButton section="description" />)}
           </CardHeader>
           <CardContent>
             {editingSection === 'description' ? (
