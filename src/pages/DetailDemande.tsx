@@ -9,11 +9,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, ClipboardList, Home, MapPin, FileText, Pencil, Save, X } from 'lucide-react';
+import { ArrowLeft, ClipboardList, Home, MapPin, FileText, Pencil, Save, X, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import PropertyMap from '@/components/PropertyMap';
+import ShareDemandeDialog from '@/components/demandes/ShareDemandeDialog';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -27,6 +28,7 @@ L.Icon.Default.mergeOptions({
 
 interface Demande {
   id: string;
+  user_id: string;
   client_nom_complet: string;
   telephone: string | null;
   email: string;
@@ -56,8 +58,18 @@ const DetailDemande = () => {
   const [formData, setFormData] = useState<Partial<Demande>>({});
   const [coordinates, setCoordinates] = useState<[number, number] | null>(null);
   const [saving, setSaving] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const viewMapContainer = useRef<HTMLDivElement>(null);
   const viewMapRef = useRef<L.Map | null>(null);
+
+  // Get current user
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUserId(user?.id || null);
+    };
+    getCurrentUser();
+  }, []);
 
   useEffect(() => {
     const fetchDemande = async () => {
@@ -247,6 +259,8 @@ const DetailDemande = () => {
 
   if (!demande) return null;
 
+  const isOwner = currentUserId === demande.user_id;
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -264,10 +278,20 @@ const DetailDemande = () => {
               </p>
             </div>
           </div>
-          {getStatusBadge(demande.status)}
+          <div className="flex items-center gap-2">
+            {!isOwner && (
+              <Badge variant="outline" className="flex items-center gap-1 text-muted-foreground">
+                <Share2 className="h-3 w-3" />
+                Partagée avec vous
+              </Badge>
+            )}
+            {isOwner && <ShareDemandeDialog demandeId={demande.id} clientName={demande.client_nom_complet} />}
+            {getStatusBadge(demande.status)}
+          </div>
         </div>
 
-        {/* Client Information Card */}
+        {/* Client Information Card - Only visible to owner */}
+        {isOwner && (
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2">
@@ -342,6 +366,7 @@ const DetailDemande = () => {
             )}
           </CardContent>
         </Card>
+        )}
 
         {/* Caracteristiques Card */}
         <Card>
@@ -350,7 +375,7 @@ const DetailDemande = () => {
               <Home className="h-5 w-5" />
               Caractéristiques du bien recherché
             </CardTitle>
-            {editingSection === 'caracteristiques' ? <SaveCancelButtons /> : <EditButton section="caracteristiques" />}
+            {isOwner && (editingSection === 'caracteristiques' ? <SaveCancelButtons /> : <EditButton section="caracteristiques" />)}
           </CardHeader>
           <CardContent className="space-y-6">
             {editingSection === 'caracteristiques' ? (
@@ -406,7 +431,7 @@ const DetailDemande = () => {
               <MapPin className="h-5 w-5" />
               Localisation
             </CardTitle>
-            {editingSection === 'localisation' ? <SaveCancelButtons /> : <EditButton section="localisation" />}
+            {isOwner && (editingSection === 'localisation' ? <SaveCancelButtons /> : <EditButton section="localisation" />)}
           </CardHeader>
           <CardContent className="space-y-6">
             {editingSection === 'localisation' ? (
@@ -472,7 +497,7 @@ const DetailDemande = () => {
               <FileText className="h-5 w-5" />
               Description
             </CardTitle>
-            {editingSection === 'description' ? <SaveCancelButtons /> : <EditButton section="description" />}
+            {isOwner && (editingSection === 'description' ? <SaveCancelButtons /> : <EditButton section="description" />)}
           </CardHeader>
           <CardContent>
             {editingSection === 'description' ? (
