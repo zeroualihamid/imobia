@@ -19,6 +19,7 @@ const Sidebar = ({
   const [proprietaireOpen, setProprietaireOpen] = useState(false);
   const [clientsOpen, setClientsOpen] = useState(false);
   const [messagerieOpen, setMessagerieOpen] = useState(false);
+  const [demandesOpen, setDemandesOpen] = useState(false);
   const menuItems = [{
     title: 'Tableau de bord',
     icon: BarChart3,
@@ -99,6 +100,30 @@ const Sidebar = ({
       title: 'Tous',
       href: '/clients',
       icon: List
+    }]
+  }, {
+    title: 'Demandes',
+    icon: ClipboardList,
+    color: 'text-indigo-600',
+    isCollapsible: true,
+    isOpen: demandesOpen,
+    setIsOpen: setDemandesOpen,
+    subItems: [{
+      title: 'Toutes',
+      href: '/demandes',
+      icon: List
+    }, {
+      title: 'Ajouter',
+      href: '/demandes/ajouter',
+      icon: Plus
+    }, {
+      title: 'Recherche',
+      href: '/demandes/recherche',
+      icon: Search
+    }, {
+      title: 'Matching',
+      href: '/demandes/matching',
+      icon: Home
     }]
   }, {
     title: 'Mandats',

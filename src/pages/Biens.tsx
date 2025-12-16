@@ -20,12 +20,15 @@ import { useCombinedProperties } from '@/hooks/useCombinedProperties';
 import { PropertyMetadata } from '@/types/property';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import BienSearchDialog from '@/components/BienSearchDialog';
+import { Filter } from 'lucide-react';
 
 const Biens = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isSearchMode, setIsSearchMode] = useState(false);
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
   const navigate = useNavigate();
   const { properties, isLoading, error, refetch } = useCombinedProperties();
@@ -231,6 +234,11 @@ const Biens = () => {
     refetch();
   };
 
+  const handleAdvancedSearch = (results: any[]) => {
+    setSearchResults(results);
+    setIsSearchMode(true);
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleSearch();
@@ -311,6 +319,15 @@ const Biens = () => {
                 </>
               )}
             </Button>
+            <Button 
+              variant="outline"
+              onClick={() => {
+                setShowAdvancedSearch(true);
+              }}
+            >
+              <Filter className="h-4 w-4 mr-2" />
+              Recherche avancée
+            </Button>
           </div>
           {isSearchMode && (
             <div className="mt-2 text-sm text-slate-600">
@@ -323,6 +340,14 @@ const Biens = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Advanced Search Dialog */}
+      <BienSearchDialog
+        open={showAdvancedSearch}
+        onOpenChange={setShowAdvancedSearch}
+        onSearch={handleAdvancedSearch}
+        onSearchingChange={setIsSearching}
+      />
 
       {/* Property Cards */}
       <div className="space-y-4">

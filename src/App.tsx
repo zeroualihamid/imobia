@@ -27,6 +27,7 @@ import CreationVocale from '@/pages/CreationVocale';
 import PropertyDetail from '@/pages/PropertyDetail';
 import MubawabScraper from '@/pages/MubawabScraper';
 import RoleManagement from '@/pages/RoleManagement';
+import Demandes from '@/pages/Demandes';
 import NotFound from '@/pages/NotFound';
 
 const queryClient = new QueryClient();
@@ -227,6 +228,26 @@ function App() {
                     <ProtectedRoute>
                       <Layout>
                         <RoleManagement />
+                      </Layout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/demandes"
+                  element={
+                    <ProtectedRoute>
+                      <Layout>
+                        <Demandes />
+                      </Layout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/demandes/ajouter"
+                  element={
+                    <ProtectedRoute>
+                      <Layout>
+                        <Demandes />
                       </Layout>
                     </ProtectedRoute>
                   }
