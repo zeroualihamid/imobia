@@ -845,5 +845,4 @@ const BienSearchDialog: React.FC<BienSearchDialogProps> = ({
 };
 
 export default BienSearchDialog;
-export type { SearchFilters };
 
