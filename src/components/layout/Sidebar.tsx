@@ -121,14 +121,6 @@ const Sidebar = ({
       title: t('nav.addRequest'),
       href: '/demandes/ajouter',
       icon: Plus
-    }, {
-      title: t('nav.searchRequest'),
-      href: '/demandes/recherche',
-      icon: Search
-    }, {
-      title: t('nav.matchingRequest'),
-      href: '/demandes/matching',
-      icon: Home
     }]
   }, {
     title: t('nav.mandates'),
