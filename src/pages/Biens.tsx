@@ -20,10 +20,13 @@ import { useCombinedProperties } from '@/hooks/useCombinedProperties';
 import { PropertyMetadata } from '@/types/property';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import BienSearchDialog from '@/components/BienSearchDialog';
 import { Filter } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const Biens = () => {
+  const { t, isRTL } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -37,18 +40,18 @@ const Biens = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'available':
-        return <Badge className="bg-emerald-100 text-emerald-800">Disponible</Badge>;
+        return <Badge className="bg-emerald-100 text-emerald-800">{t('property.available')}</Badge>;
       case 'pending':
-        return <Badge className="bg-blue-100 text-blue-800">En cours</Badge>;
+        return <Badge className="bg-blue-100 text-blue-800">{t('property.pending')}</Badge>;
       case 'sold':
-        return <Badge className="bg-slate-100 text-slate-800">Vendu</Badge>;
+        return <Badge className="bg-slate-100 text-slate-800">{t('property.sold')}</Badge>;
       default:
-        return <Badge className="bg-emerald-100 text-emerald-800">Disponible</Badge>;
+        return <Badge className="bg-emerald-100 text-emerald-800">{t('property.available')}</Badge>;
     }
   };
 
   const formatLocation = (location: PropertyMetadata['location']): string => {
-    if (!location) return 'Localisation non définie';
+    if (!location) return t('property.locationNotDefined');
     
     if (typeof location === 'string') {
       return location;
@@ -61,21 +64,18 @@ const Biens = () => {
     if (location.city) parts.push(location.city);
     if (location.region) parts.push(location.region);
     
-    return parts.length > 0 ? parts.join(', ') : 'Localisation non définie';
+    return parts.length > 0 ? parts.join(', ') : t('property.locationNotDefined');
   };
 
   const getPropertyImage = (property: { id: string; property_media?: Array<{ file_path: string }>; bien_media?: Array<{ file_path: string }> }) => {
-    // Check for bien_media first (from biens table)
     if (property.bien_media && property.bien_media.length > 0) {
       return `https://erbjiehcvwqhxqdvmges.supabase.co/storage/v1/object/public/bien-media/${property.bien_media[0].file_path}`;
     }
     
-    // Check for property_media (from properties table)
     if (property.property_media && property.property_media.length > 0) {
       return `https://erbjiehcvwqhxqdvmges.supabase.co/storage/v1/object/public/property-media/${property.property_media[0].file_path}`;
     }
     
-    // Return null if no image available
     return null;
   };
 
@@ -92,8 +92,6 @@ const Biens = () => {
     try {
       const searchLower = query.toLowerCase().trim();
       
-      // Search in biens table (with user permissions)
-      // First, get biens with proprietaires created by user
       const { data: biensWithOwnerData, error: biensWithOwnerError } = await supabase
         .from('biens')
         .select(`
@@ -113,7 +111,6 @@ const Biens = () => {
 
       if (biensWithOwnerError) throw biensWithOwnerError;
 
-      // Get biens without proprietaire
       const { data: biensWithoutOwnerData, error: biensWithoutOwnerError } = await supabase
         .from('biens')
         .select(`
@@ -126,10 +123,8 @@ const Biens = () => {
 
       if (biensWithoutOwnerError) throw biensWithoutOwnerError;
 
-      // Combine both biens queries
       const biensData = [...(biensWithOwnerData || []), ...(biensWithoutOwnerData || [])];
 
-      // Search in properties table (fetch all and filter client-side for JSONB)
       const { data: allPropertiesData, error: propertiesError } = await supabase
         .from('properties')
         .select(`
@@ -141,7 +136,6 @@ const Biens = () => {
 
       if (propertiesError) throw propertiesError;
 
-      // Filter properties client-side by searching in metadata JSONB
       const filteredProperties = (allPropertiesData || []).filter((property: any) => {
         const metadata = property.metadata || {};
         const title = (metadata.title || '').toLowerCase();
@@ -157,7 +151,6 @@ const Biens = () => {
                neighborhood.includes(searchLower);
       });
 
-      // Convert biens to the same format as useCombinedProperties
       const convertedBiens = (biensData || []).map((bien: any) => ({
         id: bien.id,
         user_id: user.id,
@@ -198,7 +191,6 @@ const Biens = () => {
         property_media: [],
       }));
 
-      // Convert properties to same format
       const convertedProperties = filteredProperties.map((property: any) => ({
         id: property.id,
         user_id: property.user_id,
@@ -209,7 +201,6 @@ const Biens = () => {
         source: 'properties' as const,
       }));
 
-      // Combine results
       const combined = [...convertedProperties, ...convertedBiens].sort(
         (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
@@ -245,12 +236,10 @@ const Biens = () => {
     }
   };
 
-  // Use search results if in search mode, otherwise show all properties
   const displayProperties = isSearchMode ? searchResults : properties;
 
   const handleSendMessage = () => {
     if (chatMessage.trim()) {
-      // Handle chat message
       console.log('Sending message:', chatMessage);
       setChatMessage('');
     }
@@ -260,7 +249,7 @@ const Biens = () => {
     return (
       <div className="text-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p className="text-slate-600">Chargement des biens...</p>
+        <p className="text-slate-600">{t('property.loading')}</p>
       </div>
     );
   }
@@ -269,10 +258,8 @@ const Biens = () => {
     return (
       <div className="text-center py-12">
         <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
-          <h3 className="text-lg font-semibold text-red-800 mb-2">Erreur de chargement</h3>
-          <p className="text-red-600">
-            Impossible de charger les biens. Veuillez réessayer.
-          </p>
+          <h3 className="text-lg font-semibold text-red-800 mb-2">{t('property.loadError')}</h3>
+          <p className="text-red-600">{t('property.loadErrorDesc')}</p>
         </div>
       </div>
     );
@@ -283,21 +270,21 @@ const Biens = () => {
       {/* Search Bar */}
       <Card className="bg-white border border-slate-200">
         <CardContent className="pt-6">
-          <div className="flex gap-2">
+          <div className={cn("flex gap-2", isRTL && "flex-row-reverse")}>
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Search className={cn("absolute top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400", isRTL ? "right-3" : "left-3")} />
               <Input
                 type="text"
-                placeholder="Rechercher un bien (titre, adresse, ville, quartier...)"
+                placeholder={t('property.search')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className="pl-10 pr-10"
+                className={cn(isRTL ? "pr-10 pl-10" : "pl-10 pr-10")}
               />
               {searchQuery && (
                 <button
                   onClick={handleClearSearch}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className={cn("absolute top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600", isRTL ? "left-3" : "right-3")}
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -309,13 +296,13 @@ const Biens = () => {
             >
               {isSearching ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Recherche...
+                  <div className={cn("animate-spin rounded-full h-4 w-4 border-b-2 border-white", isRTL ? "ml-2" : "mr-2")}></div>
+                  {t('property.searching')}
                 </>
               ) : (
                 <>
-                  <Search className="h-4 w-4 mr-2" />
-                  Rechercher
+                  <Search className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
+                  {t('property.searchBtn')}
                 </>
               )}
             </Button>
@@ -325,23 +312,22 @@ const Biens = () => {
                 setShowAdvancedSearch(true);
               }}
             >
-              <Filter className="h-4 w-4 mr-2" />
-              Recherche avancée
+              <Filter className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
+              {t('property.advancedSearch')}
             </Button>
           </div>
           {isSearchMode && (
-            <div className="mt-2 text-sm text-slate-600">
+            <div className={cn("mt-2 text-sm text-slate-600", isRTL && "text-right")}>
               {searchResults.length > 0 ? (
-                <span>{searchResults.length} résultat(s) trouvé(s)</span>
+                <span>{t('property.resultsFound').replace('{count}', searchResults.length.toString())}</span>
               ) : (
-                <span>Aucun résultat trouvé</span>
+                <span>{t('property.noResults')}</span>
               )}
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Advanced Search Dialog */}
       <BienSearchDialog
         open={showAdvancedSearch}
         onOpenChange={setShowAdvancedSearch}
@@ -363,57 +349,55 @@ const Biens = () => {
                 navigate(`/biens/${property.id}`);
               }}
             >
-              <div className="flex flex-col sm:flex-row">
-                {/* Property Image - only show if image exists */}
+              <div className={cn("flex flex-col sm:flex-row", isRTL && "sm:flex-row-reverse")}>
                 {(() => {
                   const imageUrl = getPropertyImage(property);
                   return imageUrl ? (
                     <div className="w-full sm:w-48 h-32 flex-shrink-0">
                       <img 
                         src={imageUrl}
-                        alt={metadata?.title || 'Bien immobilier'}
+                        alt={metadata?.title || t('property.noTitle')}
                         className="w-full h-full object-cover"
                       />
                     </div>
                   ) : null;
                 })()}
 
-                {/* Property Details */}
-                <div className="flex-1 p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-2">
+                <div className={cn("flex-1 p-4", isRTL && "text-right")}>
+                  <div className={cn("flex items-start justify-between mb-2", isRTL && "flex-row-reverse")}>
+                    <div className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
                       <h3 className="text-lg font-semibold text-slate-900">
-                        {metadata?.title || 'Sans titre'}
+                        {metadata?.title || t('property.noTitle')}
                       </h3>
                       {property.isShared && (
                         <Badge variant="outline" className="text-blue-600 border-blue-300">
-                          <Share2 className="h-3 w-3 mr-1" />
-                          Partagé
+                          <Share2 className={cn("h-3 w-3", isRTL ? "ml-1" : "mr-1")} />
+                          {t('property.shared')}
                         </Badge>
                       )}
                     </div>
                     {getStatusBadge(metadata?.status || 'available')}
                   </div>
                   
-                  <div className="flex items-center text-slate-600 text-sm mb-3">
-                    <MapPin className="h-4 w-4 mr-1" />
+                  <div className={cn("flex items-center text-slate-600 text-sm mb-3", isRTL && "flex-row-reverse")}>
+                    <MapPin className={cn("h-4 w-4", isRTL ? "ml-1" : "mr-1")} />
                     {locationStr}
                   </div>
 
-                  <div className="flex items-center gap-4 text-sm text-slate-600">
-                    <div className="flex items-center">
-                      <CheckSquare className="h-4 w-4 mr-1" />
+                  <div className={cn("flex items-center gap-4 text-sm text-slate-600", isRTL && "flex-row-reverse")}>
+                    <div className={cn("flex items-center", isRTL && "flex-row-reverse")}>
+                      <CheckSquare className={cn("h-4 w-4", isRTL ? "ml-1" : "mr-1")} />
                       {metadata?.surface ? 
                         (typeof metadata.surface === 'number' ? `${metadata.surface} m²` : 
                          metadata.surface.builtArea ? `${metadata.surface.builtArea} m²` : '-') 
                         : '-'}
                     </div>
-                    <div className="flex items-center">
-                      <Bed className="h-4 w-4 mr-1" />
+                    <div className={cn("flex items-center", isRTL && "flex-row-reverse")}>
+                      <Bed className={cn("h-4 w-4", isRTL ? "ml-1" : "mr-1")} />
                       {metadata?.bedrooms || '-'}
                     </div>
-                    <div className="flex items-center">
-                      <Bath className="h-4 w-4 mr-1" />
+                    <div className={cn("flex items-center", isRTL && "flex-row-reverse")}>
+                      <Bath className={cn("h-4 w-4", isRTL ? "ml-1" : "mr-1")} />
                       {metadata?.bathrooms || '-'}
                     </div>
                   </div>
@@ -427,20 +411,20 @@ const Biens = () => {
       {displayProperties.length === 0 && !isLoading && !isSearching && (
         <div className="text-center py-12">
           <Building2 className="h-12 w-12 text-slate-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">Aucun bien trouvé</h3>
+          <h3 className="text-lg font-semibold text-slate-900 mb-2">{t('property.noProperties')}</h3>
           <p className="text-slate-600 mb-4">
             {isSearchMode 
-              ? "Aucun bien ne correspond à votre recherche."
+              ? t('property.noPropertiesSearch')
               : properties.length === 0 
-                ? "Vous n'avez pas encore ajouté de bien." 
-                : "Aucun bien ne correspond à votre recherche."
+                ? t('property.noPropertiesYet')
+                : t('property.noPropertiesSearch')
             }
           </p>
           {!isSearchMode && (
             <Link to="/biens/ajouter">
               <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                {properties.length === 0 ? "Ajouter votre premier bien" : "Ajouter un bien"}
+                <Plus className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
+                {properties.length === 0 ? t('property.addFirst') : t('property.addNew')}
               </Button>
             </Link>
           )}
