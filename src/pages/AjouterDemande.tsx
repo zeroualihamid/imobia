@@ -11,10 +11,13 @@ import PropertyMap from '@/components/PropertyMap';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { cn } from '@/lib/utils';
 
 const Demandes = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t, isRTL } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [coordinates, setCoordinates] = useState<[number, number] | null>(null);
 
@@ -115,13 +118,13 @@ const Demandes = () => {
     try {
       // Validation
       if (!formData.client_nom_complet || !formData.email) {
-        toast.error('Veuillez remplir les champs obligatoires (Nom complet et Email)');
+        toast.error(t('request.requiredFields'));
         setLoading(false);
         return;
       }
 
       if (!user) {
-        toast.error('Vous devez être connecté pour créer une demande');
+        toast.error(t('request.loginRequired'));
         setLoading(false);
         return;
       }
@@ -144,75 +147,78 @@ const Demandes = () => {
 
       if (error) throw error;
       
-      toast.success('Demande créée avec succès');
+      toast.success(t('request.createSuccess'));
       navigate('/demandes');
     } catch (error) {
       console.error('Error creating demande:', error);
-      toast.error('Erreur lors de la création de la demande');
+      toast.error(t('request.createError'));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
+    <div className="space-y-6" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className={cn("flex items-center gap-4", isRTL && "flex-row-reverse")}>
         <Button variant="outline" size="sm" onClick={() => navigate('/demandes')}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Retour
+          <ArrowLeft className={cn("h-4 w-4", isRTL ? "ml-2 rotate-180" : "mr-2")} />
+          {t('common.back')}
         </Button>
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">Nouvelle demande</h1>
-          <p className="text-slate-600 mt-1">Créer une nouvelle demande client</p>
+        <div className={isRTL ? "text-right" : ""}>
+          <h1 className="text-3xl font-bold text-foreground">{t('request.addTitle')}</h1>
+          <p className="text-muted-foreground mt-1">{t('request.addSubtitle')}</p>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className={cn("flex items-center gap-2", isRTL && "flex-row-reverse")}>
               <ClipboardList className="h-5 w-5" />
-              Informations du client
+              {t('request.clientInfo')}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="client_nom_complet">Client (Nom complet) *</Label>
+                <Label htmlFor="client_nom_complet">{t('request.clientFullName')} *</Label>
                 <Input
                   id="client_nom_complet"
                   value={formData.client_nom_complet}
                   onChange={(e) => handleChange('client_nom_complet', e.target.value)}
-                  placeholder="Nom et prénom du client"
+                  placeholder={t('request.clientPlaceholder')}
                   required
+                  className={isRTL ? "text-right" : ""}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="telephone">Téléphone</Label>
+                <Label htmlFor="telephone">{t('common.phone')}</Label>
                 <Input
                   id="telephone"
                   type="tel"
                   value={formData.telephone}
                   onChange={(e) => handleChange('telephone', e.target.value)}
-                  placeholder="+212 6XX XXX XXX"
+                  placeholder={t('request.phonePlaceholder')}
+                  dir="ltr"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email *</Label>
+                <Label htmlFor="email">{t('common.email')} *</Label>
                 <Input
                   id="email"
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleChange('email', e.target.value)}
-                  placeholder="client@example.com"
+                  placeholder={t('request.emailPlaceholder')}
+                  dir="ltr"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="budget">Budget (MAD)</Label>
+                <Label htmlFor="budget">{t('request.budgetLabel')}</Label>
                 <Input
                   id="budget"
                   type="number"
@@ -220,6 +226,7 @@ const Demandes = () => {
                   onChange={(e) => handleChange('budget', e.target.value)}
                   placeholder="250000"
                   min="0"
+                  dir="ltr"
                 />
               </div>
             </div>
@@ -228,21 +235,21 @@ const Demandes = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Caractéristiques du bien recherché</CardTitle>
+            <CardTitle>{t('request.propertyCharacteristics')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="type_bien">Type de bien</Label>
+                <Label htmlFor="type_bien">{t('request.propertyType')}</Label>
                 <Select
                   value={formData.type_bien || 'all'}
                   onValueChange={(value) => handleChange('type_bien', value === 'all' ? '' : value)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner le type de bien" />
+                    <SelectValue placeholder={t('request.selectPropertyType')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Sélectionner...</SelectItem>
+                    <SelectItem value="all">{t('request.select')}</SelectItem>
                     {typesBien.map((type) => (
                       <SelectItem key={type} value={type}>{type}</SelectItem>
                     ))}
@@ -251,7 +258,7 @@ const Demandes = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="superficie">Superficie (m²)</Label>
+                <Label htmlFor="superficie">{t('request.areaLabel')}</Label>
                 <Input
                   id="superficie"
                   type="number"
@@ -259,6 +266,7 @@ const Demandes = () => {
                   onChange={(e) => handleChange('superficie', e.target.value)}
                   placeholder="100"
                   min="0"
+                  dir="ltr"
                 />
               </div>
             </div>
@@ -267,22 +275,23 @@ const Demandes = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Localisation</CardTitle>
+            <CardTitle>{t('request.locationTitle')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="adresse_complete">Adresse complète</Label>
+              <Label htmlFor="adresse_complete">{t('request.fullAddress')}</Label>
               <Textarea
                 id="adresse_complete"
                 value={formData.adresse_complete}
                 onChange={(e) => handleChange('adresse_complete', e.target.value)}
-                placeholder="Rue, quartier, ville, code postal..."
+                placeholder={t('request.addressPlaceholder')}
                 rows={3}
+                className={isRTL ? "text-right" : ""}
               />
             </div>
 
             <div className="space-y-4">
-              <Label className="text-base font-medium">Localisation sur la carte</Label>
+              <Label className="text-base font-medium">{t('request.mapLocation')}</Label>
               <PropertyMap
                 address={formData.adresse_complete}
                 city=""
@@ -313,33 +322,34 @@ const Demandes = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Description</CardTitle>
+            <CardTitle>{t('request.descriptionTitle')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <Label htmlFor="description">Description de la demande</Label>
+              <Label htmlFor="description">{t('request.descriptionLabel')}</Label>
               <Textarea
                 id="description"
                 value={formData.description}
                 onChange={(e) => handleChange('description', e.target.value)}
-                placeholder="Décrivez les besoins et préférences du client..."
+                placeholder={t('request.descriptionPlaceholder')}
                 rows={6}
+                className={isRTL ? "text-right" : ""}
               />
             </div>
           </CardContent>
         </Card>
 
-        <div className="flex justify-end gap-4">
+        <div className={cn("flex gap-4", isRTL ? "justify-start flex-row-reverse" : "justify-end")}>
           <Button
             type="button"
             variant="outline"
             onClick={() => navigate('/demandes')}
           >
-            Annuler
+            {t('common.cancel')}
           </Button>
           <Button type="submit" disabled={loading}>
-            <Save className="h-4 w-4 mr-2" />
-            {loading ? 'Enregistrement...' : 'Enregistrer la demande'}
+            <Save className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
+            {loading ? t('request.saving') : t('request.save')}
           </Button>
         </div>
       </form>
