@@ -8,8 +8,11 @@ import { User, Lock, Mail, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { cn } from '@/lib/utils';
 
 const Auth = () => {
+  const { t, isRTL } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,7 +20,6 @@ const Auth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is already logged in
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
@@ -47,15 +49,15 @@ const Auth = () => {
 
       if (error) {
         if (error.message.includes('User already registered')) {
-          toast.error('Un compte existe déjà avec cette adresse email');
+          toast.error(t('auth.accountExists'));
         } else {
           toast.error(error.message);
         }
       } else {
-        toast.success('Compte créé avec succès ! Vous pouvez maintenant vous connecter.');
+        toast.success(t('auth.accountCreated'));
       }
     } catch (error) {
-      toast.error('Une erreur est survenue lors de la création du compte');
+      toast.error(t('message.error'));
     } finally {
       setIsLoading(false);
     }
@@ -73,23 +75,23 @@ const Auth = () => {
 
       if (error) {
         if (error.message.includes('Invalid login credentials')) {
-          toast.error('Email ou mot de passe incorrect');
+          toast.error(t('auth.loginError'));
         } else {
           toast.error(error.message);
         }
       } else {
-        toast.success('Connexion réussie !');
+        toast.success(t('auth.loginSuccess'));
         navigate('/');
       }
     } catch (error) {
-      toast.error('Une erreur est survenue lors de la connexion');
+      toast.error(t('message.error'));
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4" dir={isRTL ? 'rtl' : 'ltr'}>
       <Card className="w-full max-w-md bg-white border border-slate-200 shadow-lg">
         <CardHeader className="text-center pb-4 bg-white">
           <div className="flex justify-center mb-4">
@@ -98,10 +100,10 @@ const Auth = () => {
             </div>
           </div>
           <CardTitle className="text-2xl font-bold text-slate-900">
-            Gestion Immobilière
+            {t('auth.title')}
           </CardTitle>
           <CardDescription className="text-slate-600 font-medium">
-            Connectez-vous ou créez un compte pour gérer vos biens
+            {t('auth.subtitle')}
           </CardDescription>
         </CardHeader>
         <CardContent className="bg-white">
@@ -111,44 +113,44 @@ const Auth = () => {
                 value="signin" 
                 className="text-sm text-slate-700 font-medium bg-white data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm border-slate-200"
               >
-                Connexion
+                {t('auth.login')}
               </TabsTrigger>
               <TabsTrigger 
                 value="signup" 
                 className="text-sm text-slate-700 font-medium bg-white data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm border-slate-200"
               >
-                Inscription
+                {t('auth.register')}
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="signin" className="space-y-4 mt-6">
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="signin-email" className="text-slate-900 font-medium">Email</Label>
+                  <Label htmlFor="signin-email" className="text-slate-900 font-medium">{t('auth.email')}</Label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 h-4 w-4" />
+                    <Mail className={cn("absolute top-1/2 transform -translate-y-1/2 text-slate-500 h-4 w-4", isRTL ? "right-3" : "left-3")} />
                     <Input
                       id="signin-email"
                       type="email"
                       placeholder="votre@email.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10 bg-white border-slate-300 text-slate-900 placeholder:text-slate-500"
+                      className={cn("bg-white border-slate-300 text-slate-900 placeholder:text-slate-500", isRTL ? "pr-10" : "pl-10")}
                       required
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signin-password" className="text-slate-900 font-medium">Mot de passe</Label>
+                  <Label htmlFor="signin-password" className="text-slate-900 font-medium">{t('auth.password')}</Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 h-4 w-4" />
+                    <Lock className={cn("absolute top-1/2 transform -translate-y-1/2 text-slate-500 h-4 w-4", isRTL ? "right-3" : "left-3")} />
                     <Input
                       id="signin-password"
                       type="password"
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10 bg-white border-slate-300 text-slate-900 placeholder:text-slate-500"
+                      className={cn("bg-white border-slate-300 text-slate-900 placeholder:text-slate-500", isRTL ? "pr-10" : "pl-10")}
                       required
                     />
                   </div>
@@ -158,7 +160,7 @@ const Auth = () => {
                   className="w-full bg-blue-600 text-white font-medium"
                   disabled={isLoading}
                 >
-                  {isLoading ? 'Connexion...' : 'Se connecter'}
+                  {isLoading ? t('auth.loggingIn') : t('auth.loginBtn')}
                 </Button>
               </form>
             </TabsContent>
@@ -166,52 +168,52 @@ const Auth = () => {
             <TabsContent value="signup" className="space-y-4 mt-6">
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="signup-name" className="text-slate-900 font-medium">Nom complet</Label>
+                  <Label htmlFor="signup-name" className="text-slate-900 font-medium">{t('auth.fullName')}</Label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 h-4 w-4" />
+                    <User className={cn("absolute top-1/2 transform -translate-y-1/2 text-slate-500 h-4 w-4", isRTL ? "right-3" : "left-3")} />
                     <Input
                       id="signup-name"
                       type="text"
-                      placeholder="Votre nom complet"
+                      placeholder={t('auth.fullName')}
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      className="pl-10 bg-white border-slate-300 text-slate-900 placeholder:text-slate-500"
+                      className={cn("bg-white border-slate-300 text-slate-900 placeholder:text-slate-500", isRTL ? "pr-10" : "pl-10")}
                       required
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-email" className="text-slate-900 font-medium">Email</Label>
+                  <Label htmlFor="signup-email" className="text-slate-900 font-medium">{t('auth.email')}</Label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 h-4 w-4" />
+                    <Mail className={cn("absolute top-1/2 transform -translate-y-1/2 text-slate-500 h-4 w-4", isRTL ? "right-3" : "left-3")} />
                     <Input
                       id="signup-email"
                       type="email"
                       placeholder="votre@email.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10 bg-white border-slate-300 text-slate-900 placeholder:text-slate-500"
+                      className={cn("bg-white border-slate-300 text-slate-900 placeholder:text-slate-500", isRTL ? "pr-10" : "pl-10")}
                       required
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-password" className="text-slate-900 font-medium">Mot de passe</Label>
+                  <Label htmlFor="signup-password" className="text-slate-900 font-medium">{t('auth.password')}</Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 h-4 w-4" />
+                    <Lock className={cn("absolute top-1/2 transform -translate-y-1/2 text-slate-500 h-4 w-4", isRTL ? "right-3" : "left-3")} />
                     <Input
                       id="signup-password"
                       type="password"
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10 bg-white border-slate-300 text-slate-900 placeholder:text-slate-500"
+                      className={cn("bg-white border-slate-300 text-slate-900 placeholder:text-slate-500", isRTL ? "pr-10" : "pl-10")}
                       required
                       minLength={6}
                     />
                   </div>
-                  <p className="text-xs text-slate-600 font-medium">
-                    Le mot de passe doit contenir au moins 6 caractères
+                  <p className={cn("text-xs text-slate-600 font-medium", isRTL && "text-right")}>
+                    {t('auth.passwordMinLength')}
                   </p>
                 </div>
                 <Button 
@@ -219,18 +221,18 @@ const Auth = () => {
                   className="w-full bg-blue-600 text-white font-medium"
                   disabled={isLoading}
                 >
-                  {isLoading ? 'Création...' : 'Créer un compte'}
+                  {isLoading ? t('auth.creating') : t('auth.registerBtn')}
                 </Button>
               </form>
             </TabsContent>
           </Tabs>
 
           <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <div className="flex items-start space-x-3">
+            <div className={cn("flex items-start space-x-3", isRTL && "space-x-reverse flex-row-reverse")}>
               <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
-              <div className="text-sm text-blue-800">
-                <p className="font-semibold mb-1">Note de développement :</p>
-                <p className="font-medium">Vous pouvez désactiver la confirmation email dans les paramètres Supabase pour accélérer les tests.</p>
+              <div className={cn("text-sm text-blue-800", isRTL && "text-right")}>
+                <p className="font-semibold mb-1">{t('auth.devNote')}</p>
+                <p className="font-medium">{t('auth.devNoteText')}</p>
               </div>
             </div>
           </div>
