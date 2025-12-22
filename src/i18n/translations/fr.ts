@@ -275,6 +275,11 @@ export const fr = {
   'owner.conditions': 'Conditions',
   'owner.addedOn': 'Ajouté le',
   'owner.viewDetails': 'Voir détails',
+  'owner.ownerInfo': 'Informations du propriétaire',
+  'owner.addTitle': 'Ajouter un propriétaire',
+  'owner.saving': 'Enregistrement...',
+  'owner.addSuccess': 'Propriétaire ajouté avec succès',
+  'owner.addError': "Erreur lors de l'ajout du propriétaire",
 
   // Clients
   'client.title': 'Clients',

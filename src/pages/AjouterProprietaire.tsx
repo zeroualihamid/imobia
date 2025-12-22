@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -7,14 +6,17 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Save } from 'lucide-react';
 import { useProprietaires } from '@/hooks/useProprietaires';
 import { toast } from 'sonner';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { cn } from '@/lib/utils';
 import type { Proprietaire } from '@/types/proprietaire';
 
 const AjouterProprietaire = () => {
   const navigate = useNavigate();
   const { addProprietaire } = useProprietaires();
+  const { t, isRTL } = useLanguage();
   const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState<Omit<Proprietaire, 'id' | 'created_at' | 'updated_at' | 'created_by'>>({
@@ -40,11 +42,11 @@ const AjouterProprietaire = () => {
 
     try {
       await addProprietaire(formData);
-      toast.success('Propriétaire ajouté avec succès');
+      toast.success(t('owner.addSuccess'));
       navigate('/proprietaire');
     } catch (error) {
       console.error('Error adding proprietaire:', error);
-      toast.error('Erreur lors de l\'ajout du propriétaire');
+      toast.error(t('owner.addError'));
     } finally {
       setLoading(false);
     }
@@ -54,39 +56,41 @@ const AjouterProprietaire = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const BackIcon = isRTL ? ArrowRight : ArrowLeft;
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
+      <div className={cn("flex items-center gap-4", isRTL && "flex-row-reverse")}>
         <Button variant="outline" size="sm" onClick={() => navigate('/proprietaire')}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Retour
+          <BackIcon className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
+          {t('common.back')}
         </Button>
-        <h1 className="text-3xl font-bold text-slate-900">Ajouter un propriétaire</h1>
+        <h1 className="text-3xl font-bold text-slate-900">{t('owner.addTitle')}</h1>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Informations du propriétaire</CardTitle>
+          <CardTitle>{t('owner.ownerInfo')}</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="type">Type *</Label>
+                <Label htmlFor="type">{t('owner.type')} *</Label>
                 <Select onValueChange={(value) => handleChange('type', value)} defaultValue={formData.type}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="PARTICULIER">Particulier</SelectItem>
-                    <SelectItem value="PROMOTEUR">Promoteur</SelectItem>
-                    <SelectItem value="FONCIERE">Foncière</SelectItem>
+                    <SelectItem value="PARTICULIER">{t('owner.individual')}</SelectItem>
+                    <SelectItem value="PROMOTEUR">{t('owner.developer')}</SelectItem>
+                    <SelectItem value="FONCIERE">{t('owner.realEstate')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="nom">Nom *</Label>
+                <Label htmlFor="nom">{t('owner.lastName')} *</Label>
                 <Input
                   id="nom"
                   value={formData.nom}
@@ -97,7 +101,7 @@ const AjouterProprietaire = () => {
 
               {formData.type === 'PARTICULIER' && (
                 <div className="space-y-2">
-                  <Label htmlFor="prenom">Prénom</Label>
+                  <Label htmlFor="prenom">{t('owner.firstName')}</Label>
                   <Input
                     id="prenom"
                     value={formData.prenom}
@@ -108,7 +112,7 @@ const AjouterProprietaire = () => {
 
               {(formData.type === 'PROMOTEUR' || formData.type === 'FONCIERE') && (
                 <div className="space-y-2">
-                  <Label htmlFor="raison_sociale">Raison sociale</Label>
+                  <Label htmlFor="raison_sociale">{t('owner.companyName')}</Label>
                   <Input
                     id="raison_sociale"
                     value={formData.raison_sociale}
@@ -118,7 +122,7 @@ const AjouterProprietaire = () => {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="telephone">Téléphone *</Label>
+                <Label htmlFor="telephone">{t('owner.phone')} *</Label>
                 <Input
                   id="telephone"
                   value={formData.telephone}
@@ -128,7 +132,7 @@ const AjouterProprietaire = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t('owner.email')}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -138,7 +142,7 @@ const AjouterProprietaire = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="adresse">Adresse</Label>
+                <Label htmlFor="adresse">{t('owner.address')}</Label>
                 <Input
                   id="adresse"
                   value={formData.adresse}
@@ -147,7 +151,7 @@ const AjouterProprietaire = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="ville">Ville</Label>
+                <Label htmlFor="ville">{t('owner.city')}</Label>
                 <Input
                   id="ville"
                   value={formData.ville}
@@ -156,7 +160,7 @@ const AjouterProprietaire = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="code_postal">Code postal</Label>
+                <Label htmlFor="code_postal">{t('owner.postalCode')}</Label>
                 <Input
                   id="code_postal"
                   value={formData.code_postal}
@@ -167,7 +171,7 @@ const AjouterProprietaire = () => {
               {formData.type === 'PARTICULIER' && (
                 <>
                   <div className="space-y-2">
-                    <Label htmlFor="date_naissance">Date de naissance</Label>
+                    <Label htmlFor="date_naissance">{t('owner.birthDate')}</Label>
                     <Input
                       id="date_naissance"
                       type="date"
@@ -177,7 +181,7 @@ const AjouterProprietaire = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="cin">CIN</Label>
+                    <Label htmlFor="cin">{t('owner.cin')}</Label>
                     <Input
                       id="cin"
                       value={formData.cin}
@@ -189,7 +193,7 @@ const AjouterProprietaire = () => {
 
               {(formData.type === 'PROMOTEUR' || formData.type === 'FONCIERE') && (
                 <div className="space-y-2">
-                  <Label htmlFor="ice">ICE</Label>
+                  <Label htmlFor="ice">{t('owner.ice')}</Label>
                   <Input
                     id="ice"
                     value={formData.ice}
@@ -200,7 +204,7 @@ const AjouterProprietaire = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="notes">Notes</Label>
+              <Label htmlFor="notes">{t('owner.notes')}</Label>
               <Textarea
                 id="notes"
                 value={formData.notes}
@@ -209,17 +213,17 @@ const AjouterProprietaire = () => {
               />
             </div>
 
-            <div className="flex justify-end gap-4">
+            <div className={cn("flex justify-end gap-4", isRTL && "flex-row-reverse")}>
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => navigate('/proprietaire')}
               >
-                Annuler
+                {t('common.cancel')}
               </Button>
               <Button type="submit" disabled={loading}>
-                <Save className="h-4 w-4 mr-2" />
-                {loading ? 'Enregistrement...' : 'Enregistrer'}
+                <Save className={cn("h-4 w-4", isRTL ? "ml-2" : "mr-2")} />
+                {loading ? t('owner.saving') : t('common.save')}
               </Button>
             </div>
           </form>

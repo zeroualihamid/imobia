@@ -275,6 +275,11 @@ export const ar = {
   'owner.conditions': 'الشروط',
   'owner.addedOn': 'تاريخ الإضافة',
   'owner.viewDetails': 'عرض التفاصيل',
+  'owner.ownerInfo': 'معلومات المالك',
+  'owner.addTitle': 'إضافة مالك',
+  'owner.saving': 'جاري الحفظ...',
+  'owner.addSuccess': 'تمت إضافة المالك بنجاح',
+  'owner.addError': 'خطأ أثناء إضافة المالك',
 
   // Clients
   'client.title': 'العملاء',
