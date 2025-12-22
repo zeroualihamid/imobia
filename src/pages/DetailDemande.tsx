@@ -49,6 +49,12 @@ const typesBien = [
   'Maison', 'Duplex', 'Studio', 'Triplex', 'Local commercial', 'Ferme', 'Riad'
 ];
 
+// UUID validation helper
+const isValidUUID = (str: string) => {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+};
+
 const DetailDemande = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -61,6 +67,13 @@ const DetailDemande = () => {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const viewMapContainer = useRef<HTMLDivElement>(null);
   const viewMapRef = useRef<L.Map | null>(null);
+
+  // Validate UUID and redirect if invalid
+  useEffect(() => {
+    if (id && !isValidUUID(id)) {
+      navigate('/demandes');
+    }
+  }, [id, navigate]);
 
   // Get current user
   useEffect(() => {
