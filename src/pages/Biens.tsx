@@ -346,7 +346,11 @@ const Biens = () => {
               key={property.id} 
               className="bg-white border border-slate-200 overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
               onClick={() => {
-                navigate(`/biens/${property.id}`);
+                // Route to correct detail page based on property source
+                const route = property.source === 'properties' 
+                  ? `/property/${property.id}` 
+                  : `/biens/${property.id}`;
+                navigate(route);
               }}
             >
               <div className={cn("flex flex-col sm:flex-row", isRTL && "sm:flex-row-reverse")}>
