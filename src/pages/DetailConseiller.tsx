@@ -151,53 +151,75 @@ const DetailConseiller = () => {
 
   const fetchKPIs = async () => {
     try {
-      // Mock KPIs data for now - in a real app, this would come from your backend
-      const mockKPIs: KPI[] = [
+      // Fetch real KPI data from weekly_performance table
+      const { data: performanceData, error: perfError } = await supabase
+        .from('weekly_performance')
+        .select('*')
+        .eq('user_id', id)
+        .order('week_start', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (perfError) throw perfError;
+
+      // Fetch task counts for the conseiller
+      const { data: taskData, error: taskError } = await supabase
+        .from('task_conseillers')
+        .select('task_id')
+        .eq('conseiller_id', id);
+
+      if (taskError) throw taskError;
+
+      const completedTasks = tasks.filter(t => t.status === 'TERMINEE').length;
+      const totalTasks = tasks.length;
+      const conversionRate = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+      const realKPIs: KPI[] = [
         {
           indicateur: "Nombre de visites réalisées",
-          definition: "COUNT(Visites WHERE Date = période AND Status = 'Visite réalisée')",
-          valeur: 12,
+          definition: "Score visites de la semaine",
+          valeur: performanceData?.score_visites || 0,
           periodicite: selectedPeriod,
           commentaires: "Visites effectuées durant la période sélectionnée"
         },
         {
-          indicateur: "Nombre de biens signés - mandat simple",
-          definition: "COUNT(Biens WHERE Mandat = 'Simple' AND DateMandat = période)",
-          valeur: 3,
+          indicateur: "Nombre de contrats signés",
+          definition: "Score contrats de la semaine",
+          valeur: performanceData?.score_contrats || 0,
           periodicite: selectedPeriod,
-          commentaires: "Mandats simples signés"
+          commentaires: "Contrats signés"
         },
         {
-          indicateur: "Nombre de biens signés - mandat exclusif",
-          definition: "COUNT(Biens WHERE Mandat = 'Exclusif' AND DateMandat = période)",
-          valeur: 5,
+          indicateur: "Score prospection",
+          definition: "Score prospection hebdomadaire",
+          valeur: performanceData?.score_prospection || 0,
           periodicite: selectedPeriod,
-          commentaires: "Mandats exclusifs signés"
+          commentaires: "Activité de prospection"
         },
         {
-          indicateur: "Chiffre d'affaires encaissé",
-          definition: "SUM(Commission WHERE DealStatus = 'Acte signé' AND DateActe = période)",
-          valeur: "€15,750",
+          indicateur: "Tâches assignées",
+          definition: "Nombre total de tâches assignées",
+          valeur: taskData?.length || 0,
           periodicite: selectedPeriod,
-          commentaires: "Commissions perçues"
+          commentaires: "Tâches en cours et terminées"
         },
         {
-          indicateur: "Chiffre d'affaires prévisionnel",
-          definition: "SUM(Commission × Probabilité WHERE DealStatus = 'Actif')",
-          valeur: "€28,500",
+          indicateur: "Tâches terminées",
+          definition: "Nombre de tâches complétées",
+          valeur: completedTasks,
           periodicite: selectedPeriod,
-          commentaires: "Commissions potentielles"
+          commentaires: "Tâches accomplies"
         },
         {
           indicateur: "Taux de concrétisation",
-          definition: "Deals conclus ÷ Visites réalisées",
-          valeur: "25%",
+          definition: "Tâches terminées ÷ Tâches totales",
+          valeur: `${conversionRate}%`,
           periodicite: selectedPeriod,
-          commentaires: "Ratio de conversion visites/ventes"
+          commentaires: "Ratio de conversion tâches"
         }
       ];
 
-      setKpis(mockKPIs);
+      setKpis(realKPIs);
     } catch (error) {
       console.error('Erreur lors du chargement des KPIs:', error);
       toast({

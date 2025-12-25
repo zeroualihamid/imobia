@@ -160,17 +160,28 @@ const PilotageConseillers = () => {
       if (conseillersError) throw conseillersError;
       console.log('Conseillers fetched:', conseillersData?.length);
 
-      // Fetch weekly performances (mock data for now)
-      const mockPerformances: WeeklyPerformance[] = conseillersData?.map((c: Conseiller) => ({
-        user_id: c.id,
-        score_visites: Math.floor(Math.random() * 20),
-        score_contrats: Math.floor(Math.random() * 8),
-        score_total: Math.floor(Math.random() * 100)
-      })) || [];
+      // Fetch real weekly performances from database
+      const { data: performanceData, error: perfError } = await supabase
+        .from('weekly_performance')
+        .select('*')
+        .order('week_start', { ascending: false });
+
+      if (perfError) throw perfError;
+
+      // Map performance data to the expected format
+      const mappedPerformances: WeeklyPerformance[] = conseillersData?.map((c: Conseiller) => {
+        const perf = performanceData?.find(p => p.user_id === c.id);
+        return {
+          user_id: c.id,
+          score_visites: perf?.score_visites || 0,
+          score_contrats: perf?.score_contrats || 0,
+          score_total: (perf?.score_visites || 0) + (perf?.score_contrats || 0) + (perf?.score_prospection || 0)
+        };
+      }) || [];
 
       setTasks(tasksData || []);
       setConseillers(conseillersData || []);
-      setWeeklyPerformances(mockPerformances);
+      setWeeklyPerformances(mappedPerformances);
     } catch (error) {
       console.error('Erreur lors du chargement:', error);
       toast({

@@ -1,82 +1,93 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Search, Plus, Eye, Phone, Mail, Heart } from 'lucide-react';
+import { Search, Plus, Eye, Phone, Mail, Heart, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Client {
   id: string;
-  nom: string;
-  prenom: string;
-  telephone: string;
+  client_nom_complet: string;
+  telephone: string | null;
   email: string;
-  budget: number;
-  typeRecherche: string;
-  statut: 'Actif' | 'En négociation' | 'Converti' | 'Inactif';
-  dateCreation: string;
+  budget: number | null;
+  type_bien: string | null;
+  status: string | null;
+  created_at: string;
 }
 
 const ListeClients = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [clients, setClients] = useState<Client[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
 
-  // Mock data - remplacer par des données réelles de Supabase
-  const clients: Client[] = [
-    {
-      id: '1',
-      nom: 'Dubois',
-      prenom: 'Pierre',
-      telephone: '+33 6 11 22 33 44',
-      email: 'pierre.dubois@email.com',
-      budget: 250000,
-      typeRecherche: 'Appartement',
-      statut: 'Actif',
-      dateCreation: '2024-01-10'
-    },
-    {
-      id: '2',
-      nom: 'Leroy',
-      prenom: 'Sophie',
-      telephone: '+33 6 55 66 77 88',
-      email: 'sophie.leroy@email.com',
-      budget: 350000,
-      typeRecherche: 'Maison',
-      statut: 'En négociation',
-      dateCreation: '2024-02-15'
+  useEffect(() => {
+    if (user) {
+      fetchClients();
     }
-  ];
+  }, [user]);
+
+  const fetchClients = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('demandes')
+        .select('id, client_nom_complet, telephone, email, budget, type_bien, status, created_at')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setClients(data || []);
+    } catch (error) {
+      console.error('Erreur lors du chargement des clients:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const filteredClients = clients.filter(client =>
-    `${client.prenom} ${client.nom}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    client.client_nom_complet.toLowerCase().includes(searchTerm.toLowerCase()) ||
     client.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getStatutColor = (statut: string) => {
+  const getStatutColor = (statut: string | null) => {
     switch (statut) {
-      case 'Actif':
+      case 'NOUVELLE':
         return 'bg-green-100 text-green-800';
-      case 'En négociation':
+      case 'EN_COURS':
         return 'bg-orange-100 text-orange-800';
-      case 'Converti':
+      case 'TRAITEE':
         return 'bg-blue-100 text-blue-800';
-      case 'Inactif':
+      case 'ANNULEE':
         return 'bg-gray-100 text-gray-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto" />
+          <p className="mt-4 text-muted-foreground">Chargement des clients...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Clients</h1>
-          <p className="text-slate-600 mt-1">Gérez vos clients et prospects</p>
+          <h1 className="text-3xl font-bold text-foreground">Clients</h1>
+          <p className="text-muted-foreground mt-1">Gérez vos clients et prospects</p>
         </div>
-        <Link to="/clients/ajouter">
-          <Button className="bg-blue-600">
+        <Link to="/demandes/ajouter">
+          <Button className="bg-primary">
             <Plus className="h-4 w-4 mr-2" />
             Ajouter un client
           </Button>
@@ -85,7 +96,7 @@ const ListeClients = () => {
 
       <div className="flex items-center space-x-4">
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
             placeholder="Rechercher un client..."
             value={searchTerm}
@@ -104,31 +115,31 @@ const ListeClients = () => {
             <CardHeader className="pb-3">
               <div className="flex justify-between items-start">
                 <CardTitle className="text-lg">
-                  {client.prenom} {client.nom}
+                  {client.client_nom_complet}
                 </CardTitle>
-                <Badge className={getStatutColor(client.statut)}>
-                  {client.statut}
+                <Badge className={getStatutColor(client.status)}>
+                  {client.status || 'Nouveau'}
                 </Badge>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="flex items-center text-sm text-slate-600">
+              <div className="flex items-center text-sm text-muted-foreground">
                 <Phone className="h-4 w-4 mr-2" />
-                {client.telephone}
+                {client.telephone || 'Non renseigné'}
               </div>
-              <div className="flex items-center text-sm text-slate-600">
+              <div className="flex items-center text-sm text-muted-foreground">
                 <Mail className="h-4 w-4 mr-2" />
                 {client.email}
               </div>
-              <div className="flex items-center text-sm text-slate-600">
+              <div className="flex items-center text-sm text-muted-foreground">
                 <Heart className="h-4 w-4 mr-2" />
-                {client.typeRecherche} - Budget: {client.budget.toLocaleString('fr-FR')} €
+                {client.type_bien || 'Non spécifié'} - Budget: {client.budget ? client.budget.toLocaleString('fr-FR') : 'Non défini'} DH
               </div>
-              <div className="text-xs text-slate-500">
-                Ajouté le {new Date(client.dateCreation).toLocaleDateString('fr-FR')}
+              <div className="text-xs text-muted-foreground">
+                Ajouté le {new Date(client.created_at).toLocaleDateString('fr-FR')}
               </div>
               <div className="flex gap-2 pt-2">
-                <Link to={`/clients/${client.id}`} className="flex-1">
+                <Link to={`/demandes/${client.id}`} className="flex-1">
                   <Button variant="outline" size="sm" className="w-full">
                     <Eye className="h-4 w-4 mr-2" />
                     Voir détails
@@ -142,14 +153,14 @@ const ListeClients = () => {
 
       {filteredClients.length === 0 && (
         <div className="text-center py-12">
-          <div className="text-slate-400 mb-4">
+          <div className="text-muted-foreground mb-4">
             <Heart className="h-12 w-12 mx-auto" />
           </div>
-          <h3 className="text-lg font-medium text-slate-900 mb-2">Aucun client trouvé</h3>
-          <p className="text-slate-600 mb-4">
+          <h3 className="text-lg font-medium text-foreground mb-2">Aucun client trouvé</h3>
+          <p className="text-muted-foreground mb-4">
             {searchTerm ? 'Aucun client ne correspond à votre recherche.' : 'Commencez par ajouter votre premier client.'}
           </p>
-          <Link to="/clients/ajouter">
+          <Link to="/demandes/ajouter">
             <Button>
               <Plus className="h-4 w-4 mr-2" />
               Ajouter un client
